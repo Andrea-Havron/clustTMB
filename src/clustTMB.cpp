@@ -68,6 +68,29 @@ vector<Type> rdirichlet(Type alpha){
   return(ans);
 }
 
+template<class Type>
+Type log_sum_exp(vector<Type> x){
+  //x is in log space
+  Type ans;
+  int K = x.size();
+  Type tmax = max(x);
+
+  ans = x(0) - tmax;
+  for(int k=1; k<K; k++){
+    ans = logspace_add(ans, x(k) - tmax);
+  }
+  ans += tmax;
+  return(ans);
+}
+
+template<class Type>
+vector<Type> norm_exp(vector<Type> x){
+  //x is in log space
+  vector<Type> ans(x.size());
+  ans = exp(x - log_sum_exp(x));
+  return(ans);
+}
+
 /* Define distributional families *///from glmmTMB 
 enum valid_family{
   gaussian_family = 0,
@@ -79,34 +102,39 @@ enum valid_family{
   Tweedie_family = 700
 };
 
+enum valid_method{
+  univariate = 10,
+  multivariate = 11
+};
 
-enum valid_covstruct{
-  na_covstruct = 0,
-  norm_covstruct = 1,
-  ar1_covstruct = 2,
-  gmrf_covstruct = 3, 
-  gmrfSpeedup_covstruct = 4
+enum valid_reStruct {
+  // st covariance
+  na = 0,
+  norm = 1,
+  ar1 = 2,
+  gmrf = 3, 
+  gmrf_speedup = 4
 };
 
 
 enum valid_fixStruct{
-  E_fixStruct   = 20,
-  V_fixStruct   = 21,
-  EII_fixStruct = 22,
-  VII_fixStruct = 23,
-  EEI_fixStruct = 24,
-  VEI_fixStruct = 25,
-  EVI_fixStruct = 26,
-  VVI_fixStruct = 27,
-  EEE_fixStruct = 28,
-  VEE_fixStruct = 29,
-  EVE_fixStruct = 30,
-  EEV_fixStruct = 31,
-  VVE_fixStruct = 32,
-  EVV_fixStruct = 33,
-  VEV_fixStruct = 34,
-  VVV_fixStruct = 35,
-  SFA_fixStruct = 36
+  E   = 20,
+  V   = 21,
+  EII = 22,
+  VII = 23,
+  EEI = 24,
+  VEI = 25,
+  EVI = 26,
+  VVI = 27,
+  EEE = 28,
+  VEE = 29,
+  EVE = 30,
+  EEV = 31,
+  VVE = 32,
+  EVV = 33,
+  VEV = 34,
+  VVV = 35,
+  SFA = 36
 };
 
 /* Define link functions *///from glmmTMB 
@@ -118,18 +146,24 @@ enum  valid_link{
   cloglog_link = 4,
   identity_link = 5,
   sqrt_link = 6,
-  boxcox_link = 7
+  yoejin_boxcox = 7
+};
+
+enum valid_covmod{
+  postMarginal = 0,
+  marginal = 1,
+  conditional = 2 //used in simulations
 };
 
 template<class Type>
-Type reNll(array<Type> reVec, vector<Type> parmVec, int covstruct, bool do_simulate = false){
+Type reNll(array<Type> reVec, vector<Type> parmVec, int reStruct, bool do_simulate = false){
   Type ans = 0;
   Type ar1sd;
-  switch(covstruct){
-      case na_covstruct:
+  switch(reStruct){
+      case na:
         ans += 0;
         break;
-      case norm_covstruct:
+      case norm:
         for(int i=0; i<reVec.size(); i++){
           ans -= dnorm(reVec(i),Type(0), parmVec(0), true);
           if(do_simulate){
@@ -137,7 +171,7 @@ Type reNll(array<Type> reVec, vector<Type> parmVec, int covstruct, bool do_simul
           }
         }
         break;
-      case ar1_covstruct:
+      case ar1:
         ar1sd = sqrt(parmVec(1) * 1/(1-pow(parmVec(0),2)));
         ans += SCALE(AR1(parmVec(0)), ar1sd)(reVec);
          if(do_simulate){
@@ -153,7 +187,7 @@ Type reNll(array<Type> reVec, vector<Type> parmVec, int covstruct, bool do_simul
 }
 
 template<class Type>
-Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int covstruct, bool do_simulate = false){
+Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int reStruct, bool do_simulate = false){
   Type ans = 0;
   matrix<Type> H(2,2);
   H(0,0) = exp(parmVec(2));
@@ -162,11 +196,11 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
   H(1,1) = ( 1 + pow(parmVec(3),2) )/exp(parmVec(2));
 
   SparseMatrix<Type> Q = Q_spde(Spde, parmVec(0), H);
-  switch(covstruct){
-      case na_covstruct:
+  switch(reStruct){
+      case na:
         ans += 0;
         break;
-      case gmrf_covstruct:
+      case gmrf:
         ans += SCALE(GMRF(Q),1/parmVec(1))( reVec );
         if(do_simulate){
            vector<Type>simVec(reVec.size());
@@ -174,7 +208,7 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
            reVec = simVec/parmVec(1);
         }
         break;
-      case gmrfSpeedup_covstruct:
+      case gmrf_speedup:
         ans += SCALE(GMRF(Q, false),1/parmVec(1))( reVec );
         if(do_simulate){
            vector<Type>simVec(reVec.size());
@@ -215,13 +249,15 @@ template<class Type>
 vector<Type> inverse_mlogit(vector<Type> eta){
   vector<Type> ans(eta.size()+1);
   Type pi_sum = 0;
+  Type b = max(eta);
   for(int g=0; g<eta.size(); g++){
-    ans(g) = exp(eta(g))/(1 + exp(eta).sum());
+    ans(g) = exp(eta(g)-b)/(exp(-b) + exp(eta-b).sum());
     pi_sum += ans(g);
   }
   ans(eta.size()) = Type(1) - pi_sum;
   return ans;
 }
+
 
 template<class Type>
 matrix<Type> cov_fun(vector<Type> l, int nj, int nf, int fixStruct ){
@@ -229,7 +265,7 @@ matrix<Type> cov_fun(vector<Type> l, int nj, int nf, int fixStruct ){
   matrix<Type> ans(nj,nf);
   vector<Type>l_input = invlogit(l)*Type(2)-Type(1);
   switch(fixStruct ){
-    case VVV_fixStruct:
+    case VVV:
       //correlation matrix
       for(int j=0; j<nj; j++){
         ans(j,j) = Type(1.0);
@@ -242,7 +278,7 @@ matrix<Type> cov_fun(vector<Type> l, int nj, int nf, int fixStruct ){
         }
       }
       break;
-    case SFA_fixStruct:
+    case SFA:
       for(int j=0; j<nj; j++){
         for(int f=0; f<nf; f++){
           if(j>=f){
@@ -295,7 +331,6 @@ Type objective_function<Type>::operator() ()
   DATA_MATRIX( Xd ); //Static Covariates that drive distribution means: i x k for k covariates
   DATA_MATRIX( Xg ); //Static Covariates that drive group membership: i x l for l covariates
   DATA_MATRIX( Xpz ); //Static Covariates that drive zero inflation: i x m for m covariates
-  DATA_VECTOR( Offset );
   DATA_SPARSE_MATRIX( A ); // Map vertex v to site s
   DATA_SPARSE_MATRIX( A_proj ); // Map vertex v to projection grid n
   DATA_MATRIX( Xd_proj ); //Distribution covariates used for prediction
@@ -304,8 +339,10 @@ Type objective_function<Type>::operator() ()
   DATA_STRUCT( spde, spde_aniso_t );
   DATA_INTEGER( family );
   DATA_INTEGER( link );
+  DATA_INTEGER( method );
+  DATA_INTEGER( covmod );
   DATA_INTEGER( fixStruct  );
-  DATA_IMATRIX( covstruct  ); //row 1: gating; row 2: expert; col 1: spatial; col 2: temporal; col3: overdispersion
+  DATA_IMATRIX( reStruct  ); //row 1: gating; row 2: expert; col 1: spatial; col 2: temporal; col3: overdispersion
  // DATA_INTEGER( n_f ); // Number of data reduction on columns
   //control_vec: if value is 0: off, if 1: on
   
@@ -342,7 +379,6 @@ Type objective_function<Type>::operator() ()
   PARAMETER_MATRIX( Hg_input ); //dims: 2, n_g-1
   PARAMETER_ARRAY( Hd_input ); //dims: 2, n_j, n_g
   PARAMETER_VECTOR( ln_kappag );   //dims: n_g-1
-  PARAMETER_VECTOR( ln_taug );     //dims: n_g-1
   PARAMETER_MATRIX( ln_kappad );   //dims: n_j, n_g
   PARAMETER_MATRIX( ln_taud );     //dims: n_j, n_g
   PARAMETER_VECTOR( logit_rhog );    //dims: n_g-1
@@ -359,9 +395,11 @@ Type objective_function<Type>::operator() ()
   PARAMETER_ARRAY( Omega_vfg ); //dims: n_v, (Multivariate:n_j, SFA:n_f), n_g
 
 
-  Type nll_hyperpriors = 0;
-  Type nll_priors = 0;
-  Type nll_data = 0;
+  //Type nll = 0;
+  //Type nll = 0;
+  //Type nll = 0;
+ // parallel_accumulator<Type> nll(this);
+  Type nll = 0;
 
   vector<int> omega_dim = Omega_vfg.dim; 
 
@@ -378,7 +416,7 @@ Type objective_function<Type>::operator() ()
   bool pz_flag = (betapz.size() > 0);
 
   vector<Type> kappag = exp(ln_kappag);
-  vector<Type> taug = exp(ln_taug);
+  vector<Type> taug = 1 / (sqrt(4*M_PI)*kappag);
   vector<Type> rhog = invlogit(logit_rhog);
   vector<Type> sigmaup = exp(ln_sigmaup);
   vector<Type> sigmau = exp(ln_sigmau);
@@ -396,6 +434,23 @@ Type objective_function<Type>::operator() ()
       sigmav(j,g) = exp(ln_sigmav(j,g));
     }
   }
+
+  //// Tweedie priors
+  //switch(family){
+  //   case Tweedie_family:
+  //   for(int j=0; j<n_j; j++){
+  //    for(int g=0; g<n_g; g++){
+  //      nll -= log(Type(1)/(Type(100)-Type(0))); //U(0,100) prior on phi
+  //      nll -= log(Type(1)/(Type(1.99)-Type(1.01))); //U(1.01,1.99) prior on power
+  //      nll -= dnorm(betad(0,j,g), Type(0), Type(1000), true); //prior on betag
+  //    }
+  //   }
+  //   break;
+  //  default:
+  //    nll = 0;
+  //}
+
+  
 
  
   //// Random Effects likelihood ===================================================
@@ -420,13 +475,13 @@ Type objective_function<Type>::operator() ()
     ovParmg(0) = sigmau(g);
     //Spatial effect
     
-    nll_priors += spNll(Gamma_vg.col(g), spParmg, spde, covstruct(0,0), this->do_simulate);
+    nll += spNll(Gamma_vg.col(g), spParmg, spde, reStruct(0,0), this->do_simulate);
       
     //Temporal effect
-    nll_priors += reNll(upsilon_tg.col(g), tParmg, covstruct(0,1), this->do_simulate);
+    nll += reNll(upsilon_tg.col(g), tParmg, reStruct(0,1), this->do_simulate);
 
     //Overdispersion
-    nll_priors += reNll(u_ig.col(g), ovParmg, covstruct(0,2), this->do_simulate);
+    nll += reNll(u_ig.col(g), ovParmg, reStruct(0,2), this->do_simulate);
   }
 
   //////// Expert
@@ -441,7 +496,7 @@ Type objective_function<Type>::operator() ()
     for(int f=0; f<n_f; f++){
       spParmd(0) = kappad(f,g);
       switch( fixStruct ){
-        case SFA_fixStruct:
+        case SFA:
           spParmd(1) = 1 / (2 * M_PI * kappad(f,g));
           break;
         default:
@@ -450,17 +505,17 @@ Type objective_function<Type>::operator() ()
       spParmd(2) = Hd_input(0,f,g);
       spParmd(3) = Hd_input(1,f,g);
       //Spatial effect
-      nll_priors += spNll((Omega_vfg.col(g)).col(f), spParmd, spde, covstruct(1,0), this->do_simulate);
+      nll += spNll((Omega_vfg.col(g)).col(f), spParmd, spde, reStruct(1,0), this->do_simulate);
     }
     for(int j=0; j<n_j; j++){
       tParmd(0) = rhod(j,g);
       tParmd(1) = sigmaep(j,g);
       ovParmd(0) = sigmav(j,g);
       //Temporal effect
-      nll_priors += reNll((epsilon_tjg.col(g)).col(j), tParmd, covstruct(1,1), this->do_simulate);
+      nll += reNll((epsilon_tjg.col(g)).col(j), tParmd, reStruct(1,1), this->do_simulate);
 
       //Overdispersion
-      nll_priors += reNll((v_ifg.col(g)).col(j), ovParmd, covstruct(1,2), this->do_simulate);
+      nll += reNll((v_ifg.col(g)).col(j), ovParmd, reStruct(1,2), this->do_simulate);
     } 
   }
   matrix<Type> gamma_vg(n_v, (n_g-1));
@@ -477,7 +532,7 @@ Type objective_function<Type>::operator() ()
   matrix<Type> tmp_omega(n_v, n_j);
   tmp_omega.setZero();
   switch(fixStruct ){
-    case SFA_fixStruct:
+    case SFA:
       for(int g=0; g<n_g; g++){
       	tmp_omega.setZero();
         matrix<Type> L = cov_fun(vector<Type>(ld.col(g)), n_j, n_f, fixStruct ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read i as list?
@@ -530,7 +585,7 @@ Type objective_function<Type>::operator() ()
     for(int i=0; i<n_i; i++){
       for(int j=0; j<n_j; j++){
         for(int k=0; k<n_k; k++){
-          etad(i,j,g) += Xd(i,k) * betad(k,j,g) + log(Offset(i));
+          etad(i,j,g) += Xd(i,k) * betad(k,j,g);
         }
         etad(i,j,g) += Omega_ijg(i,j,g) + epsilon_tjg(t(i),j,g) + v_ifg(i,j,g);
         if(pz_flag){
@@ -566,10 +621,8 @@ Type objective_function<Type>::operator() ()
     //  if(!isNA(Y(i,j))){
   switch(family){
     case gaussian_family:
-      switch(fixStruct){
-        case E_fixStruct:
-        case V_fixStruct:
-        case SFA_fixStruct:
+      switch(method){
+        case univariate:
           for(int i=0; i<n_i; i++){
             for(int g=0; g<n_g; g++){
               for(int j=0; j<n_j; j++){
@@ -578,7 +631,7 @@ Type objective_function<Type>::operator() ()
             }
           } 
           break;
-        case VVV_fixStruct:
+        case multivariate:
           for(int g=0; g<n_g; g++){
             vector<Type> sds(n_j);
             matrix<Type> Sigma = cov_fun(vector<Type>(ld.col(g)), n_j, n_j, fixStruct );
@@ -596,45 +649,36 @@ Type objective_function<Type>::operator() ()
           }
           break;
         default:
-          error("Covariance Structure not implemented");
-      } // end fixStruct switch
+        error("Method not implemented");
+      } //end method switch
       break;
     case Gamma_family:
-      switch(fixStruct){
-        case E_fixStruct:
-        case V_fixStruct:
-        case SFA_fixStruct:
-        for(int i=0; i<n_i; i++){
-          for(int g=0; g<n_g; g++){
-            for(int j=0; j<n_j;j++){
-              s1 = var(j,g);
-              s2 = mu(i,j,g) / var(j,g);
-              if(pz_flag){
-                //Type logit_pz = etapz(i,j,g) ;
-                //Type log_pz   = -logspace_add( Type(0) , -logit_pz );
-                //Type log_1mpz = -logspace_add( Type(0) ,  logit_pz );
-                if(Y(i,j) == Type(0)){
-                  //tmp_ll(i,g) += logpz;
-                  tmp_ll(i,g) += log(pz(i,j,g));
-                } else {
-                  // Is this correct? - tmp_ll(i,g) += logspace_add( log_1mpz, dgamma(Y(i,j), s1, s2, true) );
-                  tmp_ll(i,g) += log(Type(1) - pz(i,j,g)) + dgamma(Y(i,j), s1, s2, true);
-                }
+      for(int i=0; i<n_i; i++){
+        for(int g=0; g<n_g; g++){
+          for(int j=0; j<n_j;j++){
+            s1 = var(j,g);
+            s2 = mu(i,j,g) / var(j,g);
+            if(pz_flag){
+              //Type logit_pz = etapz(i,j,g) ;
+              //Type log_pz   = -logspace_add( Type(0) , -logit_pz );
+              //Type log_1mpz = -logspace_add( Type(0) ,  logit_pz );
+              if(Y(i,j) == Type(0)){
+                //tmp_ll(i,g) += logpz;
+                tmp_ll(i,g) += log(pz(i,j,g));
               } else {
-                tmp_ll(i,g) += dgamma(Y(i,j), s1, s2, true);
+                // Is this correct? - tmp_ll(i,g) += logspace_add( log_1mpz, dgamma(Y(i,j), s1, s2, true) );
+                tmp_ll(i,g) += log(Type(1) - pz(i,j,g)) + dgamma(Y(i,j), s1, s2, true);
               }
+            } else {
+              tmp_ll(i,g) += dgamma(Y(i,j), s1, s2, true);
             }
           }
         }
-       break;
-        default:
-          error("Covariance Structure not implemented");
-      } // end fixStruct switch
+      }
+      break;
     case lognormal_family:
-      switch(fixStruct){
-        case E_fixStruct:
-        case V_fixStruct:
-        case SFA_fixStruct:
+      switch(method){
+        case univariate:
           for(int i=0; i<n_i; i++){
             for(int g=0; g<n_g; g++){
               for(int j=0; j<n_j; j++){
@@ -657,32 +701,24 @@ Type objective_function<Type>::operator() ()
           }
           break;
         default:
-          error("Covariance Structure not implemented");
-      } // end fixStruct switch
+          error("Method not implemented");
+        } // end method switch
         break;
     case Tweedie_family:
-      switch(fixStruct){
-        case E_fixStruct:
-         case V_fixStruct:
-         case SFA_fixStruct:
+      for(int g=0; g<n_g; g++){
+        for(int j=0; j<n_j;j++){
+          s2 = var(j,g);
+          s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
           for(int i=0; i<n_i; i++){
-            for(int g=0; g<n_g; g++){
-              for(int j=0; j<n_j;j++){
-                s1 = mu(i,j,g);
-                s2 = var(j,g);
-                s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
-                tmp_ll(i,g) += dtweedie(Y(i,j), s1, s2, s3, true);
-              }
-            }
+            s1 = mu(i,j,g);
+            tmp_ll(i,g) += dtweedie(Y(i,j), s1, s2, s3, true);
           }
-          break;
-        default:
-          error("Covariance Structure not implemented");
-      } // end fixStruct switch
+        }
+      }
       break;
     default:
       error("Family not implemented");
-    } // end Family switch
+    } // end switch
     //Add zero inflation -- from glmmTMB - is this correct for delta models?
 
 
@@ -691,31 +727,92 @@ Type objective_function<Type>::operator() ()
   z_ig.setZero();
   matrix<Type> zhat(n_i,n_g);
   zhat.setZero();
-  vector<Type> denom(n_i);
-  denom.setZero();
+  matrix<Type> ln_fy(n_i,n_g);
+  vector<Type> newpi(n_g);
+  newpi.setZero();
+  //vector<Type> ln_fy_sum(n_i);
+  //Type test = 0;
+  //vector<Type> denom(n_i);
+  //denom.setZero();
   for(int i=0; i<n_i; i++){
-      denom(i) = log(pi(i,0)) + tmp_ll(i,0);
-    for(int g=1; g<n_g; g++){
-      denom(i) = logspace_add(denom(i), log(pi(i,g)) + tmp_ll(i,g));
-    } //end g loop - complete denom sum before next g loop
+  //  denom(i) = log(pi(i,0)) + tmp_ll(i,0);
+  //  for(int g=1; g<n_g; g++){
+  //    denom(i) = logspace_add(denom(i), log(pi(i,g)) + tmp_ll(i,g));
+  //  } //end g loop - complete denom sum before next g loop
 
+  //  for(int g=0; g<n_g; g++){
+  //    zhat(i,g) = exp(log(pi(i,g)) + tmp_ll(i,g) - denom(i));
+  //  } // end g loop - fill in zhat row before z_ig assignment
+  //  Type M = max(vector<Type>(zhat.row(i)));
+  //  for(int g=0; g<n_g; g++){
+  //    z_ig(i,g) = CppAD::CondExpEq(zhat(i,g), M, Type(1), Type(0));
+  //  } //end g loop
+   
     for(int g=0; g<n_g; g++){
-      zhat(i,g) = exp(log(pi(i,g)) + tmp_ll(i,g) - denom(i));
-    } // end g loop - fill in zhat row before z_ig assignment
-    Type M = max(vector<Type>(zhat.row(i)));
+      ln_fy(i,g) = log(pi(i,g)) + tmp_ll(i,g);
+    } 
+   // nll -= log_sum_exp(vector<Type>(ln_fy.row(i)));
     for(int g=0; g<n_g; g++){
-      z_ig(i,g) = CppAD::CondExpEq(zhat(i,g), M, Type(1), Type(0));
-    } //end g loop
-  } //end i loop
+      zhat(i,g) = exp( ln_fy(i,g) - log_sum_exp(vector<Type>(ln_fy.row(i))) );
+      newpi(g) += zhat(i,g);
+    }   
+    Type zmax = max(vector<Type>(zhat.row(i)));  
+    for(int g=0; g<n_g; g++){
+      z_ig(i,g) = CppAD::CondExpEq(zhat(i,g), zmax, Type(1), Type(0));
+    }
+      
+    //for(int g=0; g<n_g; g++){
+    //  ln_fy(i,g) = z_ig(i,g) * ln_fy(i,g);
+    //}
+    
+  }
+  newpi = newpi/n_i;
+  
+  switch(ll){
+    case postMarginal: //0
+      for(int i=0; i<n_i; i++){
+        for(int g=0; g<n_g; g++){
+          ln_fy(i,g) = log(newpi(g)) + tmp_ll(i,g);
+        }
+        nll -= log_sum_exp(vector<Type>(ln_fy.row(i)));
+       // rep2 = ln_fy;
+       // REPORT(rep2);
+      }
+      break;
+    case marginal: //1
+      for(int i=0; i<n_i; i++){
+        nll -= log_sum_exp(vector<Type>(ln_fy.row(i)));
+      }
+      break;
+    case conditional: //5
+      for(int i=0; i<n_i; i++){
+        for(int g=0; g<n_g;g++){
+          nll -= z_ig(i,g) * ln_fy(i,g);
+        }
+      }
+      break;
+    default:
+      error("ll not specified");
+  } //end switch 
+   
+
+
+  //Type test2 = nll;
+
+  //REPORT(test);
+  //REPORT(test2);
+  REPORT(newpi);
+
+
 
  
 
   //// Cluster Likelihood =======================================================================
-  for(int i=0; i<n_i; i++){
-  	for(int g=0; g<n_g; g++){
-        nll_data -= z_ig(i,g) * (log(pi(i,g)) + tmp_ll(i,g)); 
-    } // end g loop
-  } // end i loop
+ // for(int i=0; i<n_i; i++){
+ // 	for(int g=0; g<n_g; g++){
+ //       nll -= z_ig(i,g) * (log(pi(i,g)) + tmp_ll(i,g)); 
+ //   } // end g loop
+ // } // end i loop
 
   SIMULATE{
     vector<Type> res_sim(n_j);
@@ -726,15 +823,13 @@ Type objective_function<Type>::operator() ()
         if(pi(i,g) == max(vector<Type>(pi.row(i)))){
           switch(family){
             case gaussian_family:
-              switch(fixStruct){
-                case E_fixStruct:
-                case V_fixStruct:
-                case SFA_fixStruct:
+              switch(method){
+                case univariate:
                   for(int j=0; j<n_j; j++){
                     Y(i,j) = rnorm(mu(i,j,g), sqrt(var(j,g)));
                   }
                   break;
-                case VVV_fixStruct:
+                case multivariate:
                   for(int j1=0; j1<n_j; j1++){
                     for(int j2=0; j2<n_j; j2++){
                       Sigma(j1,j2) = Sigma_g(j1,j2,g);
@@ -747,19 +842,17 @@ Type objective_function<Type>::operator() ()
                   } 
                   break;
                 default:
-                  error("Covariance Structure not implemented");
-              } // end fixStruct switch
+                  error("Method not implemented");
+              } //end switch
               break;
              case lognormal_family:
-              switch(fixStruct){
-                case E_fixStruct:
-                case V_fixStruct:
-                case SFA_fixStruct:
+              switch(method){
+                case univariate:
                   for(int j=0; j<n_j; j++){
                     Y(i,j) = exp(rnorm(mu(i,j,g), sqrt(var(j,g))) );
                   }
                   break;
-                case VVV_fixStruct: 
+                case multivariate: 
                   for(int j1=0; j1<n_j; j1++){
                     for(int j2=0; j2<n_j; j2++){
                       Sigma(j1,j2) = Sigma_g(j1,j2,g);
@@ -772,24 +865,16 @@ Type objective_function<Type>::operator() ()
                   } 
                   break;
                 default:
-                  error("Covariance Structure not implemented");
-              } // end fixStruct switch
+                  error("Method not implemented");
+              } //end switch
               break;
             case Tweedie_family:
-              switch(fixStruct){
-                case E_fixStruct:
-                case V_fixStruct:
-                case SFA_fixStruct:
-                  for(int j=0; j<n_j; j++){
-                    s1 = mu(i,j,g);
-                    s2 = var(j,g);
-                    s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
-                    Y(i,j) = rtweedie(s1, s2, s3);
-                  }
-                  break;
-                default:
-                  error("Covariance Structure not implemented");
-              } // end fixStruct switch
+              for(int j=0; j<n_j; j++){
+                s1 = mu(i,j,g);
+                s2 = var(j,g);
+                s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
+                Y(i,j) = rtweedie(s1, s2, s3);
+              }
               break;
             default:
               error("Family not implmented");
@@ -865,7 +950,7 @@ Type objective_function<Type>::operator() ()
 
   //// NLL =====================================================================================
 
-  Type nll = nll_hyperpriors + nll_priors + nll_data;
+  //Type nll = nll + nll + nll;
 
   //// Report ==================================================================================
 
@@ -874,9 +959,9 @@ Type objective_function<Type>::operator() ()
   REPORT( z_ig );
   REPORT( mu );
   REPORT( etad );
-  REPORT( nll );
-  REPORT( nll_priors);
-  REPORT( nll_data );
+  //REPORT( nll );
+  //REPORT( nll);
+  //REPORT( nll );
   REPORT( zhat );
   REPORT( Gamma_xg );
   REPORT( pi_pred );

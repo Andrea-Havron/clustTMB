@@ -30,10 +30,11 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
   n.g <- dim.list$n.g
   n.f <- dim.list$n.f
   n.v <- dim.list$n.v
+  n.r <- dim.list$n.r
 
   if(n.j == 1) hc.options[1] <- 'E'
 
-  # #Apply any data transformations
+  ## Apply any data transformations
   y <- Data$Y
   if(!is.na(data.trans)){
     if(data.trans == "log+1"){
@@ -53,6 +54,23 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
       }
     }
   }
+ 
+  #set default init.methods based on dim(y)
+  if(is.null(init.method)){
+    if(n.j == 1){
+      Class <- mc.qclass(y, as.numeric(n.g))
+      pi.init <- as.vector(table(Class)/nrow(Dat$Y))
+      Class <- matrix(0, n.i, n.g)
+      for(i in 1:n.i){
+        Class[i,classify[i]] <- 1
+      }
+    }
+    if(n.j >1){
+      if(Data$family == 0){
+        init.method == 'hc'
+      }
+    }
+  }
 
   #Apply classification method
   if(init.method =="random"){
@@ -63,7 +81,7 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
   if(init.method == "hc"){
     #Class <- unmap(hclass(hc(y),n.g))
     Class <- unmap(hclass(hc(y, modelName = hc.options[1], use = hc.options[2]),n.g))
-    pi.init <-  rep(1/n.g,n.g)#apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+    pi.init <-  apply(Class,2,function(x) sum(x)/nrow(Data$Y))
     classify = apply(Class,1,function(x) which(x==1))
 
   }
@@ -137,7 +155,6 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
     Hg_input = matrix(0,2,(n.g-1)),
     Hd_input = array(0, dim = c(2,n.j,n.g)), #fix in cpp - should be n.f, not n.j
     ln_kappag = rep(0, (n.g-1)),
-    ln_taug = rep(0,(n.g-1)),
     ln_kappad = matrix(0,n.j,n.g), #fix in cpp - should be n.f, not n.j
     ln_taud = matrix(0,n.j,n.g), #fix in cpp - should be n.f, not n.j
     logit_rhog = rep(0,(n.g-1)),
@@ -155,7 +172,20 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
   )
   if(sum(Data$reStruct[1,])==0){#no random effects in gating, turn on beta, o.w. beta in gating is mapped out
     ParList$betag <- matrix(log(pi.init[1:n.g-1]/(1 - sum(pi.init[1:n.g-1]))), nrow = 1)
+  } 
+  #Set initial values for kappa and tau if n.r provided
+  if(Data$reStruct[1,1] > 2){
+    if(is.null(dim.list$n.r)){
+      ParList$ln_kappag = rep(log(sqrt(8)/(n.r/2)), (n.g-1))
+    }
   }
+  if(Data$reStruct[2,1] > 2){
+    if(is.null(dim.list$n.r)){
+      ParList$ln_kappad = matrix(log(sqrt(8)/(n.r/2)), n.j,n.g)
+      ParList$ln_taud = matrix( 1/(2*sqrt(pi)*sqrt(8)/(n.r/2)) ,n.j,n.g)
+    }
+  }
+ 
 
   #Update initial values based on classification
   for(g in 1:n.g){
@@ -243,3 +273,35 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
 
 }
 
+#' mc.qclass: qclass function from mclust. Defaults used to initate 'E' or 'V' models
+#'
+#' @param x A numeric vector of observations for classification
+#' @param k Integer specifying the number of mixtures
+#'
+#' @return vclassification vector
+#'
+#' @examples
+#
+mc.qclass <- function (x, k) 
+{
+  x <- as.vector(x)
+  eps <- sd(x) * sqrt(.Machine$double.eps)
+  q <- NA
+  n <- k
+  while (length(q) < (k + 1)) {
+    n <- n + 1
+    q <- unique(quantile(x, seq(from = 0, to = 1, length = n)))
+  }
+  if (length(q) > (k + 1)) {
+    dq <- diff(q)
+    nr <- length(q) - k - 1
+    q <- q[-order(dq)[1:nr]]
+  }
+  q[1] <- min(x) - eps
+  q[length(q)] <- max(x) + eps
+  cl <- rep(0, length(x))
+  for (i in 1:k) {
+    cl[x >= q[i] & x < q[i + 1]] <- i
+  }
+  return(cl)
+}

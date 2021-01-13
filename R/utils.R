@@ -1,12 +1,13 @@
 #' @importFrom TMB openmp MakeADFun sdreport
 #' @param obj.args list of arguments for TMB MakeADFun() function
 #' @return fitted objective function, nlminb output, reported values from model
-fit.tmb <- function(obj.args){
+fit.tmb <- function(obj.args, opt.args = list(control = list(iter = 800, eval = 800),
+                                              hessian = NULL, scale = 1,
+                                              lower = -Inf, upper = Inf )){
   obj <- do.call(MakeADFun, obj.args)
-  opt <- with(obj, do.call(nlminb,  c(list(par, fn, gr, control = list(iter = 800, eval = 800))) ))
+  opt <- with(obj, do.call(nlminb,  c(list(par, fn, gr), opt.args) ))
   report <- obj$report(obj$env$last.par.best)
   fit.results <- list(obj = obj, opt = opt, report = report)
-  ##! add sdreport here or in a separate function?
   return(fit.results)
 }
 
@@ -18,7 +19,7 @@ mkFac <- function(dims, f = NA){
   return(ans)
 }
 
-mkMap <- function(covstruct, Family, fixStruct, dim.list, map.ops = NULL){
+mkMap <- function(reStruct, Family, fixStruct, dim.list, map.ops = NULL){
   #list2env(dim.list, environment(mkMap))
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
@@ -32,27 +33,27 @@ mkMap <- function(covstruct, Family, fixStruct, dim.list, map.ops = NULL){
     nl <- (n.j^2-n.j)/2
   }
   Map <- list()
-  if(sum(covstruct[1,]>0))  Map$betag = mkFac(c(1,n.g-1)) #map out betag if random effects terms
-  if(Family != "Tweedie") Map$thetaf <- mkFac(c(n.j,n.g))
+  if(sum(reStruct[1,]>0))  Map$betag = mkFac(c(1,n.g-1)) #map out betag if random effects terms
+  if(Family != 700) Map$thetaf <- mkFac(c(n.j,n.g))
   if( fixStruct == 20 ) Map$ld <- mkFac(c(nl, n.g))
-  if(covstruct[1,1] == 0){
+  if(reStruct[1,1] == 0){
     Map$Hg_input <- mkFac(c(2,n.g-1))
     Map$ln_kappag <- mkFac(n.g-1)
     Map$ln_taug <- mkFac(n.g-1)
     Map$Gamma_vg <- mkFac(c(n.v,n.g-1))
   }
-  if(covstruct[1,1] > 0){
+  if(reStruct[1,1] > 0){
     Map$Hg_input = mkFac(c(2,n.g-1))
     Map$ln_kappag <- mkFac(n.g-1, f=1)
     Map$ln_taug <- mkFac(n.g-1, f=1)
   }
-  if(covstruct[2,1] == 0){
+  if(reStruct[2,1] == 0){
     Map$Hd_input = mkFac(c(2,n.j,n.g))
     Map$ln_kappad <- mkFac(c(n.j,n.g))
     Map$ln_taud <- mkFac(c(n.j,n.g))
     Map$Omega_vfg <- mkFac(c(n.v, n.j, n.g))
   }
-  if(covstruct[2,1] > 0){
+  if(reStruct[2,1] > 0){
     Map$Hd_input =  mkFac(c(2,n.j,n.g))
     Map$ln_kappad <- mkFac(c(n.j,n.g), f=1)
     Map$ln_taud <- mkFac(c(n.j,n.g), f=1)
@@ -60,26 +61,28 @@ mkMap <- function(covstruct, Family, fixStruct, dim.list, map.ops = NULL){
   if(fixStruct == 36){
     Map$ln_taud <- mkFac(c(n.j,n.g))
   }
-  if(covstruct[1,2] == 0){
+  if(reStruct[1,2] == 0){
     Map$logit_rhog = mkFac(c(n.g-1))
     Map$ln_sigmaup = mkFac(c(n.g-1))
     Map$upsilon_tg = mkFac(c(n.t,n.g-1))
   }
-  if(covstruct[2,2] == 0){
+  if(reStruct[2,2] == 0){
     Map$logit_rhod = mkFac(c(n.j,n.g))
     Map$ln_sigmaep = mkFac(c(n.j,n.g))
     Map$epsilon_tjg = mkFac(c(n.t,n.j,n.g))
   }
-  if(covstruct[1,3] == 0){
+  if(reStruct[1,3] == 0){
     Map$ln_sigmau = mkFac(c(n.g-1))
     Map$u_ig = mkFac(c(n.i,n.g-1))
   }
-  if(covstruct[2,3] == 0){
+  if(reStruct[2,3] == 0){
     Map$ln_sigmav = mkFac(c(n.j,n.g))
     Map$v_ifg = mkFac(c(n.i,n.j,n.g))
   }
   return(Map)
 }
+
+
 
 #' @importFrom stats make.link
 Tweedie <- function(f = 'Tweedie', link = "log"){
@@ -158,7 +161,6 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     A <- inla.spde.make.A(mesh, loc)
     if(is.null(grid.df)){
       grid.loc <- as.matrix(expand.grid(x = seq(0,1,.1), y = seq(0,1,.1)))
-      A.proj <- inla.spde.make.A(mesh, grid.loc)
       Xd_proj = matrix(1, nrow(grid.loc), 1)
       Xg_proj = matrix(1, nrow(grid.loc), 1)
     } else {
@@ -172,6 +174,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
         Xg_proj <- as.matrix(grid.data[gating.pred.names])
       }
     }
+    A.proj <- inla.spde.make.A(mesh, grid.loc)
   }
   if(is.null(loc)&!is.null(mesh)){
     stop ("Need to provide locations for observations in spatial list")

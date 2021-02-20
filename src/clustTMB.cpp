@@ -6,21 +6,6 @@ using namespace tmbutils;
 using namespace R_inla;
 
 
-/* Simulate from tweedie distribution *///from glmmTMB 
-template<class Type>
-Type rtweedie(Type mu_, Type phi_, Type p_){
-  double mu = asDouble(mu_);
-  double Phi = asDouble(phi_);
-  double p = asDouble(p_);
-  // Copied from R function tweedie::rtweedie
-  double lambda = pow(mu, 2. - p) / (Phi * (2. - p));
-  double alpha  = (2. - p) / (1. - p);
-  double gam = Phi * (p - 1.) * pow(mu, p - 1.);
-  int N = (int) rpois(lambda);
-  double ans = rgamma(N, -alpha /* shape */, gam /* scale */).sum();
-  return ans;
-}
-
 template<class Type>
 bool isNA(Type x){
   return R_IsNA(asDouble(x));
@@ -39,7 +24,7 @@ Type lddirichlet(vector<Type> q, vector<Type> alpha){
   return ans;
 }
 
-//adapted from STAN - need to test 
+//adapted from STAN - need to test
 template<class Type>
 vector<Type> rdirichlet(Type alpha){
   vector<Type> ans(alpha.size());
@@ -91,7 +76,7 @@ vector<Type> norm_exp(vector<Type> x){
   return(ans);
 }
 
-/* Define distributional families *///from glmmTMB 
+/* Define distributional families *///from glmmTMB
 enum valid_family{
   gaussian_family = 0,
   binomial_family = 100,
@@ -102,42 +87,29 @@ enum valid_family{
   Tweedie_family = 700
 };
 
-enum valid_method{
-  univariate = 10,
-  multivariate = 11
-};
 
 enum valid_reStruct {
   // st covariance
   na = 0,
   norm = 1,
   ar1 = 2,
-  gmrf = 3, 
+  gmrf = 3,
   gmrf_speedup = 4
 };
 
 
 enum valid_fixStruct{
-  E   = 20,
-  V   = 21,
-  EII = 22,
-  VII = 23,
-  EEI = 24,
-  VEI = 25,
-  EVI = 26,
-  VVI = 27,
-  EEE = 28,
-  VEE = 29,
-  EVE = 30,
-  EEV = 31,
-  VVE = 32,
-  EVV = 33,
-  VEV = 34,
-  VVV = 35,
-  SFA = 36
+  Univariate = 10,
+  Diag = 20,
+  General = 30
 };
 
-/* Define link functions *///from glmmTMB 
+enum valid_rrStruct{
+  full = 0,
+  reduce = 1
+};
+
+/* Define link functions *///from glmmTMB
 enum  valid_link{
   log_link = 0,
   logit_link = 1,
@@ -149,7 +121,7 @@ enum  valid_link{
   yoejin_boxcox = 7
 };
 
-enum valid_covmod{
+enum valid_ll{
   postMarginal = 0,
   marginal = 1,
   conditional = 2 //used in simulations
@@ -222,7 +194,7 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
    return ans;
 }
 
-//inverse links *///from glmmTMB 
+//inverse links *///from glmmTMB
 template<class Type>
 Type inverse_linkfun(Type eta, int link){
   Type ans;
@@ -242,7 +214,7 @@ Type inverse_linkfun(Type eta, int link){
     default:
       error("Link not implemented");
   } // end switch
-  return ans; 
+  return ans;
 }
 
 template<class Type>
@@ -260,39 +232,18 @@ vector<Type> inverse_mlogit(vector<Type> eta){
 
 
 template<class Type>
-matrix<Type> cov_fun(vector<Type> l, int nj, int nf, int fixStruct ){
+matrix<Type> corrmat_fun(vector<Type> l, int nj ){
+  matrix<Type> ans(nj,nj);
   int cnt = 0;
-  matrix<Type> ans(nj,nf);
-  vector<Type>l_input = invlogit(l)*Type(2)-Type(1);
-  switch(fixStruct ){
-    case VVV:
-      //correlation matrix
-      for(int j=0; j<nj; j++){
-        ans(j,j) = Type(1.0);
-      }
-      for(int j1=0; j1<(nj-1); j1++){
-        for(int j2=(j1+1); j2<nj; j2++){
-          ans(j1,j2) = l_input(cnt);
-          ans(j2,j1) = l_input(cnt);
-          cnt += 1;
-        }
-      }
-      break;
-    case SFA:
-      for(int j=0; j<nj; j++){
-        for(int f=0; f<nf; f++){
-          if(j>=f){
-            ans(j,f) = l[cnt];
-            cnt ++;
-          } else {
-            ans(j,f) = 0.0;
-          }
-        }
-      }
-      break;
-    default:
-      error("cov_fun method not implemented");
-  } //end switch
+  vector<Type> l_input = invlogit(l)*Type(2)-Type(1);
+  ans.setIdentity();
+  for(int j1=0; j1<(nj-1); j1++){
+    for(int j2=(j1+1); j2<nj; j2++){
+      ans(j1,j2) = l_input(cnt);
+      ans(j2,j1) = l_input(cnt);
+      cnt += 1;
+    }
+  }
   return ans;
 }
 
@@ -316,15 +267,62 @@ vector<Type> rmultinom(vector<Type> prob){
   return ans;
 }
 
+template<class Type>
+Type prec_fun(Type kappa, Type tau, int rrStruct){
+  Type ans = 0;
+  switch( rrStruct ){
+    case reduce:
+      ans = 1 / (2 * M_PI * kappa);
+      break;
+    case full:
+      ans = tau;
+      break;
+  }
+  return ans;
+}
+
+template<class Type>
+array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
+  vector<int> d = x.dim;
+  int ni = d(0);
+  int nf = d(1);
+  int ng = d(2);
+  array<Type> ans(ni,nj,ng);
+  int cnt = 0;
+  switch(rrStruct){
+    case reduce:
+      for(int g=0; g<ng; g++){
+        matrix<Type> L(nj, nf);
+        for(int f=0; f<nf; f++){
+        for(int j=0; j<nj; j++){
+          if(j>=f){
+            ans(j,f) = l(cnt);
+            cnt ++;
+          } else {
+            ans(j,f) = 0.0;
+          }
+        }
+        } //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read i as list?
+        for(int i=0; i<ni; i++){
+          for(int j=0; j<nj; j++){
+            for(int f=0; f<nf; f++){
+               ans(i,j,g) += x(i,f,g) * L(j,f);
+            }
+          }
+        }
+      }
+      break;
+    case full:
+      ans = x;
+      break;
+  }
+  return ans;
+}
+
 
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
-  // i: I rows (no. tows)
-  // j: J columns (no. spp)
-  // f: F data reduction on columns
-  // g: G data reduction on rows
-  // v: V mesh vertices
   // Data
   DATA_ARRAY( Y ); // Data matrix: i obs x j species
   DATA_IVECTOR( t ); //temporal index
@@ -335,54 +333,35 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX( A_proj ); // Map vertex v to projection grid n
   DATA_MATRIX( Xd_proj ); //Distribution covariates used for prediction
   DATA_MATRIX( Xg_proj ); //Cluster covariates used for prediction
-  
+
   DATA_STRUCT( spde, spde_aniso_t );
   DATA_INTEGER( family );
   DATA_INTEGER( link );
-  DATA_INTEGER( method );
-  DATA_INTEGER( covmod );
+  DATA_INTEGER( ll );
   DATA_INTEGER( fixStruct  );
+  DATA_IVECTOR( rrStruct ); //1: random, 2:spatial
   DATA_IMATRIX( reStruct  ); //row 1: gating; row 2: expert; col 1: spatial; col 2: temporal; col3: overdispersion
- // DATA_INTEGER( n_f ); // Number of data reduction on columns
-  //control_vec: if value is 0: off, if 1: on
-  
-  //col_control_vec: controls data reduction model on the columns; positions:
-  //0: covariates in data mean
-  //1: isotropic spatial effect in data mean 
-  //2: anisotropic spatial effect in data mean 
-  //3: data reduction on spatial effect - if both 1 and 2 are 0, 3 must also be 0
-  //4: temporal effect in data mean
-  //5: data reduction on beta 
-  //6: random error in data mean
-  //7: data reduction on random error - if 6 is 0, 7 must also be 0
-  // DATA_IVECTOR( col_control_vec ); 
-
-  //row_control_vec: control clustering model on the rows; positions:
-  //0: covariates in pi
-  //1: isotropic spatial effect in pi
-  //2: anisotropic spatial effect in pi
-  //2: temporal effect in pi
-  //3: random error in pi
-  //DATA_IVECTOR( row_control_vec ); 
 
   //DATA_ARRAY_INDICATOR( keep, Y );
 
   vector<int> y_dim = Y.dim; //dims: i*t,j (i: no. obs; t: no. time events; j: no. spp)
 
   // Parameters
-  PARAMETER_MATRIX( betag ); // Group membership covariate coefficients; dims: l,(g-1)
+  PARAMETER_MATRIX( betag ); // Group membership covariate coefficients; dims: kg,(g-1)
   PARAMETER_ARRAY( betad ); // Distribution covariate coefficients; dims: k,j,g
   PARAMETER_ARRAY( betapz ); //Zero-inflation covariate coefficients; dims: m,j,g
   PARAMETER_MATRIX( theta );  //variance parameters; dims: j,g
   PARAMETER_MATRIX( thetaf ); // If NOT Tweedie, these are mapped to 0, o.w. Tweedie power parameter
-  PARAMETER_MATRIX( ld ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
+  PARAMETER_MATRIX( logit_corr_fix );
+  PARAMETER_MATRIX( ld_rand ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
+  PARAMETER_MATRIX( ld_sp ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
   PARAMETER_MATRIX( Hg_input ); //dims: 2, n_g-1
   PARAMETER_ARRAY( Hd_input ); //dims: 2, n_j, n_g
   PARAMETER_VECTOR( ln_kappag );   //dims: n_g-1
   PARAMETER_MATRIX( ln_kappad );   //dims: n_j, n_g
   PARAMETER_MATRIX( ln_taud );     //dims: n_j, n_g
   PARAMETER_VECTOR( logit_rhog );    //dims: n_g-1
-  PARAMETER_MATRIX( logit_rhod ); //dims: n_j, n_g  
+  PARAMETER_MATRIX( logit_rhod ); //dims: n_j, n_g
   PARAMETER_VECTOR( ln_sigmaup );   //dims: ng-1
   PARAMETER_MATRIX( ln_sigmaep ); //dims: n_j, n_g
   PARAMETER_VECTOR( ln_sigmau );    //dims: n_g-1
@@ -390,21 +369,19 @@ Type objective_function<Type>::operator() ()
   PARAMETER_ARRAY( upsilon_tg ); //dims: n_t, n_g-1
   PARAMETER_ARRAY( epsilon_tjg ); //dims: n_t, n_j, n_g
   PARAMETER_ARRAY( u_ig ); //dims: n_i, n_g-1
-  PARAMETER_ARRAY( v_ifg ); //dims: n_i, (Multivariate:n_j, SFA:n_f), n_g
+  PARAMETER_ARRAY( v_ifg ); //dims: n_i, (Multivariate:n_j, RR:n_f), n_g
   PARAMETER_ARRAY( Gamma_vg ); //dims: n_v, n_g-1
-  PARAMETER_ARRAY( Omega_vfg ); //dims: n_v, (Multivariate:n_j, SFA:n_f), n_g
+  PARAMETER_ARRAY( Omega_vfg ); //dims: n_v, (Multivariate:n_j, RR:n_f), n_g
 
 
   //Type nll = 0;
-  //Type nll = 0;
-  //Type nll = 0;
+  Type nll_re = 0;
+  Type nll_data = 0;
  // parallel_accumulator<Type> nll(this);
-  Type nll = 0;
 
-  vector<int> omega_dim = Omega_vfg.dim; 
+  vector<int> omega_dim = Omega_vfg.dim;
+  vector<int> v_dim = v_ifg.dim;
 
-  
-  int n_f = omega_dim(1);  
   int n_g = omega_dim(2);
   int n_i = y_dim(0);
   int n_j = y_dim(1);
@@ -415,6 +392,7 @@ Type objective_function<Type>::operator() ()
 
   bool pz_flag = (betapz.size() > 0);
 
+  
   vector<Type> kappag = exp(ln_kappag);
   vector<Type> taug = 1 / (sqrt(4*M_PI)*kappag);
   vector<Type> rhog = invlogit(logit_rhog);
@@ -450,12 +428,12 @@ Type objective_function<Type>::operator() ()
   //    nll = 0;
   //}
 
-  
 
- 
+
+
   //// Random Effects likelihood ===================================================
-  
-  ////// Cluster probability ================================================== 
+
+  ////// Cluster probability ==================================================
   //////// Gating
   vector<Type> tParmg(2);
   tParmg.setZero();
@@ -464,7 +442,7 @@ Type objective_function<Type>::operator() ()
   vector<Type> ovParmg(1);
   ovParmg.setZero();
 
-  
+
   for(int g=0; g<(n_g-1); g++){
     spParmg(0) = kappag(g);
     spParmg(1) = taug(g);
@@ -474,14 +452,14 @@ Type objective_function<Type>::operator() ()
     tParmg(1) = sigmaup(g);
     ovParmg(0) = sigmau(g);
     //Spatial effect
-    
-    nll += spNll(Gamma_vg.col(g), spParmg, spde, reStruct(0,0), this->do_simulate);
-      
+
+    nll_re += spNll(Gamma_vg.col(g), spParmg, spde, reStruct(0,0), this->do_simulate);
+
     //Temporal effect
-    nll += reNll(upsilon_tg.col(g), tParmg, reStruct(0,1), this->do_simulate);
+    nll_re += reNll(upsilon_tg.col(g), tParmg, reStruct(0,1), this->do_simulate);
 
     //Overdispersion
-    nll += reNll(u_ig.col(g), ovParmg, reStruct(0,2), this->do_simulate);
+    nll_re += reNll(u_ig.col(g), ovParmg, reStruct(0,2), this->do_simulate);
   }
 
   //////// Expert
@@ -493,30 +471,24 @@ Type objective_function<Type>::operator() ()
   ovParmd.setZero();
 
   for(int g=0; g<n_g; g++){
-    for(int f=0; f<n_f; f++){
+    for(int f=0; f<omega_dim(1); f++){
       spParmd(0) = kappad(f,g);
-      switch( fixStruct ){
-        case SFA:
-          spParmd(1) = 1 / (2 * M_PI * kappad(f,g));
-          break;
-        default:
-          spParmd(1) = taud(f,g);
-      }
+      spParmd(1) = prec_fun(kappad(f,g), taud(f,g), rrStruct(1));
       spParmd(2) = Hd_input(0,f,g);
       spParmd(3) = Hd_input(1,f,g);
       //Spatial effect
-      nll += spNll((Omega_vfg.col(g)).col(f), spParmd, spde, reStruct(1,0), this->do_simulate);
+      nll_re += spNll((Omega_vfg.col(g)).col(f), spParmd, spde, reStruct(1,0), this->do_simulate);
     }
     for(int j=0; j<n_j; j++){
       tParmd(0) = rhod(j,g);
       tParmd(1) = sigmaep(j,g);
       ovParmd(0) = sigmav(j,g);
       //Temporal effect
-      nll += reNll((epsilon_tjg.col(g)).col(j), tParmd, reStruct(1,1), this->do_simulate);
+      nll_re += reNll((epsilon_tjg.col(g)).col(j), tParmd, reStruct(1,1), this->do_simulate);
 
       //Overdispersion
-      nll += reNll((v_ifg.col(g)).col(j), ovParmd, reStruct(1,2), this->do_simulate);
-    } 
+      nll_re += reNll((v_ifg.col(g)).col(j), ovParmd, reStruct(1,2), this->do_simulate);
+    }
   }
   matrix<Type> gamma_vg(n_v, (n_g-1));
   for(int g=0; g<(n_g-1); g++){
@@ -525,41 +497,25 @@ Type objective_function<Type>::operator() ()
 
   matrix<Type> Gamma_ig = A * gamma_vg;
 
-
+  //Apply any rank reduction
   array<Type> Omega_vjg(n_v, n_j, n_g);
   array<Type> Omega_ijg (n_i, n_j, n_g);
   Omega_ijg.setZero();
-  matrix<Type> tmp_omega(n_v, n_j);
-  tmp_omega.setZero();
-  switch(fixStruct ){
-    case SFA:
-      for(int g=0; g<n_g; g++){
-      	tmp_omega.setZero();
-        matrix<Type> L = cov_fun(vector<Type>(ld.col(g)), n_j, n_f, fixStruct ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read i as list?
+  Omega_vjg = rr_fun(Omega_vfg, ld_sp, n_j, rrStruct(1));
+
+  for(int g=0; g<n_g; g++){
+    for(int i=0; i<n_i; i++){
+      for(int j=0; j<n_j; j++){
         for(int v=0; v<n_v; v++){
-          for(int j=0; j<n_j; j++){
-            for(int f=0; f<n_f; f++){
-               Omega_vjg(v,j,g) += Omega_vfg(v,f,g) * L(j,f);
-            }
-            tmp_omega(v,j) = Omega_vjg(v,j,g);
-          }
-        }
-        Omega_ijg.col(g) = A * tmp_omega;
-      }
-      //  Omega_ijg.col(g) = A * (Omega_vfg.col(g) * L.transpose())   //-check to make sure indexing array correctly
-      break;
-    default:
-      Omega_vjg = Omega_vfg;
-      for(int g=0; g<n_g; g++){
-        for(int i=0; i<n_i; i++){
-          for(int j=0; j<n_j; j++){
-            for(int v=0; v<n_v; v++){
-              Omega_ijg(i,j,g) += A.coeffRef(i,v) * Omega_vjg(v,j,g);  //-check to make sure indexing array correctly
-            }
-          }
+          Omega_ijg(i,j,g) += A.coeffRef(i,v) * Omega_vjg(v,j,g);  //-check to make sure indexing array correctly
         }
       }
+    }
   }
+
+  array<Type> v_ijg(n_i, n_j, n_g);
+  v_ijg = rr_fun(v_ifg, ld_rand, n_j, rrStruct(0));
+
 
 
   ////Linear predictor and Links ========================================
@@ -568,26 +524,26 @@ Type objective_function<Type>::operator() ()
   matrix<Type> etag = Xg*betag;
   for(int g=0; g<(n_g-1); g++){
     for(int i=0; i<n_i; i++){
-      etag(i,g) += Gamma_ig(i,g) + upsilon_tg(t(i),g) + u_ig(i,g); 
+      etag(i,g) += Gamma_ig(i,g) + upsilon_tg(t(i),g) + u_ig(i,g);
     }
   }
   matrix<Type> pi(n_i, n_g);
   for(int i=0; i<n_i; i++){
     pi.row(i) = inverse_mlogit(vector<Type>(etag.row(i)));
   }
- 
+
   //Observation linear predictor and link
   array<Type> etad(n_i, n_j, n_g);
   array<Type> etapz(n_i, n_j, n_g);
   array<Type> mu(n_i, n_j, n_g);
   array<Type> pz(n_i, n_j, n_g);
-  for(int g=0; g<n_g; g++){ 
+  for(int g=0; g<n_g; g++){
     for(int i=0; i<n_i; i++){
       for(int j=0; j<n_j; j++){
         for(int k=0; k<n_k; k++){
           etad(i,j,g) += Xd(i,k) * betad(k,j,g);
         }
-        etad(i,j,g) += Omega_ijg(i,j,g) + epsilon_tjg(t(i),j,g) + v_ifg(i,j,g);
+        etad(i,j,g) += Omega_ijg(i,j,g) + epsilon_tjg(t(i),j,g) + v_ijg(i,j,g);
         if(pz_flag){
           for(int m=0; m<n_m; m++){
             etapz(i,j,g) += Xpz(i,m) * betapz(m,j,g);
@@ -614,32 +570,33 @@ Type objective_function<Type>::operator() ()
 
   matrix<Type> tmp_ll(n_i, n_g); //dim: i,g
   tmp_ll.setZero();
-  array<Type>Sigma_g(n_j,n_j,n_g);
-  Sigma_g.setZero();
+  array<Type>Corr_mat_g(n_j,n_j,n_g);
+  Corr_mat_g.setZero();
   vector<Type> residual(n_j);
   residual.setZero();
     //  if(!isNA(Y(i,j))){
   switch(family){
     case gaussian_family:
-      switch(method){
-        case univariate:
+      switch(fixStruct){
+        case Univariate:
+        case Diag:
           for(int i=0; i<n_i; i++){
             for(int g=0; g<n_g; g++){
               for(int j=0; j<n_j; j++){
                 tmp_ll(i,g) += dnorm(Y(i,j), mu(i,j,g), sqrt(var(j,g)), true);
               }
             }
-          } 
+          }
           break;
-        case multivariate:
+        case General:
           for(int g=0; g<n_g; g++){
             vector<Type> sds(n_j);
-            matrix<Type> Sigma = cov_fun(vector<Type>(ld.col(g)), n_j, n_j, fixStruct );
-            Sigma_g.col(g) = Sigma; 
+            matrix<Type> Corr_mat = corrmat_fun(vector<Type>(logit_corr_fix.col(g)), n_j );
+            Corr_mat_g.col(g) = Corr_mat;
             for(int j=0; j<n_j; j++){
-              sds(j) = sqrt(var(j,g));  
-            }          
-            MVNORM_t<Type> neg_log_dmvnorm(Sigma);
+              sds(j) = sqrt(var(j,g));
+            }
+            MVNORM_t<Type> neg_log_dmvnorm(Corr_mat);
             for(int i=0; i<n_i; i++){
               for(int j=0; j<n_j; j++){
                residual(j) = Y(i,j) - mu(i,j,g);
@@ -649,36 +606,43 @@ Type objective_function<Type>::operator() ()
           }
           break;
         default:
-        error("Method not implemented");
+        error("Covariance structure not implemented");
       } //end method switch
       break;
     case Gamma_family:
-      for(int i=0; i<n_i; i++){
-        for(int g=0; g<n_g; g++){
-          for(int j=0; j<n_j;j++){
-            s1 = var(j,g);
-            s2 = mu(i,j,g) / var(j,g);
-            if(pz_flag){
-              //Type logit_pz = etapz(i,j,g) ;
-              //Type log_pz   = -logspace_add( Type(0) , -logit_pz );
-              //Type log_1mpz = -logspace_add( Type(0) ,  logit_pz );
-              if(Y(i,j) == Type(0)){
-                //tmp_ll(i,g) += logpz;
-                tmp_ll(i,g) += log(pz(i,j,g));
-              } else {
-                // Is this correct? - tmp_ll(i,g) += logspace_add( log_1mpz, dgamma(Y(i,j), s1, s2, true) );
-                tmp_ll(i,g) += log(Type(1) - pz(i,j,g)) + dgamma(Y(i,j), s1, s2, true);
-              }
-            } else {
-              tmp_ll(i,g) += dgamma(Y(i,j), s1, s2, true);
-            }
-          }
-        }
-      }
-      break;
+      switch(fixStruct){
+        case Univariate:
+        case Diag:
+	      for(int i=0; i<n_i; i++){
+	        for(int g=0; g<n_g; g++){
+	          for(int j=0; j<n_j;j++){
+	            s1 = var(j,g);
+	            s2 = mu(i,j,g) / var(j,g);
+	            if(pz_flag){
+	              //Type logit_pz = etapz(i,j,g) ;
+	              //Type log_pz   = -logspace_add( Type(0) , -logit_pz );
+	              //Type log_1mpz = -logspace_add( Type(0) ,  logit_pz );
+	              if(Y(i,j) == Type(0)){
+	                //tmp_ll(i,g) += logpz;
+	                tmp_ll(i,g) += log(pz(i,j,g));
+	              } else {
+	                // Is this correct? - tmp_ll(i,g) += logspace_add( log_1mpz, dgamma(Y(i,j), s1, s2, true) );
+	                tmp_ll(i,g) += log(Type(1) - pz(i,j,g)) + dgamma(Y(i,j), s1, s2, true);
+	              }
+	            } else {
+	              tmp_ll(i,g) += dgamma(Y(i,j), s1, s2, true);
+	            }
+	          }
+	        }
+	      }
+	      break;
+	    default:
+	      	error("General covariance structure not implemented for Gamma");
+	      }
     case lognormal_family:
-      switch(method){
-        case univariate:
+      switch(fixStruct){
+        case Univariate:
+        case Diag:
           for(int i=0; i<n_i; i++){
             for(int g=0; g<n_g; g++){
               for(int j=0; j<n_j; j++){
@@ -701,28 +665,32 @@ Type objective_function<Type>::operator() ()
           }
           break;
         default:
-          error("Method not implemented");
+          error("General covariance structure not implemented yet for lognormal");
         } // end method switch
         break;
     case Tweedie_family:
-      for(int g=0; g<n_g; g++){
-        for(int j=0; j<n_j;j++){
-          s2 = var(j,g);
-          s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
-          for(int i=0; i<n_i; i++){
-            s1 = mu(i,j,g);
-            tmp_ll(i,g) += dtweedie(Y(i,j), s1, s2, s3, true);
-          }
-        }
-      }
-      break;
-    default:
-      error("Family not implemented");
+      switch(fixStruct){
+        case Univariate:
+        case Diag:
+	      for(int g=0; g<n_g; g++){
+	        for(int j=0; j<n_j;j++){
+	          s2 = var(j,g);
+	          s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
+	          for(int i=0; i<n_i; i++){
+	            s1 = mu(i,j,g);
+	            tmp_ll(i,g) += dtweedie(Y(i,j), s1, s2, s3, true);
+	          }
+	        }
+	      }
+	      break;
+	    default:
+	      error("General covariance structure not implemented for tweedie");
+	  }
     } // end switch
     //Add zero inflation -- from glmmTMB - is this correct for delta models?
 
 
-  ////Marginalize z by hand   ==================================================================  
+  ////Marginalize z by hand   ==================================================================
   matrix<Type> z_ig(n_i,n_g);
   z_ig.setZero();
   matrix<Type> zhat(n_i,n_g);
@@ -747,54 +715,54 @@ Type objective_function<Type>::operator() ()
   //  for(int g=0; g<n_g; g++){
   //    z_ig(i,g) = CppAD::CondExpEq(zhat(i,g), M, Type(1), Type(0));
   //  } //end g loop
-   
+
     for(int g=0; g<n_g; g++){
       ln_fy(i,g) = log(pi(i,g)) + tmp_ll(i,g);
-    } 
+    }
    // nll -= log_sum_exp(vector<Type>(ln_fy.row(i)));
     for(int g=0; g<n_g; g++){
       zhat(i,g) = exp( ln_fy(i,g) - log_sum_exp(vector<Type>(ln_fy.row(i))) );
       newpi(g) += zhat(i,g);
-    }   
-    Type zmax = max(vector<Type>(zhat.row(i)));  
+    }
+    Type zmax = max(vector<Type>(zhat.row(i)));
     for(int g=0; g<n_g; g++){
       z_ig(i,g) = CppAD::CondExpEq(zhat(i,g), zmax, Type(1), Type(0));
     }
-      
+
     //for(int g=0; g<n_g; g++){
     //  ln_fy(i,g) = z_ig(i,g) * ln_fy(i,g);
     //}
-    
+
   }
   newpi = newpi/n_i;
-  
+
   switch(ll){
     case postMarginal: //0
       for(int i=0; i<n_i; i++){
         for(int g=0; g<n_g; g++){
           ln_fy(i,g) = log(newpi(g)) + tmp_ll(i,g);
         }
-        nll -= log_sum_exp(vector<Type>(ln_fy.row(i)));
+        nll_data -= log_sum_exp(vector<Type>(ln_fy.row(i)));
        // rep2 = ln_fy;
        // REPORT(rep2);
       }
       break;
     case marginal: //1
       for(int i=0; i<n_i; i++){
-        nll -= log_sum_exp(vector<Type>(ln_fy.row(i)));
+        nll_data -= log_sum_exp(vector<Type>(ln_fy.row(i)));
       }
       break;
     case conditional: //5
       for(int i=0; i<n_i; i++){
         for(int g=0; g<n_g;g++){
-          nll -= z_ig(i,g) * ln_fy(i,g);
+          nll_data -= z_ig(i,g) * ln_fy(i,g);
         }
       }
       break;
     default:
       error("ll not specified");
-  } //end switch 
-   
+  } //end switch
+
 
 
   //Type test2 = nll;
@@ -805,77 +773,85 @@ Type objective_function<Type>::operator() ()
 
 
 
- 
+
 
   //// Cluster Likelihood =======================================================================
  // for(int i=0; i<n_i; i++){
  // 	for(int g=0; g<n_g; g++){
- //       nll -= z_ig(i,g) * (log(pi(i,g)) + tmp_ll(i,g)); 
+ //       nll -= z_ig(i,g) * (log(pi(i,g)) + tmp_ll(i,g));
  //   } // end g loop
  // } // end i loop
 
   SIMULATE{
     vector<Type> res_sim(n_j);
-    matrix<Type> Sigma(n_j,n_j);
+    matrix<Type> Corr_mat(n_j,n_j);
 
     for(int i=0; i<n_i; i++){
       for(int g=0; g<n_g; g++){
         if(pi(i,g) == max(vector<Type>(pi.row(i)))){
           switch(family){
             case gaussian_family:
-              switch(method){
-                case univariate:
+              switch(fixStruct){
+                case Univariate:
+                case Diag:
                   for(int j=0; j<n_j; j++){
                     Y(i,j) = rnorm(mu(i,j,g), sqrt(var(j,g)));
                   }
                   break;
-                case multivariate:
+                case General:
                   for(int j1=0; j1<n_j; j1++){
                     for(int j2=0; j2<n_j; j2++){
-                      Sigma(j1,j2) = Sigma_g(j1,j2,g);
+                      Corr_mat(j1,j2) = Corr_mat_g(j1,j2,g);
                     }
                   }
-                  MVNORM(Sigma).simulate(res_sim);
+                  MVNORM(Corr_mat).simulate(res_sim);
                   for(int j=0; j<n_j; j++){
                     res_sim(j) = res_sim(j)*sqrt(var(j,g));
                     Y(i,j) = res_sim(j) + mu(i,j,g);
-                  } 
+                  }
                   break;
                 default:
                   error("Method not implemented");
               } //end switch
               break;
              case lognormal_family:
-              switch(method){
-                case univariate:
+              switch(fixStruct){
+                case Univariate:
+                case Diag:
                   for(int j=0; j<n_j; j++){
                     Y(i,j) = exp(rnorm(mu(i,j,g), sqrt(var(j,g))) );
                   }
                   break;
-                case multivariate: 
+                case General:
                   for(int j1=0; j1<n_j; j1++){
                     for(int j2=0; j2<n_j; j2++){
-                      Sigma(j1,j2) = Sigma_g(j1,j2,g);
+                      Corr_mat(j1,j2) = Corr_mat_g(j1,j2,g);
                     }
                   }
-                  MVNORM(Sigma).simulate(res_sim);
+                  MVNORM(Corr_mat).simulate(res_sim);
                   for(int j=0; j<n_j; j++){
                     res_sim(j) = res_sim(j)*sqrt(var(j,g));
                     Y(i,j) = exp ( res_sim(j) + mu(i,j,g) );
-                  } 
+                  }
                   break;
                 default:
                   error("Method not implemented");
               } //end switch
               break;
             case Tweedie_family:
-              for(int j=0; j<n_j; j++){
-                s1 = mu(i,j,g);
-                s2 = var(j,g);
-                s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
-                Y(i,j) = rtweedie(s1, s2, s3);
-              }
-              break;
+              switch(fixStruct){
+                case Univariate:
+                case Diag:
+	              for(int j=0; j<n_j; j++){
+	                s1 = mu(i,j,g);
+	                s2 = var(j,g);
+	                s3 = invlogit(thetaf(j,g)) + Type(1); //p, 1<p<2
+	                Y(i,j) = rtweedie(s1, s2, s3);
+	              }
+	              break;
+                default:
+                  error("Method not implemented");
+              } //end switch
             default:
               error("Family not implmented");
           } // end switch
@@ -905,7 +881,7 @@ Type objective_function<Type>::operator() ()
   //// Prediction ===========================================================================
   matrix<Type> Gamma_xg = A_proj * gamma_vg;
 
-  
+
   matrix<Type> etapi_pred = Xg_proj * betag;
   matrix<Type> pi_pred(n_x,n_g);
   vector<int> Class_pred(n_x);
@@ -916,7 +892,7 @@ Type objective_function<Type>::operator() ()
     pi_pred.row(n) = inverse_mlogit(vector<Type>(etapi_pred.row(n)));
     for(int g=0; g<n_g; g++){
       if(pi_pred(n,g) == max(vector<Type>(pi_pred.row(n)))) Class_pred(n) = g;
-    } 
+    }
   }
 
   //density prediction only implemented for spatial
@@ -932,25 +908,25 @@ Type objective_function<Type>::operator() ()
     Omega_xjg.col(g) = A_proj * tmp_omega2;
   }
 
-  matrix<Type> etad_pred(n_x, n_j); 
+  matrix<Type> etad_pred(n_x, n_j);
   etad_pred.setZero();
   matrix<Type> mu_pred(n_x, n_j);
   for(int n=0; n<n_x; n++){
     for(int j=0; j<n_j; j++){
       for(int k=0; k<n_k; k++){
-        etad_pred(n,j) += Xd_proj(n,k) * betad(k,j,Class_pred(n));      
+        etad_pred(n,j) += Xd_proj(n,k) * betad(k,j,Class_pred(n));
       }
       etad_pred(n,j) += Omega_xjg(n,j,Class_pred(n));
       mu_pred(n,j) = inverse_linkfun(etad_pred(n,j), link);
     }
   }
-   
+
 
 
 
   //// NLL =====================================================================================
 
-  //Type nll = nll + nll + nll;
+  Type nll = nll_re + nll_data;
 
   //// Report ==================================================================================
 
@@ -959,8 +935,8 @@ Type objective_function<Type>::operator() ()
   REPORT( z_ig );
   REPORT( mu );
   REPORT( etad );
-  //REPORT( nll );
-  //REPORT( nll);
+  REPORT( nll_re );
+  REPORT( nll_data );
   //REPORT( nll );
   REPORT( zhat );
   REPORT( Gamma_xg );
@@ -971,7 +947,7 @@ Type objective_function<Type>::operator() ()
   REPORT( tmp_ll );
   REPORT( Gamma_ig );
   REPORT( Omega_ijg );
-  REPORT( Sigma_g );
+  REPORT( Corr_mat_g );
   REPORT( residual );
   REPORT( Omega_vjg );
   REPORT( etad_pred );

@@ -1,13 +1,14 @@
-#' genInit: generates starting values for cluster model
+#' genInit: generates initial values for cluster model
 #'
-#' @param init.method method as string used to generate initial values. Options include: "random", "hc"
-#' @parma Data list containing TMB data objects
-#' @param dim integer
-#' @param data.trans string identifying any data transformation
-#' @param hc.options hierarchical clustering settings. Position[1] is model name -see mclust.options("hcModelName"). Position[2] is data transformation -see mclust.options("hcUse").
-#' @param mix.method string stating initialization method
-#' @param r.tol relative convergence tolerance
-#' @param true.class vector of true classification integers for testing models
+#' @param init.method Method as string used to generate initial values. Options include: "random", "hc"
+#' @param Data List containing TMB data objects
+#' @param family Distribution family
+#' @param dim Integer
+#' @param data.trans String identifying any data transformation
+#' @param hc.options Hierarchical clustering settings. Position[1] is model name -see mclust.options("hcModelName"). Position[2] is data transformation -see mclust.options("hcUse").
+#' @param mix.method String stating initialization method
+#' @param r.tol Relative convergence tolerance
+#' @param true.class Vector of true classification integers for testing models
 #'
 #' @importFrom stats cutree gaussian hclust runif rmultinom nlminb cor
 #' @importFrom mclust unmap hclass hc hcVVV hcE
@@ -17,20 +18,29 @@
 #' @importFrom clustMixType kproto
 #'
 #' @return list
-#' @export
+#' @keywords internal
+#' @noRd
 #'
 #' @examples
-genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #original default was VARS, changed to match mclust default 7/20/2020
+genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
                      mix.method = NULL, r.tol = 1e-10, true.class = NULL){
 
   #list2env(dim.list, environment(genStart))
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
   n.t <- dim.list$n.t
+  n.k.g <- ncol(Data$Xg)
+  n.k.e <- ncol(Data$Xd)
   n.g <- dim.list$n.g
+  n.f.rand <- dim.list$n.f.rand
+  n.f.sp <- dim.list$n.f.sp
   n.f <- dim.list$n.f
   n.v <- dim.list$n.v
   n.r <- dim.list$n.r
+  nl.fix <- ifelse(n.j>1, (n.j^2-n.j)/2, 1)
+  nl.rand <- n.j*n.f.rand - (n.f.rand*(n.f.rand-1))/2
+  nl.sp <- n.j*n.f.sp - (n.f.sp*(n.f.sp-1))/2
+
 
   if(n.j == 1) hc.options[1] <- 'E'
 
@@ -54,104 +64,118 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
       }
     }
   }
- 
+
   #set default init.methods based on dim(y)
   if(is.null(init.method)){
     if(n.j == 1){
-      Class <- mc.qclass(y, as.numeric(n.g))
-      pi.init <- as.vector(table(Class)/nrow(Dat$Y))
+      init.method <- 'mc.qclass'
+    }
+    if(n.j >1){
+      if(Data$family == 0){
+        init.method <- 'hc'
+        hc.options = c("VVV", "SVD")
+      }
+      if(Data$family == 700){
+        init.method <- 'mixed'
+        mix.method <- 'Gower kmeans'
+      }
+    }
+  }
+
+
+  X <- subset(Data$Xg, select = colnames(Data$Xg) != ('(Intercept)'))
+  if(ncol(X)>0){
+    y <- cbind(y, X)
+    if(init.method == 'mc.qclass'){
+      init.method <- 'hc'
+    }
+    hc.options = c("VVV", "VARS")
+  }
+
+    #Apply classification method
+    if(init.method =="random"){
+      pi.init <- rep(1/n.g,n.g)
+      Class <- t(rmultinom(n.i, 1, pi.init)) ## FIXME: write my own rmultinom function to avoid dependency here
+    }
+
+    if(init.method == 'mc.qclass'){
+      classify <- mc.qclass(y, as.numeric(n.g))
       Class <- matrix(0, n.i, n.g)
       for(i in 1:n.i){
         Class[i,classify[i]] <- 1
       }
+      pi.init <- apply(Class,2,sum)/n.i
     }
-    if(n.j >1){
-      if(Data$family == 0){
-        init.method == 'hc'
+
+    if(init.method == "hc"){
+      #Class <- unmap(hclass(hc(y),n.g))
+      Class <- unmap(hclass(hc(y, modelName = hc.options[1], use = hc.options[2]),n.g))
+      pi.init <-  apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+      classify <- apply(Class,1,function(x) which(x==1))
+
+    }
+
+    if(init.method == "kmeans"){
+      classify <- cluster::pam(diss, k = n.g)$clustering
+      Class <- matrix(0, n.i, n.g)
+      for(i in 1:n.i){
+        Class[i,classify[i]] <- 1
       }
+      pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
     }
-  }
 
-  #Apply classification method
-  if(init.method =="random"){
-    pi.init <- rep(1/n.g,n.g)
-    Class <- t(rmultinom(n.i, 1, pi.init)) ## FIXME: write my own rmultinom function to avoid dependency here
-  }
-
-  if(init.method == "hc"){
-    #Class <- unmap(hclass(hc(y),n.g))
-    Class <- unmap(hclass(hc(y, modelName = hc.options[1], use = hc.options[2]),n.g))
-    pi.init <-  apply(Class,2,function(x) sum(x)/nrow(Data$Y))
-    classify = apply(Class,1,function(x) which(x==1))
-
-  }
-
-  if(init.method == "kmeans"){
-    classify <- cluster::pam(diss, k = n.g)$clustering
-    Class <- matrix(0, n.i, n.g)
-    for(i in 1:n.i){
-      Class[i,classify[i]] <- 1
-    }
-    pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
-  }
-
-  if(init.method == "mixed"){
-    tmp.pa <- matrix(NA, n.i, n.j)
-    y1 <- as.data.frame(matrix(NA, n.i, n.j) )
-    for(j in 1:n.j){
-      tmp.pa[,j] = ifelse(y[,j]==0, "A", "P")
-      y1[,j] <- as.factor(tmp.pa[,j])
-    }
-    y <- data.frame(cbind(y1, y))
-
-
-    if(mix.method != "kproto"){
-      diss <- cluster::daisy(y, metric = "gower")
-      if(mix.method == "Gower kmeans"){
-        classify <- cluster::pam(diss, k = n.g)$clustering
+    if(init.method == "mixed"){
+      tmp.pa <- matrix(NA, n.i, n.j)
+      y1 <- as.data.frame(matrix(NA, n.i, n.j) )
+      for(j in 1:n.j){
+        tmp.pa[,j] <- ifelse(y[,j]==0, "A", "P")
+        y1[,j] <- as.factor(tmp.pa[,j])
       }
-      if(mix.method == "Gower hclust"){
-        classify <- cutree(hclust(diss),n.g)
+      y <- data.frame(cbind(y1, y))
+
+
+      if(mix.method != "kproto"){
+        diss <- cluster::daisy(y, metric = "gower")
+        if(mix.method == "Gower kmeans"){
+          classify <- cluster::pam(diss, k = n.g)$clustering
+        }
+        if(mix.method == "Gower hclust"){
+          classify <- cutree(hclust(diss),n.g)
+        }
+      } else {
+        classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
       }
-    } else {
-      classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
+      Class <- matrix(0, n.i, n.g)
+      for(i in 1:n.i){
+        Class[i,classify[i]] <- 1
+      }
+      pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
     }
-    Class <- matrix(0, n.i, n.g)
-    for(i in 1:n.i){
-      Class[i,classify[i]] <- 1
+
+    if(init.method == "true"){
+      if(!is.null(true.class)){
+        classify <- true.class
+      } else {
+        classify <- Data$classification + 1
+      }
+      Class <- matrix(0, n.i, n.g)
+      for(i in 1:n.i){
+        Class[i,classify[i]] <- 1
+      }
+      pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
     }
-    pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
-  }
 
-
-
-  if(init.method == "true"){
-    if(!is.null(true.class)){
-      classify <- true.class
-    } else {
-      classify <- Data$classification + 1
-    }
-    Class <- matrix(0, n.i, n.g)
-    for(i in 1:n.i){
-      Class[i,classify[i]] <- 1
-    }
-    pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
-  }
-
-  if(Data$fixStruct == 36){
-    nl <- n.j*n.f - (n.f*(n.f-1))/2
-  } else {
-    nl <- (n.j^2-n.j)/2
-  }
 
   #setup ParList
   ParList <- list(
-    betag = matrix(0,1,(n.g-1)),
-    betad = array(0, dim = c(1,n.j,n.g)),
+    betag = matrix(0,n.k.g,(n.g-1)),
+    betad = array(0, dim = c(n.k.e,n.j,n.g)),
     betapz = array(numeric(0)),
     theta = matrix(0,n.j,n.g),
     thetaf = matrix(0,n.j,n.g),
-    ld = matrix(0,nl,n.g),
+    logit_corr_fix = matrix(0,nl.fix,n.g),
+    ld_rand = matrix(0,nl.rand,n.g),
+    ld_sp = matrix(0,nl.sp,n.g),
     Hg_input = matrix(0,2,(n.g-1)),
     Hd_input = array(0, dim = c(2,n.j,n.g)), #fix in cpp - should be n.f, not n.j
     ln_kappag = rep(0, (n.g-1)),
@@ -168,11 +192,12 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
     u_ig = array(0, dim = c(n.i,(n.g-1))),
     v_ifg = array(0, dim = c(n.i,n.j,n.g)),
     Gamma_vg = array(0, dim = c(n.v,(n.g-1))),
-    Omega_vfg = array(0, dim = c(n.v,n.f,n.g))
+    Omega_vfg = array(0, dim = c(n.v,n.f.sp,n.g))
   )
-  if(sum(Data$reStruct[1,])==0){#no random effects in gating, turn on beta, o.w. beta in gating is mapped out
-    ParList$betag <- matrix(log(pi.init[1:n.g-1]/(1 - sum(pi.init[1:n.g-1]))), nrow = 1)
-  } 
+  if(sum(Data$reStruct[1,])==0){
+    ParList$betag[1,] <- matrix(log(pi.init[1:(n.g-1)]/(1 - sum(pi.init[1:(n.g-1)]))), nrow = 1)
+  }
+
   #Set initial values for kappa and tau if n.r provided
   if(Data$reStruct[1,1] > 2){
     if(is.null(dim.list$n.r)){
@@ -185,13 +210,12 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
       ParList$ln_taud = matrix( 1/(2*sqrt(pi)*sqrt(8)/(n.r/2)) ,n.j,n.g)
     }
   }
- 
+
 
   #Update initial values based on classification
   for(g in 1:n.g){
     for(j in 1:n.j){
       y.sub <- Data$Y[Class[,g] == 1,j]
-      #  if(init.model == "empirical"){
       if(sum(y.sub) == 0){
         mu <- 0.01
         var <- 0.01
@@ -201,73 +225,75 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
         var <- var(y.sub)
         power.est <-  e1071::skewness(y.sub)*mu/sqrt(var)  # Clark and Thayer, 2004
       }
-      #ideally this will be based on link function not family!!
-      if(Data$family == 700){
-        ParList$betad[,j,g] <- log(mu)
+
+      if(Data$family == 700){ #Tweedie
+        ParList$betad[1,j,g] <- log(mu) ##! ideally this will be based on link function not family
         if(power.est >= 2) power.est <- 1.95
         if(power.est <= 1) power.est <- 1.05
         ParList$thetaf[j,g] <- log((1-power.est)/(power.est - 2))
-        ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 #exp(1) accounts for var=1 attributed to spatial
+        ##! adjust varaince when random effects -  ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 #exp(1) accounts for var=1 attributed to spatial
+        ParList$theta[j,g] <- log(var/mu^power.est)
       } else {
-        ParList$betad[,j,g] <- mu
+        ParList$betad[1,j,g] <- mu
         ParList$theta[j,g] <- log(var)
       }
+    }
 
-
-      y.mat <- Data$Y[Class[,g] == 1,]
-      if( Data$fixStruct == 36 ){
-        cor.mat <- cor(y.mat)
-        if(sum(is.na(cor.mat))>0){
-          idx.na <- which(is.na(cor.mat), arr.ind = TRUE)
-          tmp.pa <- matrix(0, nrow(y.mat), n.j)
-          for(j in 1:n.j){
-            tmp.pa[y.mat[,j]>0,j] <- 1
-          }
-
-          for(n in 1:nrow(idx.na)){
-            tmp.ctab <- cbind(
-              c(nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==1 & tmp.pa[,idx.na[n,2]]==1,]),
-                nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==0 & tmp.pa[,idx.na[n,2]]==1,])),
-              c(nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==1 & tmp.pa[,idx.na[n,2]]==0,]),
-                nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==0 & tmp.pa[,idx.na[n,2]]==0,]))
-            )
-            tmp.ctab[tmp.ctab==0] <- 1
-            cor.mat[idx.na[n,2], idx.na[n,1]] <-
-              (tmp.ctab[1,1]*tmp.ctab[2,2] - tmp.ctab[1,2]*tmp.ctab[2,1]) /
-              sqrt(sum(tmp.ctab[1,])*sum(tmp.ctab[2,])*sum(tmp.ctab[,1])*sum(tmp.ctab[,2]))
-          }
-        }
-        L.mat <- t(chol(cor.mat))[,1:n.f]
-        cnt <- start <- 1
-        for(f. in 1:n.f){
-          for(j. in start:n.j){
-            ParList$ld[cnt,g] <- L.mat[j.,f.]
-            cnt <- cnt + 1
-          }
-          start <- start + 1
+    y.mat <- Data$Y[Class[,g] == 1,]
+    if(Data$fixStruct != 10){
+      cor.mat <- cor(y.mat)
+      if(sum(is.na(cor.mat))>0){
+        idx.na <- which(is.na(cor.mat), arr.ind = TRUE)
+        tmp.pa <- matrix(0, nrow(y.mat), n.j)
+        for(j in 1:n.j){
+          tmp.pa[y.mat[,j]>0,j] <- 1
         }
 
-      } else{
-        if( Data$fixStruct == 20 ){
-          ParList$ld[,g] <- 0
-        } else {
-          corr.mat <- cor(y.mat)
-          corr.mat[is.na(corr.mat)] <- 0
-          ParList$ld[,g] <- corr.mat[which(lower.tri(corr.mat)==TRUE, arr.ind = TRUE)]
+        for(n in 1:nrow(idx.na)){
+          #Set up confusion matrix between 2 columns with NA correlation
+          tmp.confusion <- cbind(
+            c(nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==1 & tmp.pa[,idx.na[n,2]]==1,]),
+              nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==0 & tmp.pa[,idx.na[n,2]]==1,])),
+            c(nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==1 & tmp.pa[,idx.na[n,2]]==0,]),
+              nrow(tmp.pa[tmp.pa[,idx.na[n,1]]==0 & tmp.pa[,idx.na[n,2]]==0,]))
+          )
+          #tmp.ctab[tmp.ctab==0] <- 1
+          #Calculate Matthews correlation coefficient
+          denom = sum(tmp.confusion[1,])*sum(tmp.confusion[2,])*sum(tmp.confusion[,1])*sum(tmp.confusion[,2])
+          #if 0 occurs in any of the sums, the denominator can arbitrarily be set to 1
+          if(denom == 0) denom <- 1
+          cor.mat[idx.na[n,2], idx.na[n,1]] <-
+            (tmp.confusion[1,1]*tmp.confusion[2,2] - tmp.confusion[1,2]*tmp.confusion[2,1]) /
+            sqrt(denom)
         }
       }
-      # if(init.model == "opt"){
-      #   p.init <- e1071::skewness(y.sub)*mean(y.sub)/sd(y.sub)
-      #   mu.init <- mean(y.sub)
-      #   phi.init <- var(y.sub)/mu.init^p.init
-      #   mod <- nlminb(c(log(mu.init),log(phi.init), log((1-p.init)/(p.init - 2))), tweed.fun, dat = y.sub)
-      #   ParList$betad[1,j,g] <- mod$par[1]
-      #   ParList$theta[j,g] <- mod$par[2]
-      #   ParList$thetaf[j,g] <- mod$par[3]
-      # }
-      # }
+      corvec <- cor.mat[lower.tri(cor.mat)]
+      if(Data$fixStruct == 30){
+        ParList$logit_corr_fix[,g] <- log((corvec+1)/(1-corvec))
+      }
+
+      if(sum(Data$rrStruct)>0){
+        L.mat <- t(chol(cor.mat))
+        keep <- lower.tri(L.mat, diag = TRUE)
+        if(Data$rrStruct[1] == 1){
+          keep.rand <- keep
+          keep.rand[,(n.f.rand+1):n.j] <- FALSE
+          ParList$ld_rand[,g] = L.mat[keep.rand]
+        }
+        if(Data$rrStruct[2] == 1){
+          keep.sp <- keep
+          keep.sp[,(n.f.sp+1):n.j] <- FALSE
+          ParList$ld_sp[,g] = L.mat[keep.sp]
+        }
+        if(sum(Data$rrStruct == 2)){
+          #equal probability correlation results from spatial or random rank reduction
+          ParList$ld_rand[,g] <- ParList$ld_rand[,g]/2
+          ParList$ld_sp[,g] <- ParList$ld_sp[,g]/2
+        }
+      }
     }
-  }
+  } # end g loop
+
   gen.init <- list(parms = ParList, class = classify)
   return(gen.init)
 
@@ -282,7 +308,7 @@ genInit <- function(init.method, Data, dim.list, data.trans = NA, hc.options = c
 #'
 #' @examples
 #
-mc.qclass <- function (x, k) 
+mc.qclass <- function (x, k)
 {
   x <- as.vector(x)
   eps <- sd(x) * sqrt(.Machine$double.eps)

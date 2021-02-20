@@ -1,18 +1,17 @@
-#' functions used to setup spatial structure
+## Functions used to setup spatial structure
 
-
-#' spde Struct
+#' Generate SPDE list needed as imput to FEM-SPDE spatial TMB models
 #'
 #' @param mesh INLA mesh object generated from inla.mesh.create or inla.mesh.2d
 #'
 #' @return spde List used as input into TMB anisotropic model
-#' @export
 #'
 #' @importFrom INLA inla.spde2.matern inla.mesh.create
 #' @importFrom methods as
 #' @importFrom Matrix diag
+#' @keywords internal
 #'
-
+#' @NoRd
 spdeStruct <- function(mesh){
   spde <-inla.spde2.matern(mesh)
   # ---------- Begin code that prepares object for anisotropy.

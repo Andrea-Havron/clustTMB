@@ -81,7 +81,7 @@ Dat <- mkDat(response = as.matrix(faithful$waiting), time.vector = rep(1, nrow(f
              dim.list =  dim.list
 )
 dim.list$n.v <- Dat$spde$n_s
-init.parm.clustTMB <- genInit(init.method = NULL, Dat, family = gaussian(link = "identity"),
+init.parm.clustTMB <- genInit(init.method = 'mc.qclass', Dat, family = gaussian(link = "identity"),
                               dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
                               mix.method = NULL, r.tol = 1e-10, true.class = NULL)
 

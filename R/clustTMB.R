@@ -48,7 +48,7 @@ clustTMB <- function(response = NULL,
                      initialization.args = list(init.method = NULL,
                                                 data.trans = NA,
                                                 ##! default needs to be 'E' when response univariate
-                                                hc.options = c(),
+                                                hc.options = c(modelName = NULL, use = NULL),
                                                 mix.method = NULL),
                      spatial.list = list(loc = NULL, mesh = NULL),
                      projection.list = list(grid.df = NULL, ##!Need more rules about grid.df spatial structure
@@ -105,6 +105,14 @@ clustTMB <- function(response = NULL,
   if(!(family[[2]] %in% names(.valid_link))){
     stop ("link not supported in specified family")
   }
+  if((is.null(initialization.args$init.method == 'hc') & !is.null(initialization.args$hc.options)){
+    initialization.args$init.method = 'hc'
+    warning("Switching initialization method from NULL to 'hc' as hc.options are specified" )
+  }
+  if(initialization.args$init.method != 'hc' & !is.null(initialization.args$hc.options)){
+    stop("Initialization method does not match hc.options in intialization.args. Change init.method to 'hc' or set hc.options to NULL " )
+  }
+  
   if(!is.null(spatial.list$loc)){
     if( (class(spatial.list$loc) != 'SpatialPoints') &
         (class(spatial.list$loc) != 'SpatialPointsDataFrame') ){

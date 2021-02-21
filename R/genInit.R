@@ -10,7 +10,7 @@
 #' @param r.tol Relative convergence tolerance
 #' @param true.class Vector of true classification integers for testing models
 #'
-#' @importFrom stats cutree gaussian hclust runif rmultinom nlminb cor
+#' @importFrom stats cutree gaussian hclust runif rmultinom nlminb cor glm
 #' @importFrom mclust unmap hclass hc hcVVV hcE
 #' @importFrom e1071 skewness
 #' @importFrom cluster daisy pam
@@ -22,8 +22,9 @@
 #' @noRd
 #'
 #' @examples
-genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
-                     mix.method = NULL, r.tol = 1e-10, true.class = NULL){
+genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.trans = NA, 
+                    hc.options = c(modelName = NULL, use = NULL), 
+                    mix.method = NULL, r.tol = 1e-10, user.class = NULL){
 
   #list2env(dim.list, environment(genStart))
   n.i <- dim.list$n.i
@@ -64,103 +65,138 @@ genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.tran
       }
     }
   }
+  
+  X.g <- subset(Data$Xg, select = colnames(Data$Xg) != ('(Intercept)'))
+  X.d <- subset(Data$Xd, select = colnames(Data$Xd) != ('(Intercept)'))
+  gate.mod <- emp.mod <- FALSE
+  if(ncol(X.g)>0) gate.mod <- TRUE
+  if(ncol(X.d)>0) exp.mod <- TRUE
 
-  #set default init.methods based on dim(y)
-  if(is.null(init.method)){
-    if(Data$family == 0){
-      init.method <- 'hc'
-      hc.options[1] <- 'VVV'
-
-      hc.options = c("VVV", "SVD")
-    }
+  #set default init.methods based on dim(y), gating/expert models, and family
+  if(is.null(init.method)){ #Default method for Tweedie is Gower kmeans ##! Adjust when expert/gating model?
     if(Data$family == 700){
       init.method <- 'mixed'
       mix.method <- 'Gower kmeans'
+    } else {
+      # default when covariate in expert or gating model and not Tweedie
+      if( gate.mod | exp.mod ){
+        init.method <- 'hc'
+        hc.options <- c(modelName = "VVV", use = "VARS")
+      } else {
+        # default when data are univariate and not Tweedie and when no covariates in expert/gating
+        if(dim.list$n.j == 1){
+          init.method <- 'mc.qclass'
+        } else {
+          # default when data are multivariate and not Tweedie and when no covariates in expert/gating
+          init.method = 'hc'
+          hc.options <- c(model.name = "VVV", use = "SVD")
+        }
+      }
+    }
+  }
+  
+  if(init.method == 'hc' & is.null(hc.options$modelName)){
+    if(n.j == 1) hc.options$modelName <- 'V'
+    if(n.j > 1) hc.options$modelName <- 'VVV'
+  } 
+  if(init.method == 'hc' & is.null(hc.options$use)){
+    if(exp.mod){
+      hc.options$use <- 'VARS'
+    } else {
+      hc.options$use <- 'SVD'
     }
   }
 
-
-  X <- subset(Data$Xg, select = colnames(Data$Xg) != ('(Intercept)'))
-  if(ncol(X)>0){
-    y <- cbind(y, X)
+ 
+  if(gate.mod | exp.mod){
     if(init.method == 'mc.qclass'){
       init.method <- 'hc'
+      hc.options = c("V", "VARS")
+      warning("switching init method to 'hc' for gating and/or expert model")
+    } else {
+      if(hc.option[2] == 'SVD') warning("consider changeing hcUse to 'VARS' when covariates in the expert model")
     }
-    hc.options = c("VVV", "VARS")
+  }
+  if(gate.mod){
+    y <- cbind(y, X.g)
+  }
+  if(exp.mod){
+    y <- cbind(y, X.d)
+  }
+  y <- y[,!duplicated(t(y))]
+
+  #Apply classification method
+  if(init.method =="random"){
+    pi.init <- rep(1/n.g,n.g)
+    Class <- t(rmultinom(n.i, 1, pi.init)) ## FIXME: write my own rmultinom function to avoid dependency here
   }
 
-    #Apply classification method
-    if(init.method =="random"){
-      pi.init <- rep(1/n.g,n.g)
-      Class <- t(rmultinom(n.i, 1, pi.init)) ## FIXME: write my own rmultinom function to avoid dependency here
+  if(init.method == 'mc.qclass'){
+    classify <- mc.qclass(y, as.numeric(n.g))
+    Class <- matrix(0, n.i, n.g)
+    for(i in 1:n.i){
+      Class[i,classify[i]] <- 1
     }
+    pi.init <- apply(Class,2,sum)/n.i
+  }
 
-    if(init.method == 'mc.qclass'){
-      classify <- mc.qclass(y, as.numeric(n.g))
-      Class <- matrix(0, n.i, n.g)
-      for(i in 1:n.i){
-        Class[i,classify[i]] <- 1
-      }
-      pi.init <- apply(Class,2,sum)/n.i
+  if(init.method == "hc"){
+    #Class <- unmap(hclass(hc(y),n.g))
+    Class <- unmap(hclass(hc(y, modelName = hc.options[1], use = hc.options[2]),n.g))
+    pi.init <-  apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+    classify <- apply(Class,1,function(x) which(x==1))
+
+  }
+
+  if(init.method == "kmeans"){
+    classify <- cluster::pam(diss, k = n.g)$clustering
+    Class <- matrix(0, n.i, n.g)
+    for(i in 1:n.i){
+      Class[i,classify[i]] <- 1
     }
+    pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+  }
 
-    if(init.method == "hc"){
-      #Class <- unmap(hclass(hc(y),n.g))
-      Class <- unmap(hclass(hc(y, modelName = hc.options[1], use = hc.options[2]),n.g))
-      pi.init <-  apply(Class,2,function(x) sum(x)/nrow(Data$Y))
-      classify <- apply(Class,1,function(x) which(x==1))
-
+  if(init.method == "mixed"){
+    tmp.pa <- matrix(NA, n.i, n.j)
+    y1 <- as.data.frame(matrix(NA, n.i, n.j) )
+    for(j in 1:n.j){
+      tmp.pa[,j] <- ifelse(y[,j]==0, "A", "P")
+      y1[,j] <- as.factor(tmp.pa[,j])
     }
+    y <- data.frame(cbind(y1, y))
 
-    if(init.method == "kmeans"){
-      classify <- cluster::pam(diss, k = n.g)$clustering
-      Class <- matrix(0, n.i, n.g)
-      for(i in 1:n.i){
-        Class[i,classify[i]] <- 1
+
+    if(mix.method != "kproto"){
+      diss <- cluster::daisy(y, metric = "gower")
+      if(mix.method == "Gower kmeans"){
+        classify <- cluster::pam(diss, k = n.g)$clustering
       }
-      pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+      if(mix.method == "Gower hclust"){
+        classify <- cutree(hclust(diss),n.g)
+      }
+    } else {
+      classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
     }
-
-    if(init.method == "mixed"){
-      tmp.pa <- matrix(NA, n.i, n.j)
-      y1 <- as.data.frame(matrix(NA, n.i, n.j) )
-      for(j in 1:n.j){
-        tmp.pa[,j] <- ifelse(y[,j]==0, "A", "P")
-        y1[,j] <- as.factor(tmp.pa[,j])
-      }
-      y <- data.frame(cbind(y1, y))
-
-
-      if(mix.method != "kproto"){
-        diss <- cluster::daisy(y, metric = "gower")
-        if(mix.method == "Gower kmeans"){
-          classify <- cluster::pam(diss, k = n.g)$clustering
-        }
-        if(mix.method == "Gower hclust"){
-          classify <- cutree(hclust(diss),n.g)
-        }
-      } else {
-        classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
-      }
-      Class <- matrix(0, n.i, n.g)
-      for(i in 1:n.i){
-        Class[i,classify[i]] <- 1
-      }
-      pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+    Class <- matrix(0, n.i, n.g)
+    for(i in 1:n.i){
+      Class[i,classify[i]] <- 1
     }
+    pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+  }
 
-    if(init.method == "true"){
-      if(!is.null(true.class)){
-        classify <- true.class
-      } else {
-        classify <- Data$classification + 1
-      }
-      Class <- matrix(0, n.i, n.g)
-      for(i in 1:n.i){
-        Class[i,classify[i]] <- 1
-      }
-      pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+  if(init.method == "user"){
+    if(!is.null(user.class)){
+      classify <- user.class
+    } else {
+      classify <- Data$classification
     }
+    Class <- matrix(0, n.i, n.g)
+    for(i in 1:n.i){
+      Class[i,classify[i]] <- 1
+    }
+    pi.init <- apply(Class,2,function(x) sum(x)/nrow(Data$Y))
+  }
 
 
   #setup ParList
@@ -210,35 +246,53 @@ genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.tran
 
 
   #Update initial values based on classification
+  res.mat <- matrix(0, n.i, n.j)
   for(g in 1:n.g){
     for(j in 1:n.j){
       y.sub <- Data$Y[Class[,g] == 1,j]
-      if(sum(y.sub) == 0){
-        mu <- 0.01
-        var <- 0.01
-        power.est <- 1.05
+      if(exp.mod){
+        class.sum <- apply(Class,2,sum)
+        if(any(class.sum <= 1)) stop("initalization method results in an empty or unit cluster which is not suitable when intializing the expert model")
+        x.sub <- X.d[Class[,g] == 1,]
+        mod <- glm(y.sub ~ x.sub, family = family)
+        coeff <- as.vector(mod$coefficients)
+        coeff[is.na(coeff)] <- 0
+        mu.init <- coeff
+        res.mat[Class[,g] == 1,j] <- mod$residuals
+        var.init <- var(mod$residuals)
       } else {
-        mu <- mean(y.sub)
-        var <- var(y.sub)
-        power.est <-  e1071::skewness(y.sub)*mu/sqrt(var)  # Clark and Thayer, 2004
+        if(sum(y.sub) == 0){
+          mu.init <- 0.01
+          var.init <- 0.01
+          power.est <- 1.05
+        } else {
+          mu.init <- mean(y.sub)
+          var.init <- var(y.sub)
+          power.est <-  e1071::skewness(y.sub)*mu.init/sqrt(var.init)  # Clark and Thayer, 2004
+        }
       }
 
       if(Data$family == 700){ #Tweedie
-        ParList$betad[1,j,g] <- log(mu) ##! ideally this will be based on link function not family
+        ParList$betad[1,j,g] <- log(mu.init) ##! ideally this will be based on link function not family
         if(power.est >= 2) power.est <- 1.95
         if(power.est <= 1) power.est <- 1.05
         ParList$thetaf[j,g] <- log((1-power.est)/(power.est - 2))
         ##! adjust varaince when random effects -  ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 #exp(1) accounts for var=1 attributed to spatial
-        ParList$theta[j,g] <- log(var/mu^power.est)
+        ParList$theta[j,g] <- log(var.init/mu.init^power.est)
       } else {
-        ParList$betad[1,j,g] <- mu
-        ParList$theta[j,g] <- log(var)
+        ParList$betad[1,j,g] <- mu.init
+        ParList$theta[j,g] <- log(var.init)
       }
     }
 
     y.mat <- Data$Y[Class[,g] == 1,]
     if(Data$fixStruct != 10){
-      cor.mat <- cor(y.mat)
+      if(exp.mod){
+        res <- res.mat[Class[,g] == 1,]
+        cor.mat <- cor(res)
+      } else {
+        cor.mat <- cor(y.mat)
+      }
       if(sum(is.na(cor.mat))>0){
         idx.na <- which(is.na(cor.mat), arr.ind = TRUE)
         tmp.pa <- matrix(0, nrow(y.mat), n.j)

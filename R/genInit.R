@@ -42,7 +42,7 @@ genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.tran
   nl.sp <- n.j*n.f.sp - (n.f.sp*(n.f.sp-1))/2
 
 
-  if(n.j == 1) hc.options[1] <- 'E'
+#  if(n.j == 1) hc.options[1] <- 'E'
 
   ## Apply any data transformations
   y <- Data$Y
@@ -67,18 +67,15 @@ genInit <- function(init.method = NULL, Data, family = NULL, dim.list, data.tran
 
   #set default init.methods based on dim(y)
   if(is.null(init.method)){
-    if(n.j == 1){
-      init.method <- 'mc.qclass'
+    if(Data$family == 0){
+      init.method <- 'hc'
+      hc.options[1] <- 'VVV'
+
+      hc.options = c("VVV", "SVD")
     }
-    if(n.j >1){
-      if(Data$family == 0){
-        init.method <- 'hc'
-        hc.options = c("VVV", "SVD")
-      }
-      if(Data$family == 700){
-        init.method <- 'mixed'
-        mix.method <- 'Gower kmeans'
-      }
+    if(Data$family == 700){
+      init.method <- 'mixed'
+      mix.method <- 'Gower kmeans'
     }
   }
 

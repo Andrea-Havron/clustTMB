@@ -290,7 +290,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   if(family[[1]] == "Tweedie") Dat$family <- 700
   if(family[[2]] == "log") Dat$link <- 0
   if(family[[2]] == "identity") Dat$link <- 5
-  Dat$ll <- ll.method
+  Dat$loglike <- ll.method
   if(fixStruct == 'E' | fixStruct == 'V'){
     Dat$fixStruct <- 10
   }
@@ -305,4 +305,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 
   return(Dat)
+}
+
+
+fixStruct.names <- function(...){
+  return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE', 'RR'))
 }

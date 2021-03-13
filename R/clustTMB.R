@@ -12,10 +12,11 @@
 #' @param rr List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate ressponse to a smaller dimension independent reponse. When used, the covariance structure of the response is swicthed to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.
 #' @param covariance.structure A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.
 #' @param initialization.args A list consisting of initalization settings used to generate initial values.
-##' \item{init.method}{methods include: qclass (univariate), hc, kmeans, mixed}
-##' \item{data.trans}{data transformation options include: log+1, log, yeojin boxcox }
-##' \item{hc.options}{list specifying (hcModelName and hcUse) from mclust, see ?mclust.options.}
-##' \item{mix.method}{When fitting Tweedie data, this method is used to determine a better intial clustering. Options include kproto, Gower kmeans, and Gower hclust.}
+#' control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
+#' 1. init.method - Single character string indicating intial clustering method. Mehtods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
+#' 2. hc.options - Named list of two character strings specifying hc modelName and hcUse when init.method = 'hc'. The default modelName is 'VVV' and the default use is 'SVD' unless gating/expert covariates specified, in which case default in VARS. See ?mclust::mclust.options for complete list of options.
+#' 3. mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
+#' 4. user - Numeric or character vector defining user specified intial classification. init.method must be set to 'user' when using this option.
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
 #' @param projection.list List of data objects needed for projection
 #' @param control List controlling whether models are run and whether standard errors are calculated.
@@ -31,9 +32,8 @@
 #'
 #' @examples
 #' data("faithful")
-#' m1 <- clustTMB(response = faithful, covariance.structure = "VVV",
-#' initialization.args = list(init.method = "hc", hc.options = c("VVV", "VARS")))
-#' plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification)
+#' m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
+#' plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification+1)
 clustTMB <- function(response = NULL,
                      expertformula = ~ 1,
                      gatingformula = ~ 1,
@@ -45,11 +45,7 @@ clustTMB <- function(response = NULL,
                      rr = list(spatial = NULL, temporal = NULL, random = NULL),
                      covariance.structure = NULL,
                      ##! more advanced arguments can be passed to list. How do I specify this, using ...?
-                     initialization.args = list(init.method = NULL,
-                                                data.trans = NA,
-                                                ##! default needs to be 'E' when response univariate
-                                                hc.options = c(modelName = NULL, use = NULL),
-                                                mix.method = NULL),
+                     initialization.args = list(control = init.options()),
                      spatial.list = list(loc = NULL, mesh = NULL),
                      projection.list = list(grid.df = NULL, ##!Need more rules about grid.df spatial structure
                                             ##!need to ensure order of covariates preserved somehow
@@ -70,6 +66,11 @@ clustTMB <- function(response = NULL,
       warning("Setting covariance structure to univariate EII")
     }
   }
+
+  if(!(covariance.structure %in% fixStruct.names())){
+    stop("covariance structure not supported")
+  }
+
   if(gatingformula == ~1){
     ll.method <- 0
   } else {
@@ -105,14 +106,7 @@ clustTMB <- function(response = NULL,
   if(!(family[[2]] %in% names(.valid_link))){
     stop ("link not supported in specified family")
   }
-  if((is.null(initialization.args$init.method == 'hc') & !is.null(initialization.args$hc.options)){
-    initialization.args$init.method = 'hc'
-    warning("Switching initialization method from NULL to 'hc' as hc.options are specified" )
-  }
-  if(initialization.args$init.method != 'hc' & !is.null(initialization.args$hc.options)){
-    stop("Initialization method does not match hc.options in intialization.args. Change init.method to 'hc' or set hc.options to NULL " )
-  }
-  
+
   if(!is.null(spatial.list$loc)){
     if( (class(spatial.list$loc) != 'SpatialPoints') &
         (class(spatial.list$loc) != 'SpatialPointsDataFrame') ){
@@ -271,7 +265,7 @@ clustTMB <- function(response = NULL,
       stop('cannot implement rank reduction on univariate models')
     }
     if(covariance.structure != 'RR'){
-      covariance.structure = 'Diag'
+      covariance.structure = 'Diag' ##! FixMe
       warning('Covariance structure changed to Diag. Multivariate models will be reduced to conditionally independent.')
     }
   }

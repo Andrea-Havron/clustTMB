@@ -111,7 +111,7 @@ addArgs <- function(argList) {
 
 ##' list of specials -- taken from enum.R
 findReTrmClasses <- function() {
-    names(.valid_covstruct)
+    names(.valid_reStruct) #modified from covstruct
 }
 
 ## expandGrpVar(quote(x*y))

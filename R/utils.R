@@ -191,6 +191,7 @@ Tweedie <- function(f = 'Tweedie', link = "log"){
 #' @param projection.list List of spatial objects used when returning spatial projection results
 #'
 #' @importFrom INLA inla.mesh.create inla.spde.make.A
+#' @importFrom sp coordinates
 #'
 #' @return Data list for input into TMB::MakeADFun
 #' @keywords internal
@@ -228,13 +229,14 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   }
   if(is.null(loc)&is.null(mesh)){
     #create dummy mesh for model - not used in inference or projection
-    loc <- matrix(runif(n.i*2,0,1), ncol = 2)
-    mesh <- inla.mesh.create(loc)
+    loc <- data.frame(x=runif(n.i,0,1), y=runif(n.i,0,1))
+    mesh <- inla.mesh.create(as.matrix(loc))
+    coordinates(loc) <- ~x*y
   }
   if(!is.null(loc)& is.null(mesh)){
     #default mesh - in future add options to include arguments for inla.mesh.2d
     #for now, user can supply mesh if a more complex mesh is needed
-    mesh <- inla.mesh.create(loc)
+    mesh <- inla.mesh.create(loc@coords)
     warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
             the simple mesh may result in spatial bias. Consider bulding a
             more appropriate mesh using INLA::meshbuilder()")
@@ -249,7 +251,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     }
   }
   n.v <- mesh$n
-  A <- inla.spde.make.A(mesh, loc)
+  A <- inla.spde.make.A(mesh, loc@coords)
 
   if(is.null(grid.df)){
     #create dummy projection grid - ##! be sure to turn off projection when reporting out

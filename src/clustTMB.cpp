@@ -90,23 +90,23 @@ enum valid_family{
 
 enum valid_reStruct {
   // st covariance
-  na = 0,
-  norm = 1,
-  ar1 = 2,
-  gmrf = 3,
-  gmrf_speedup = 4
+  na_reStruct = 0,
+  norm_reStruct = 1,
+  ar1_reStruct = 2,
+  gmrf_reStruct = 3,
+  gmrf_speedup_reStruct = 4
 };
 
 
 enum valid_fixStruct{
-  Univariate = 10,
-  Diag = 20,
-  General = 30
+  Univariate_fixStruct = 10,
+  Diag_fixStruct = 20,
+  General_fixStruct = 30
 };
 
 enum valid_rrStruct{
-  full = 0,
-  reduce = 1
+  full_rrStruct = 0,
+  reduce_rrStruct = 1
 };
 
 /* Define link functions *///from glmmTMB
@@ -118,13 +118,13 @@ enum  valid_link{
   cloglog_link = 4,
   identity_link = 5,
   sqrt_link = 6,
-  yoejin_boxcox = 7
+  yoejin_boxcox_link = 7
 };
 
-enum valid_ll{
-  postMarginal = 0,
-  marginal = 1,
-  conditional = 2 //used in simulations
+enum valid_loglike{
+  postMarginal_loglike = 0,
+  marginal_loglike = 1,
+  conditional_loglike = 2 
 };
 
 template<class Type>
@@ -132,10 +132,10 @@ Type reNll(array<Type> reVec, vector<Type> parmVec, int reStruct, bool do_simula
   Type ans = 0;
   Type ar1sd;
   switch(reStruct){
-      case na:
+      case na_reStruct:
         ans += 0;
         break;
-      case norm:
+      case norm_reStruct:
         for(int i=0; i<reVec.size(); i++){
           ans -= dnorm(reVec(i),Type(0), parmVec(0), true);
           if(do_simulate){
@@ -143,7 +143,7 @@ Type reNll(array<Type> reVec, vector<Type> parmVec, int reStruct, bool do_simula
           }
         }
         break;
-      case ar1:
+      case ar1_reStruct:
         ar1sd = sqrt(parmVec(1) * 1/(1-pow(parmVec(0),2)));
         ans += SCALE(AR1(parmVec(0)), ar1sd)(reVec);
          if(do_simulate){
@@ -169,10 +169,10 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
 
   SparseMatrix<Type> Q = Q_spde(Spde, parmVec(0), H);
   switch(reStruct){
-      case na:
+      case na_reStruct:
         ans += 0;
         break;
-      case gmrf:
+      case gmrf_reStruct:
         ans += SCALE(GMRF(Q),1/parmVec(1))( reVec );
         if(do_simulate){
            vector<Type>simVec(reVec.size());
@@ -180,7 +180,7 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
            reVec = simVec/parmVec(1);
         }
         break;
-      case gmrf_speedup:
+      case gmrf_speedup_reStruct:
         ans += SCALE(GMRF(Q, false),1/parmVec(1))( reVec );
         if(do_simulate){
            vector<Type>simVec(reVec.size());
@@ -271,10 +271,10 @@ template<class Type>
 Type prec_fun(Type kappa, Type tau, int rrStruct){
   Type ans = 0;
   switch( rrStruct ){
-    case reduce:
+    case reduce_rrStruct:
       ans = 1 / (2 * M_PI * kappa);
       break;
-    case full:
+    case full_rrStruct:
       ans = tau;
       break;
   }
@@ -290,7 +290,7 @@ array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
   array<Type> ans(ni,nj,ng);
   int cnt = 0;
   switch(rrStruct){
-    case reduce:
+    case reduce_rrStruct:
       for(int g=0; g<ng; g++){
         matrix<Type> L(nj, nf);
         for(int f=0; f<nf; f++){
@@ -312,7 +312,7 @@ array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
         }
       }
       break;
-    case full:
+    case full_rrStruct:
       ans = x;
       break;
   }
@@ -337,7 +337,7 @@ Type objective_function<Type>::operator() ()
   DATA_STRUCT( spde, spde_aniso_t );
   DATA_INTEGER( family );
   DATA_INTEGER( link );
-  DATA_INTEGER( ll );
+  DATA_INTEGER( loglike );
   DATA_INTEGER( fixStruct  );
   DATA_IVECTOR( rrStruct ); //1: random, 2:spatial
   DATA_IMATRIX( reStruct  ); //row 1: gating; row 2: expert; col 1: spatial; col 2: temporal; col3: overdispersion
@@ -578,8 +578,8 @@ Type objective_function<Type>::operator() ()
   switch(family){
     case gaussian_family:
       switch(fixStruct){
-        case Univariate:
-        case Diag:
+        case Univariate_fixStruct:
+        case Diag_fixStruct:
           for(int i=0; i<n_i; i++){
             for(int g=0; g<n_g; g++){
               for(int j=0; j<n_j; j++){
@@ -588,7 +588,7 @@ Type objective_function<Type>::operator() ()
             }
           }
           break;
-        case General:
+        case General_fixStruct:
           for(int g=0; g<n_g; g++){
             vector<Type> sds(n_j);
             matrix<Type> Corr_mat = corrmat_fun(vector<Type>(logit_corr_fix.col(g)), n_j );
@@ -611,8 +611,8 @@ Type objective_function<Type>::operator() ()
       break;
     case Gamma_family:
       switch(fixStruct){
-        case Univariate:
-        case Diag:
+        case Univariate_fixStruct:
+        case Diag_fixStruct:
 	      for(int i=0; i<n_i; i++){
 	        for(int g=0; g<n_g; g++){
 	          for(int j=0; j<n_j;j++){
@@ -641,8 +641,8 @@ Type objective_function<Type>::operator() ()
 	      }
     case lognormal_family:
       switch(fixStruct){
-        case Univariate:
-        case Diag:
+        case Univariate_fixStruct:
+        case Diag_fixStruct:
           for(int i=0; i<n_i; i++){
             for(int g=0; g<n_g; g++){
               for(int j=0; j<n_j; j++){
@@ -670,8 +670,8 @@ Type objective_function<Type>::operator() ()
         break;
     case Tweedie_family:
       switch(fixStruct){
-        case Univariate:
-        case Diag:
+        case Univariate_fixStruct:
+        case Diag_fixStruct:
 	      for(int g=0; g<n_g; g++){
 	        for(int j=0; j<n_j;j++){
 	          s2 = var(j,g);
@@ -736,8 +736,8 @@ Type objective_function<Type>::operator() ()
   }
   newpi = newpi/n_i;
 
-  switch(ll){
-    case postMarginal: //0
+  switch(loglike){
+    case postMarginal_loglike: //0
       for(int i=0; i<n_i; i++){
         for(int g=0; g<n_g; g++){
           ln_fy(i,g) = log(newpi(g)) + tmp_ll(i,g);
@@ -747,12 +747,12 @@ Type objective_function<Type>::operator() ()
        // REPORT(rep2);
       }
       break;
-    case marginal: //1
+    case marginal_loglike: //1
       for(int i=0; i<n_i; i++){
         nll_data -= log_sum_exp(vector<Type>(ln_fy.row(i)));
       }
       break;
-    case conditional: //5
+    case conditional_loglike: //5
       for(int i=0; i<n_i; i++){
         for(int g=0; g<n_g;g++){
           nll_data -= z_ig(i,g) * ln_fy(i,g);
@@ -792,13 +792,13 @@ Type objective_function<Type>::operator() ()
           switch(family){
             case gaussian_family:
               switch(fixStruct){
-                case Univariate:
-                case Diag:
+                case Univariate_fixStruct:
+                case Diag_fixStruct:
                   for(int j=0; j<n_j; j++){
                     Y(i,j) = rnorm(mu(i,j,g), sqrt(var(j,g)));
                   }
                   break;
-                case General:
+                case General_fixStruct:
                   for(int j1=0; j1<n_j; j1++){
                     for(int j2=0; j2<n_j; j2++){
                       Corr_mat(j1,j2) = Corr_mat_g(j1,j2,g);
@@ -816,13 +816,13 @@ Type objective_function<Type>::operator() ()
               break;
              case lognormal_family:
               switch(fixStruct){
-                case Univariate:
-                case Diag:
+                case Univariate_fixStruct:
+                case Diag_fixStruct:
                   for(int j=0; j<n_j; j++){
                     Y(i,j) = exp(rnorm(mu(i,j,g), sqrt(var(j,g))) );
                   }
                   break;
-                case General:
+                case General_fixStruct:
                   for(int j1=0; j1<n_j; j1++){
                     for(int j2=0; j2<n_j; j2++){
                       Corr_mat(j1,j2) = Corr_mat_g(j1,j2,g);
@@ -840,8 +840,8 @@ Type objective_function<Type>::operator() ()
               break;
             case Tweedie_family:
               switch(fixStruct){
-                case Univariate:
-                case Diag:
+                case Univariate_fixStruct:
+                case Diag_fixStruct:
 	              for(int j=0; j<n_j; j++){
 	                s1 = mu(i,j,g);
 	                s2 = var(j,g);

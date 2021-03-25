@@ -44,6 +44,7 @@ clustTMB <- function(response = NULL,
                      G = 2,
                      rr = list(spatial = NULL, temporal = NULL, random = NULL),
                      covariance.structure = NULL,
+                     map = list(),
                      ##! more advanced arguments can be passed to list. How do I specify this, using ...?
                      initialization.args = list(control = init.options()),
                      spatial.list = list(loc = NULL, mesh = NULL),
@@ -52,7 +53,7 @@ clustTMB <- function(response = NULL,
                                             ##?match names from expert.dat/gating.dat to grid.df?
                                             expert.pred.names = NULL,
                                             gating.pred.names = NULL),
-                     control = list(run.model = TRUE, do.sdreport = TRUE)){
+                     control = run.options()){
 
   response <- as.matrix(response)
   dim.list <- list(n.i = nrow(response), n.j = ncol(response), n.t = NULL,
@@ -280,6 +281,8 @@ clustTMB <- function(response = NULL,
     stop ("You have specified a spatal rank reduction in th expert model and therefore need to specify a spatial model in the expertformula")
   }
 
+  arg.map <- mkMap(map, Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
+
   ##! fix time component of .cpp to distinguish between gating/expert. Implement something similar to glmmTMB?
   Dat <- mkDat(response, time.vector = expert.time-1,
                expert.dat = expert.fix.dat,
@@ -297,6 +300,12 @@ clustTMB <- function(response = NULL,
   initialization.args$Data <- Dat
   initialization.args$dim.list <- dim.list
   initialization.args$family <- family
+  if(control$check.input == TRUE){
+    clustTMB.mod <- list(Dat = Dat,
+                    inits = do.call(genInit, initialization.args),
+                    map = mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list),
+                    random = random.names)
+  } else {
     clustTMB.mod <- fit.tmb(
       obj.args = list(data = Dat,
            parameters = do.call(genInit, initialization.args)$parms,
@@ -306,8 +315,19 @@ clustTMB <- function(response = NULL,
            silent = TRUE),
       control = control
     )
-
+  }
   return(clustTMB.mod)
 }
 
+run.options <- function(check.input = NULL, run.model = NULL,
+                        do.sdreport = NULL){
+  if(missing(check.input)) check.input <- FALSE
+  if(missing(run.model)) run.model <- TRUE
+  if(missing(do.sdreport)) do.sdreport <- TRUE
+  return(list(check.input = check.input,
+              run.model = run.model,
+              do.sdreport = do.sdreport))
+}
+
+map.control <- function(args)
 

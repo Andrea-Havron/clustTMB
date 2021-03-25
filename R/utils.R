@@ -18,15 +18,13 @@ fit.tmb <- function(obj.args, opt.args = list(control = list(iter = 800, eval = 
     report <- obj$report(obj$env$last.par.best)
     if(control$do.sdreport){
       sdr <- sdreport(obj)
+      fit.results <- list(obj = obj, opt = opt, report = report, sdr = sdr)
     } else {
-      sdr <- NULL
+      fit.results <- list(obj = obj, opt = opt, report = report)
     }
   } else {
-    opt <- NULL
-    report <- NULL
-    sdr <- NULL
+    fit.results <- list(obj = obj, inits = obj$par, init.report = obj$report())
   }
-  fit.results <- list(obj = obj, opt = opt, report = report, sdr = sdr)
   return(fit.results)
 }
 
@@ -59,7 +57,7 @@ mkFac <- function(d, f = NA){
 #' @return List defining how to optionally collect and fix parameters
 #' @keywords internal
 #' @noRd
-mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL){
+mkMap <- function(map, Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL){
   #list2env(dim.list, environment(mkMap))
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
@@ -167,7 +165,7 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
 #' @importFrom stats make.link
 #' @keywords internal
 #' @noRd
-Tweedie <- function(f = 'Tweedie', link = "log"){
+Tweedie <- function(f = "Tweedie", link = "log"){
   f <- c(f,list(link=link),make.link(link))
   class(f) <- "family"
   return(f)
@@ -191,7 +189,6 @@ Tweedie <- function(f = 'Tweedie', link = "log"){
 #' @param projection.list List of spatial objects used when returning spatial projection results
 #'
 #' @importFrom INLA inla.mesh.create inla.spde.make.A
-#' @importFrom sp coordinates
 #'
 #' @return Data list for input into TMB::MakeADFun
 #' @keywords internal
@@ -215,6 +212,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   n.v <- dim.list$n.v
   #list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
   loc <- spatial.list$loc
+  if(!is.null(loc)){
+    loc <- loc@coords
+  }
   mesh <- spatial.list$mesh
   #list2env(spatial.list, environment(mkDat))
   grid.df <- projection.list$grid.df
@@ -229,9 +229,8 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   }
   if(is.null(loc)&is.null(mesh)){
     #create dummy mesh for model - not used in inference or projection
-    loc <- data.frame(x=runif(n.i,0,1), y=runif(n.i,0,1))
+    loc <- matrix(runif(n.i*2,0,1), ncol=2)
     mesh <- inla.mesh.create(as.matrix(loc))
-    coordinates(loc) <- ~x*y
   }
   if(!is.null(loc)& is.null(mesh)){
     #default mesh - in future add options to include arguments for inla.mesh.2d
@@ -251,7 +250,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     }
   }
   n.v <- mesh$n
-  A <- inla.spde.make.A(mesh, loc@coords)
+  A <- inla.spde.make.A(mesh, loc)
 
   if(is.null(grid.df)){
     #create dummy projection grid - ##! be sure to turn off projection when reporting out
@@ -312,4 +311,79 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 fixStruct.names <- function(...){
   return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE', 'RR'))
+}
+
+#' Parameter Information
+#'
+#' @return Description of parameters, including dimension and structure
+#' @export
+#'
+#' @examples
+#' parm.lookup()
+parm.lookup <- function(){
+  df <- data.frame(
+    parm = c(
+      'betag', 'betad', 'betapz', 'theta', 'thetaf', 'logit_corr_fix',
+      'ld_rand', 'ld_sp', 'Hg_input', 'Hd_input', 'ln_kappa_g', 'ln_kappa_d',
+      'ln_tau_d', 'logit_rhog', 'logit_rhod', 'ln_sigmaup', 'ln_sigmaep',
+      'ln_sigmau', 'ln_sigmav', 'upsilon_tg', 'epsilon_tjg', 'u_ig', 'v_ifg',
+      'Gamma_vg', 'Omega_vfg'
+    ),
+    type = c(rep('Fixed', 19), rep('Random', 6)),
+    str = c(
+      'Matrix', 'Array', 'Array', rep('Matrix',6), 'Array',
+      'Vector', 'Matrix', 'Matrix', 'Vector', 'Matrix', 'Vector',
+      'Matrix', 'Vector', 'Matrix', rep('Array', 6)
+    ),
+    dim = c(
+      'Kg,G-1', 'Kd,J,G', 'M,J,G', 'J,G', 'J,G', '(J^2-J)/2', 'Fr,G', "Fs,G",
+      '2,G-1', '2,J,G', 'G-1', 'J,G', 'J,G', 'G-1', 'J,G', 'G-1', 'J,G', 'G-1',
+      'J,G', 'T,G-1', 'T,J,G', 'N,G-1', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
+    ),
+    descr = c(
+      'Gating covariate coefficients',
+      'Expert covariate coefficients',
+      'Zero-inflation covariate coefficients',
+      'Observation variance terms (natural log)',
+      'Tweedie power parameter (adjusted logit)',
+      'Observation multivariate correlation (logit)',
+      'Overdispersion rank reduction loadings',
+      'Spatial rank reduction loadings',
+      'Anisotropy terms in spatial gating',
+      'Anisotropy terms in spatial expert',
+      'Spatial gating decay (natural log)',
+      'Spatial expert decay (natural log)',
+      'Spatial expert precision (natural log)',
+      'Temporal gating correlation (logit)',
+      'Temporal expert correlation (logit)',
+      'Temporal gating variance (natural log)',
+      'Temporal expert variance (natural log)',
+      'Overdispersion gating standard deviation (natural log)',
+      'Overdispersion expert standard deviation (natural log)',
+      'Temporal gating random effect',
+      'Temporal expert random effect',
+      'Overdispersion gating random effect',
+      'Overdispersion expert random effect',
+      'Spatial gating random effect',
+      'Spatial expert random effect'
+    ))
+  key <- data.frame(
+    dim = c(
+      'Fr', 'Fs', 'G', 'J', 'Kd', 'Kg', 'M', 'N', 'T', 'V'
+    ),
+    descr = c(
+      'Rank reduction on random error',
+      'Rank reduction on spatial effects',
+      'Number of clusters',
+      'Number of columns in the response',
+      'Number of covariates in gating',
+      'Number of covariates in expert',
+      'Number of covariates in zero inflation',
+      'Number of observations in the response',
+      'Number of unique temporal units',
+      'Number of vertices in INLA mesh'
+    )
+  )
+  out <- list(parm = df, key = key)
+  return(out)
 }

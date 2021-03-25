@@ -219,12 +219,12 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
 
   #Set initial values for kappa and tau if n.r provided
   if(Data$reStruct[1,1] > 2){
-    if(is.null(dim.list$n.r)){
+    if(!is.null(dim.list$n.r)){
       ParList$ln_kappag = rep(log(sqrt(8)/(n.r/2)), (n.g-1))
     }
   }
   if(Data$reStruct[2,1] > 2){
-    if(is.null(dim.list$n.r)){
+    if(!is.null(dim.list$n.r)){
       ParList$ln_kappad = matrix(log(sqrt(8)/(n.r/2)), n.j,n.g)
       ParList$ln_taud = matrix( 1/(2*sqrt(pi)*sqrt(8)/(n.r/2)) ,n.j,n.g)
     }

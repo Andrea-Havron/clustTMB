@@ -23,9 +23,7 @@ test_that('mvn with no random effect, no rank reduction', {
                dim.list =  dim.list
   )
   dim.list$n.v <- Dat$spde$n_s
-  init.parm <- genInit('hc', Dat, family = gaussian(link = "identity"),
-                       dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
-                       mix.method = NULL, r.tol = 1e-10, true.class = NULL)
+  init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
   map.names <- names(map.list)
   exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
@@ -58,9 +56,7 @@ test_that('mvn with gating random effects, no rank reduction', {
   for(j in 1:3){
     Dat$reStruct <- matrix(0,2,3)
     Dat$reStruct[1,j] <- reNum[j]
-    init.parm <- genInit('hc', Dat, family = gaussian(link = "identity"),
-                         dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
-                         mix.method = NULL, r.tol = 1e-10, true.class = NULL)
+    init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
     map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
     map.names <- names(map.list)
     exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
@@ -95,9 +91,7 @@ test_that('mvn with expert random effects, no rank reduction', {
   for(j in 1:3){
     Dat$reStruct <- matrix(0,2,3)
     Dat$reStruct[2,j] <- reNum[j]
-    init.parm <- genInit('hc', Dat, family = gaussian(link = "identity"),
-                         dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
-                         mix.method = NULL, r.tol = 1e-10, true.class = NULL)
+    init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
     map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
     map.names <- names(map.list)
     exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
@@ -138,9 +132,7 @@ test_that('mvn with expert random effects and rank reduction', {
   Dat$reStruct <- matrix(0,2,3)
   Dat$reStruct[2,3] <- 1
   Dat$rrStruct[1] <- 1
-  init.parm <- genInit('hc', Dat, family = gaussian(link = "identity"),
-                       dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
-                       mix.method = NULL, r.tol = 1e-10, true.class = NULL)
+  init.parm <-genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
   map.names <- names(map.list)
   exp.map.names <- c("thetaf", "ld_sp", "Hg_input", "Hd_input",
@@ -171,9 +163,7 @@ test_that('mvn with expert random effects and rank reduction', {
   Dat$reStruct <- matrix(0,2,3)
   Dat$reStruct[2,1] <- 3
   Dat$rrStruct[2] <- 1
-  init.parm <- genInit('hc', Dat, family = gaussian(link = "identity"),
-                       dim.list, data.trans = NA, hc.options = c("VVV", "SVD"), #default matches mclust
-                       mix.method = NULL, r.tol = 1e-10, true.class = NULL)
+  init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
   map.names <- names(map.list)
   exp.map.names <- c("thetaf", "ld_rand", "Hg_input", "Hd_input",

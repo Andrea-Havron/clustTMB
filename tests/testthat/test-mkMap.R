@@ -181,3 +181,47 @@ test_that('mvn with expert random effects and rank reduction', {
 
 })
 
+context('test user specified start/map')
+test_that('map tests', {
+  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, map = list(Sigma = runif(10,0,1))))
+  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, map = list(thetaf = runif(10,0,1))))
+  map.thetaf <- factor(matrix(1.6,n.j,n.g))
+  expect_error(clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'),
+                        covariance.structure = 'VII', G = n.g, map = list(thetaf = map.thetaf)))
+  dim(map.thetaf) <- c(n.j,n.g)
+  mod <- clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'),
+                  covariance.structure = 'VII', G = n.g, map = list(thetaf = map.thetaf),
+                  control = run.options(check.input = TRUE))
+  expect_equal(map.thetaf, mod$map$thetaf)
+  mod <- clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'),
+                  covariance.structure = 'VII', G = n.g, map = list(thetaf = map.thetaf))
+  expect_equal(n.j*n.g*2+n.g-1+1, length(mod$opt$par))
+  init.thetaf <- matrix(1.6,n.j,n.g)
+  map.thetaf <- factor(matrix(NA,n.j,n.g))
+  dim(map.thetaf) <- c(n.j,n.g)
+  mod <- clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'),
+                  covariance.structure = 'VII', G = n.g,
+                  start = list(thetaf = init.thetaf), map = list(thetaf = map.thetaf))
+  expect_equal(init.thetaf, attributes(mod$obj$env$parameters$thetaf)$shape)
+})
+test_that('start tests', {
+  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, start = list(theta = matrix(1.6,n.j,n.g))))
+  expect_warning(clustTMB(y, covariance.structure = 'VVV', G = n.g,
+                          start = list(u_ig = matrix(rnorm(n.i*(n.g-1)),n.i,n.g-1))))
+  expect_error(clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'), G = n.g,
+                        start = list(thetaf = rep(1.6,3)),
+                        covariance.structure = 'VII'))
+  init.thetaf <- matrix(1.6,n.j,n.g)
+  mod <- clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'), G = n.g,
+           start = list(thetaf = init.theta), covariance.structure = 'VII',
+                        control = run.options(check.input = TRUE))
+  expect_equal(init.thetaf, mod$inits$parms$thetaf)
+})
+test_that('incorrect parm dimension', {
+  expect_error()
+})
+context('Tweedie tests')
+test_that('Tweedie covariance structure',{
+  expect_error(clustTMB(log(y-min(y)+1), family = Tweedie(link = 'log'), covariance.structure = 'VVV'))
+})
+

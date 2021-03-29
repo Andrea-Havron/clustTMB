@@ -36,7 +36,6 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
   n.f.sp <- dim.list$n.f.sp
   n.f <- dim.list$n.f
   n.v <- dim.list$n.v
-  n.r <- dim.list$n.r
   nl.fix <- ifelse(n.j>1, (n.j^2-n.j)/2, 1)
   nl.rand <- n.j*n.f.rand - (n.f.rand*(n.f.rand-1))/2
   nl.sp <- n.j*n.f.sp - (n.f.sp*(n.f.sp-1))/2
@@ -219,14 +218,14 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
 
   #Set initial values for kappa and tau if n.r provided
   if(Data$reStruct[1,1] > 2){
-    if(!is.null(dim.list$n.r)){
-      ParList$ln_kappag = rep(log(sqrt(8)/(n.r/2)), (n.g-1))
+    if(!is.null(dim.list$n.r.g)){
+      ParList$ln_kappag = rep(log(sqrt(8)/(dim.list$n.r.g/2)), (n.g-1))
     }
   }
   if(Data$reStruct[2,1] > 2){
-    if(!is.null(dim.list$n.r)){
-      ParList$ln_kappad = matrix(log(sqrt(8)/(n.r/2)), n.j,n.g)
-      ParList$ln_taud = matrix( 1/(2*sqrt(pi)*sqrt(8)/(n.r/2)) ,n.j,n.g)
+    if(!is.null(dim.list$n.r.e)){
+      ParList$ln_kappad = matrix(log(sqrt(8)/(dim.list$n.r.e/2)), n.j,n.g)
+      ParList$ln_taud = matrix( 1/(2*sqrt(pi)*sqrt(8)/(dim.list$n.r.e/2)) ,n.j,n.g)
     }
   }
 

@@ -57,7 +57,7 @@ mkFac <- function(d, f = NA){
 #' @return List defining how to optionally collect and fix parameters
 #' @keywords internal
 #' @noRd
-mkMap <- function(map, Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL){
+mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL){
   #list2env(dim.list, environment(mkMap))
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
@@ -311,6 +311,12 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 fixStruct.names <- function(...){
   return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE', 'RR'))
+}
+
+start.names <- function(...){
+  return(c('thetaf', 'ln_kappa_g', 'ln_kappa_d', 'ln_tau_d', 'logit_rhog',
+    'logit_rhod', 'ln_sigmaup', 'ln_sigma_ep', 'ln_sigmau', 'ln_sigmav',
+    'upsilon_tg', 'epsilon_tjg', 'u_ig', 'v_ifg', 'Gamma_vg', 'Omega_vfg'))
 }
 
 #' Parameter Information

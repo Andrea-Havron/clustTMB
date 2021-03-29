@@ -11,6 +11,8 @@
 #' @param G Integer specifying the number of clusters.
 #' @param rr List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate ressponse to a smaller dimension independent reponse. When used, the covariance structure of the response is swicthed to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.
 #' @param covariance.structure A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.
+#' @param start set initial values for random effects parameters (fixed and random terms)
+#' @param map vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control model specification and user input is limited
 #' @param initialization.args A list consisting of initalization settings used to generate initial values.
 #' control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
 #' 1. init.method - Single character string indicating intial clustering method. Mehtods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
@@ -44,10 +46,11 @@ clustTMB <- function(response = NULL,
                      G = 2,
                      rr = list(spatial = NULL, temporal = NULL, random = NULL),
                      covariance.structure = NULL,
+                     start = list(),
                      map = list(),
                      ##! more advanced arguments can be passed to list. How do I specify this, using ...?
                      initialization.args = list(control = init.options()),
-                     spatial.list = list(loc = NULL, mesh = NULL),
+                     spatial.list = list(loc = NULL, mesh = NULL, init.range = list(gating.range = NULL, expert.range = NULL)),
                      projection.list = list(grid.df = NULL, ##!Need more rules about grid.df spatial structure
                                             ##!need to ensure order of covariates preserved somehow
                                             ##?match names from expert.dat/gating.dat to grid.df?
@@ -57,14 +60,15 @@ clustTMB <- function(response = NULL,
 
   response <- as.matrix(response)
   dim.list <- list(n.i = nrow(response), n.j = ncol(response), n.t = NULL,
-                   n.g = G, n.f.sp = NULL, n.f.rand = NULL, n.v = NULL)
+                   n.g = G, n.f.sp = NULL, n.f.rand = NULL, n.r.g = spatial.list$init.range$gating.range,
+                   n.r.e = spatial.list$init.range$expert.range, n.v = NULL)
   if(is.null(covariance.structure)){
     if(dim.list$n.j == 1){
       covariance.structure = 'E'
       warning("Setting covariance structure to univariate E")
     } else {
       covariance.structure = 'EII'
-      warning("Setting covariance structure to univariate EII")
+      warning("Setting covariance structure to multivariate EII")
     }
   }
 
@@ -281,8 +285,6 @@ clustTMB <- function(response = NULL,
     stop ("You have specified a spatal rank reduction in th expert model and therefore need to specify a spatial model in the expertformula")
   }
 
-  arg.map <- mkMap(map, Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
-
   ##! fix time component of .cpp to distinguish between gating/expert. Implement something similar to glmmTMB?
   Dat <- mkDat(response, time.vector = expert.time-1,
                expert.dat = expert.fix.dat,
@@ -300,16 +302,59 @@ clustTMB <- function(response = NULL,
   initialization.args$Data <- Dat
   initialization.args$dim.list <- dim.list
   initialization.args$family <- family
+  init.parm <- do.call(genInit, initialization.args)
+  arg.map <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
+  #update starting values
+  for (p in names(start)) {
+    if (!(p %in% names(init.parm$parms))) {
+      stop(sprintf('unrecognized parameter name in start: %s', p))
+    }
+    if(!(p %in% start.names())){
+      stop(sprintf('setting initial value unsupported for this parameter as initial value controlled by user specified cluster id: %s', p))
+    }
+    if(p %in% names(arg.map)){
+      warning(sprintf('parameter is not estimated in specified model, setting starting value may affect inference: %s', p))
+    }
+    Ds <- dim(start[[p]])
+    Dp <- dim(init.parm$parms[[p]])
+    if(is.null(Ds)) Ds <- length(start[[p]])
+    if(is.null(Dp)) Dp <- length(init.parm$parms[[p]])
+    if(!all(Ds == Dp)){
+      stop(sprintf('parameter dimension mismatch, see parm.lookup() for dimensions: %s', p))
+    }
+    init.parm$parms[[p]] <- start[[p]]
+  }
+  for(m in names(map)){
+    if(!(m %in% names(init.parm$parms))){
+      stop(sprintf('unrecognized parameter name in map: %s', m))
+    }
+    if(!is.factor(map[[m]])){
+      stop(sprintf('map values need to be specified as factors, see ?TMB::MakeADFun() for details: %s', m))
+    }
+    if(m %in% names(arg.map)){
+      if(all(is.na(arg.map[[m]])) & !(all(is.na(map[[m]])))){
+        stop(sprintf('this parameter is turned off for this model specification and should not be estimated: %s', m))
+      }
+    }
+    Dm <- dim(map[[m]])
+    Dp <- dim(init.parm$parms[[m]])
+    if(is.null(Dm)) Dm <- length(map[[m]])
+    if(is.null(Dp)) Dp <- length(init.parm$parms[[m]])
+    if(!all(Dm == Dp)){
+      stop('parameter dimension mismatch, see parm.lookup() for dimensions')
+    }
+    arg.map[[m]] <- map[[m]]
+  }
   if(control$check.input == TRUE){
     clustTMB.mod <- list(Dat = Dat,
-                    inits = do.call(genInit, initialization.args),
-                    map = mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list),
+                    inits = init.parm,
+                    map = arg.map,
                     random = random.names)
   } else {
     clustTMB.mod <- fit.tmb(
       obj.args = list(data = Dat,
-           parameters = do.call(genInit, initialization.args)$parms,
-           map = mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list),
+           parameters = init.parm$parms,
+           map = arg.map,
            random = random.names,
            DLL="clustTMB",
            silent = TRUE),
@@ -329,5 +374,5 @@ run.options <- function(check.input = NULL, run.model = NULL,
               do.sdreport = do.sdreport))
 }
 
-map.control <- function(args)
+#map.control <- function(args)
 

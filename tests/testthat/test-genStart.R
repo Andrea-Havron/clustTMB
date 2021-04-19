@@ -39,10 +39,10 @@ test_that("Sigma", {
   expect_equal(as.vector(init.parm.mclust$Sigma$g1), exp(init.parm.clustTMB$parms$theta[,1]))
   expect_equal(as.vector(init.parm.mclust$Sigma$g2), exp(init.parm.clustTMB$parms$theta[,2]))
 })
-test_that("Corr", {
-  expect_equal(as.vector(unlist(init.parm.mclust$Corr)),
-               as.vector(1/(1+exp(-init.parm.clustTMB$parms$logit_corr_fix))*2-1))
-})
+# test_that("Corr", { Not same now input is based on cholesky decomp
+#   expect_equal(as.vector(unlist(init.parm.mclust$Corr)),
+#                as.vector(1/(1+exp(-init.parm.clustTMB$parms$logit_corr_fix))*2-1))
+# })
 test_that("Pi", {
   expect_equal(as.vector(unlist(init.parm.mclust$Pi)),
               c(1/(1+exp(-init.parm.clustTMB$parms$betag)),

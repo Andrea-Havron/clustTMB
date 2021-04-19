@@ -1,4 +1,26 @@
 ## Auto generated - do not edit by hand
+.valid_family <- c(
+  gaussian = 0,
+  Gamma = 300,
+  lognormal = 600,
+  tweedie = 700
+)
+.valid_reStruct <- c(
+  na = 0,
+  norm = 1,
+  ar1 = 2,
+  gmrf = 3,
+  gmrf_speedup = 4
+)
+.valid_fixStruct <- c(
+  Univariate = 10,
+  Diag = 20,
+  General = 30
+)
+.valid_rrStruct <- c(
+  full = 0,
+  reduce = 1
+)
 .valid_link <- c(
   log = 0,
   logit = 1,
@@ -7,40 +29,10 @@
   cloglog = 4,
   identity = 5,
   sqrt = 6,
-  boxcox = 7
+  yoejin_boxcox = 7
 )
-.valid_family <- c(
-  gaussian = 0,
-  binomial = 100,
-  betabinomial = 101,
-  beta = 200,
-  Gamma = 300,
-  lognormal = 600,
-  Tweedie = 700
-)
-.valid_covstruct <- c(
-  na = 0,
-  norm = 1,
-  ar1 = 2,
-  gmrf = 3,
-  gmrfSpeedup = 4
-)
-.valid_fixStruct <- c(
-  E   = 20,
-  V   = 21,
-  EII = 22,
-  VII = 23,
-  EEI = 24,
-  VEI = 25,
-  EVI = 26,
-  VVI = 27,
-  EEE = 28,
-  VEE = 29,
-  EVE = 30,
-  EEV = 31,
-  VVE = 32,
-  EVV = 33,
-  VEV = 34,
-  VVV = 35,
-  SFA = 36
+.valid_loglike <- c(
+  postMarginal = 0,
+  marginal = 1,
+  conditional = 2
 )

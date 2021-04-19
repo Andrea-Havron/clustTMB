@@ -248,7 +248,7 @@ clustTMB <- function(response = NULL,
   #clustTMB currently allows for spatial and random rank reduction
   rrStruct = c(0,0)
   if(!is.null(rr$random)){
-    if(rr$random == n.j){
+    if(rr$random == dim.list$n.j){
       stop("random rank reduction must be smaller than the number of columns in the response")
     }
     rrStruct[1] <- 1
@@ -257,7 +257,7 @@ clustTMB <- function(response = NULL,
     dim.list$n.f.rand = dim.list$n.j
   }
   if(!is.null(rr$spatial)){
-    if(rr$spatial == n.j){
+    if(rr$spatial == dim.list$n.j){
       stop("spatial rank reduction must be smaller than the number of columns in the response")
     }
     rrStruct[2] <- 1
@@ -266,21 +266,22 @@ clustTMB <- function(response = NULL,
     dim.list$n.f.sp = dim.list$n.j
   }
   if(sum(rrStruct)>0){
-    if(n.j == 1){
+    if(dim.list$n.j == 1){
       stop('cannot implement rank reduction on univariate models')
     }
     if(covariance.structure != 'RR'){
-      covariance.structure = 'Diag' ##! FixMe
-      warning('Covariance structure changed to Diag. Multivariate models will be reduced to conditionally independent.')
+      covariance.structure = 'RR' ##! FixMe
+      warning('Covariance structure changed to Diagonal. Multivariate models will be reduced to conditionally independent.')
     }
   }
   if(sum(rrStruct)==0 & covariance.structure == 'RR'){
     stop('Need to specify dimensions of rank reduction using rr')
   }
 
-  if((rrStruct[1] == 1) & reStruct[2,3] == 0){
-    stop ("You have specified an random error rank reduction in the expert model and therefore need to specify a normal overdispersion model in the expertformula")
-  }
+  # turn this warning off for now until random error formula updated
+  #if((rrStruct[1] == 1) & reStruct[2,3] == 0){
+  #  stop ("You have specified an random error rank reduction in the expert model and therefore need to specify a normal overdispersion model in the expertformula")
+  #}
   if(rrStruct[2] == 1 & reStruct[2,1] == 0){
     stop ("You have specified a spatal rank reduction in th expert model and therefore need to specify a spatial model in the expertformula")
   }
@@ -303,7 +304,7 @@ clustTMB <- function(response = NULL,
   initialization.args$dim.list <- dim.list
   initialization.args$family <- family
   init.parm <- do.call(genInit, initialization.args)
-  arg.map <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
+  arg.map <- mkMap(Dat$family, covariance.structure, Dat$rrStruct, Dat$reStruct, dim.list)
   #update starting values
   for (p in names(start)) {
     if (!(p %in% names(init.parm$parms))) {
@@ -364,6 +365,14 @@ clustTMB <- function(response = NULL,
   return(clustTMB.mod)
 }
 
+#' Run Options
+#'
+#' @param check.input TRUE: Return initial values before running TMB
+#' @param run.model FALSE: Return TMB object before optimizing model
+#' @param do.sdreport TRUE: Run delta method to obtain standard errors
+#'
+#' @return list
+#' @export
 run.options <- function(check.input = NULL, run.model = NULL,
                         do.sdreport = NULL){
   if(missing(check.input)) check.input <- FALSE

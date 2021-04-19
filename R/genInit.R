@@ -45,6 +45,9 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
 
   # ## Apply any data transformations
   y <- Data$Y
+  if(Data$family == 300 | Data$family == 600){
+    y <- log(y)
+  }
   # if(!is.na(data.trans)){
   #   if(data.trans == "log+1"){
   #     for(j in 1:n.j){
@@ -229,15 +232,20 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
     }
   }
 
+  #re-intitiate data for initial value estimation
+  y <- Data$Y
+  if(Data$family == 300 | Data$family == 600){
+    y <- log(y)
+  }
 
   #Update initial values based on classification
   res.mat <- matrix(0, n.i, n.j)
   if(exp.mod & control$exp.init$mahala){
-    Class <- run.mahala(Class, as.matrix(Data$Y), as.matrix(X.d))
+    Class <- run.mahala(Class, as.matrix(y), as.matrix(X.d))
   }
   for(g in 1:n.g){
     for(j in 1:n.j){
-      y.sub <- Data$Y[Class[,g] == 1,j]
+      y.sub <- y[Class[,g] == 1,j]
       if(exp.mod){
         class.sum <- apply(Class,2,sum)
         if(any(class.sum <= 1)) stop("initalization method results in an empty or unit cluster which is not suitable when intializing the expert model")
@@ -271,9 +279,12 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
         ParList$betad[,j,g] <- mu.init
         ParList$theta[j,g] <- log(var.init)
       }
+      if(Data$family == 300){
+        ParList$theta[j,g] <- log(mu.init^2/var.init)
+      }
     }
 
-    y.mat <- Data$Y[Class[,g] == 1,]
+    y.mat <- y[Class[,g] == 1,]
     if(Data$fixStruct != 10){
       if(exp.mod){
         res <- res.mat[Class[,g] == 1,]
@@ -307,8 +318,19 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
         }
       }
       corvec <- cor.mat[lower.tri(cor.mat)]
+      #L.mat <- t(chol(cor.mat))
       if(Data$fixStruct == 30){
-        ParList$logit_corr_fix[,g] <- log((corvec+1)/(1-corvec))
+      #   off.diag <- c()
+      #   cnt <- 1
+      #   Norm <- 1/diag(L.mat)
+      #   L.mat[upper.tri(L.mat)] <- 0
+      #   for(i in 2:nrow(L.mat)){
+      #     for(j in 1:(i-1)){
+      #       off.diag[cnt] <- L.mat[i,j]*Norm[i]
+      #       cnt <- cnt+1
+      #     }
+      #   }
+        ParList$logit_corr_fix[,g] <- log((corvec+1)/(1-corvec))#off.diag
       }
 
       if(sum(Data$rrStruct)>0){

@@ -79,12 +79,9 @@ vector<Type> norm_exp(vector<Type> x){
 /* Define distributional families *///from glmmTMB
 enum valid_family{
   gaussian_family = 0,
-  binomial_family = 100,
-  betabinomial_family = 101,
-  beta_family = 200,
   Gamma_family = 300,
   lognormal_family = 600,
-  Tweedie_family = 700
+  tweedie_family = 700
 };
 
 
@@ -124,7 +121,7 @@ enum  valid_link{
 enum valid_loglike{
   postMarginal_loglike = 0,
   marginal_loglike = 1,
-  conditional_loglike = 2 
+  conditional_loglike = 2
 };
 
 template<class Type>
@@ -234,9 +231,22 @@ vector<Type> inverse_mlogit(vector<Type> eta){
 template<class Type>
 matrix<Type> corrmat_fun(vector<Type> l, int nj ){
   matrix<Type> ans(nj,nj);
-  int cnt = 0;
-  vector<Type> l_input = invlogit(l)*Type(2)-Type(1);
   ans.setIdentity();
+  vector<Type> l_input = invlogit(l)*Type(2)-Type(1);
+  int cnt = 0;
+  //matrix<Type> L(nj,nj);
+  //L.setIdentity();
+  //for(int j1=1; j1<nj; j1++){
+  //  Type Norm2 = L(j1,j1);
+  //  for(int j2=0; j2<=j1-1; j2++){
+  //    L(j1,j2) = l(cnt);
+  //    Norm2 += L(j1,j2)*L(j1*j2);
+  //  }
+  //  for(int j2=0; j2<=j1; j2++){
+  //    L(j1,j2) /= sqrt(Norm2);
+  //  }
+  //}
+  //matrix<Type> ans = L * L.transpose();
   for(int j1=0; j1<(nj-1); j1++){
     for(int j2=(j1+1); j2<nj; j2++){
       ans(j1,j2) = l_input(cnt);
@@ -296,10 +306,10 @@ array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
         for(int f=0; f<nf; f++){
         for(int j=0; j<nj; j++){
           if(j>=f){
-            ans(j,f) = l(cnt);
+            L(j,f) = l(cnt);
             cnt ++;
           } else {
-            ans(j,f) = 0.0;
+            L(j,f) = 0.0;
           }
         }
         } //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read i as list?
@@ -351,7 +361,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_ARRAY( betad ); // Distribution covariate coefficients; dims: k,j,g
   PARAMETER_ARRAY( betapz ); //Zero-inflation covariate coefficients; dims: m,j,g
   PARAMETER_MATRIX( theta );  //variance parameters; dims: j,g
-  PARAMETER_MATRIX( thetaf ); // If NOT Tweedie, these are mapped to 0, o.w. Tweedie power parameter
+  PARAMETER_MATRIX( thetaf ); // If NOT tweedie, these are mapped to 0, o.w. tweedie power parameter
   PARAMETER_MATRIX( logit_corr_fix );
   PARAMETER_MATRIX( ld_rand ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
   PARAMETER_MATRIX( ld_sp ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
@@ -392,7 +402,7 @@ Type objective_function<Type>::operator() ()
 
   bool pz_flag = (betapz.size() > 0);
 
-  
+
   vector<Type> kappag = exp(ln_kappag);
   vector<Type> taug = 1 / (sqrt(4*M_PI)*kappag);
   vector<Type> rhog = invlogit(logit_rhog);
@@ -413,9 +423,9 @@ Type objective_function<Type>::operator() ()
     }
   }
 
-  //// Tweedie priors
+  //// tweedie priors
   //switch(family){
-  //   case Tweedie_family:
+  //   case tweedie_family:
   //   for(int j=0; j<n_j; j++){
   //    for(int g=0; g<n_g; g++){
   //      nll -= log(Type(1)/(Type(100)-Type(0))); //U(0,100) prior on phi
@@ -566,7 +576,7 @@ Type objective_function<Type>::operator() ()
   Type s1;
   Type s2;
   Type s3;
-  //Tweedie power link
+  //tweedie power link
 
   matrix<Type> tmp_ll(n_i, n_g); //dim: i,g
   tmp_ll.setZero();
@@ -668,7 +678,7 @@ Type objective_function<Type>::operator() ()
           error("General covariance structure not implemented yet for lognormal");
         } // end method switch
         break;
-    case Tweedie_family:
+    case tweedie_family:
       switch(fixStruct){
         case Univariate_fixStruct:
         case Diag_fixStruct:
@@ -838,7 +848,7 @@ Type objective_function<Type>::operator() ()
                   error("Method not implemented");
               } //end switch
               break;
-            case Tweedie_family:
+            case tweedie_family:
               switch(fixStruct){
                 case Univariate_fixStruct:
                 case Diag_fixStruct:

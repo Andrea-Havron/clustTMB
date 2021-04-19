@@ -163,13 +163,23 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
 
 
 #' @importFrom stats make.link
-#' @keywords internal
-#' @noRd
-Tweedie <- function(f = "Tweedie", link = "log"){
-  f <- c(f,list(link=link),make.link(link))
+#' @export
+tweedie <- function(link="log") {
+  r <- list(family="tweedie")
+  f <- c(r, list(link=link),make.link(link))
   class(f) <- "family"
   return(f)
 }
+
+#' @importFrom stats make.link
+#' @export
+lognormal <- function(link="log") {
+  r <- list(family="lognormal")
+  f <- c(r, list(link=link),make.link(link))
+  class(f) <- "family"
+  return(f)
+}
+
 
 #' Sets up data list for TMB model.
 #'
@@ -287,15 +297,14 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   )
 
   Dat$spde <- spdeStruct(mesh)
-  if(family[[1]] == "gaussian") Dat$family <- 0
-  if(family[[1]] == "Tweedie") Dat$family <- 700
-  if(family[[2]] == "log") Dat$link <- 0
-  if(family[[2]] == "identity") Dat$link <- 5
+  Dat$family <- clustTMB:::.valid_family[family[[1]]]
+  Dat$link <- clustTMB:::.valid_link[family[[2]]]
   Dat$loglike <- ll.method
   if(fixStruct == 'E' | fixStruct == 'V'){
     Dat$fixStruct <- 10
   }
-  if(fixStruct == 'EII' | fixStruct == 'VII' | fixStruct == 'EEI' | fixStruct == 'VVI'){
+  if(fixStruct == 'EII' | fixStruct == 'VII' | fixStruct == 'EEI' |
+     fixStruct == 'VVI' | fixStruct == 'RR'){
     Dat$fixStruct <- 20
   }
   if(fixStruct == "VVV" | fixStruct == 'EEE'){
@@ -309,10 +318,14 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 }
 
 
+#' Fixed Covariance Structure names
+#' @export
 fixStruct.names <- function(...){
   return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE', 'RR'))
 }
 
+#' Names of parameters with initial values that can be modified
+#' @export
 start.names <- function(...){
   return(c('thetaf', 'ln_kappa_g', 'ln_kappa_d', 'ln_tau_d', 'logit_rhog',
     'logit_rhod', 'ln_sigmaup', 'ln_sigma_ep', 'ln_sigmau', 'ln_sigmav',

@@ -690,7 +690,7 @@ Type objective_function<Type>::operator() ()
             tmp_ll(i,g) -= VECSCALE(neg_log_dmvnorm, sds)(residual); //record positve likelihood
             //lognormal correction
             for(int j=0; j<n_j; j++){
-              tmp_ll -= log(Y(i,j));
+              tmp_ll(i,g) -= log(Y(i,j));
             }
           }
         }

@@ -303,8 +303,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   if(fixStruct == 'E' | fixStruct == 'V'){
     Dat$fixStruct <- 10
   }
-  if(fixStruct == 'EII' | fixStruct == 'VII' | fixStruct == 'EEI' |
-     fixStruct == 'VVI' | fixStruct == 'RR'){
+  if(fixStruct == 'EII' | fixStruct == 'VII' | fixStruct == 'EEI' | fixStruct == 'VVI'){
     Dat$fixStruct <- 20
   }
   if(fixStruct == "VVV" | fixStruct == 'EEE'){
@@ -321,7 +320,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' Fixed Covariance Structure names
 #' @export
 fixStruct.names <- function(...){
-  return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE', 'RR'))
+  return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE'))
 }
 
 #' Names of parameters with initial values that can be modified

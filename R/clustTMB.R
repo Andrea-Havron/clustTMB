@@ -269,13 +269,9 @@ clustTMB <- function(response = NULL,
     if(dim.list$n.j == 1){
       stop('cannot implement rank reduction on univariate models')
     }
-    if(covariance.structure != 'RR'){
-      covariance.structure = 'RR' ##! FixMe
-      warning('Covariance structure changed to Diagonal. Multivariate models will be reduced to conditionally independent.')
+    if(covariance.structure != 'EII' | covariance.structure != 'VII' | covariance.structure != 'EEI' | covariance.structure != 'VVI' ){
+      stop('Need to specify diagonal covariance structure when implementing rank reduction')
     }
-  }
-  if(sum(rrStruct)==0 & covariance.structure == 'RR'){
-    stop('Need to specify dimensions of rank reduction using rr')
   }
 
   # turn this warning off for now until random error formula updated

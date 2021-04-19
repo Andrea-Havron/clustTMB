@@ -674,8 +674,29 @@ Type objective_function<Type>::operator() ()
             }
           }
           break;
+        case General_fixStruct:
+        for(int g=0; g<n_g; g++){
+          vector<Type> sds(n_j);
+          matrix<Type> Corr_mat = corrmat_fun(vector<Type>(logit_corr_fix.col(g)), n_j );
+          Corr_mat_g.col(g) = Corr_mat;
+          for(int j=0; j<n_j; j++){
+            sds(j) = sqrt(var(j,g));
+          }
+          MVNORM_t<Type> neg_log_dmvnorm(Corr_mat);
+          for(int i=0; i<n_i; i++){
+            for(int j=0; j<n_j; j++){
+             residual(j) = log(Y(i,j)) - mu(i,j,g);
+            }
+            tmp_ll(i,g) -= VECSCALE(neg_log_dmvnorm, sds)(residual); //record positve likelihood
+            //lognormal correction
+            for(int j=0; j<n_j; j++){
+              tmp_ll -= log(Y(i,j));
+            }
+          }
+        }
+        break;
         default:
-          error("General covariance structure not implemented yet for lognormal");
+          error("Covariance structure not implemented for lognormal");
         } // end method switch
         break;
     case tweedie_family:

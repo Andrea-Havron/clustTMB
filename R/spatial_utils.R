@@ -10,8 +10,6 @@
 #' @importFrom methods as
 #' @importFrom Matrix diag
 #' @keywords internal
-#'
-#' @NoRd
 spdeStruct <- function(mesh){
   spde <-inla.spde2.matern(mesh)
   # ---------- Begin code that prepares object for anisotropy.

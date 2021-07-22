@@ -28,12 +28,12 @@ extern "C" {
     {NULL, NULL, 0}
   };
 
-  void R_init_glmmTMB(DllInfo *dll)
+  void R_init_clustTMB(DllInfo *dll)
   {
     R_registerRoutines(dll, NULL, R_CallDef, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 #ifdef TMB_CCALLABLES
-    TMB_CCALLABLES("glmmTMB");
+    TMB_CCALLABLES("clustTMB");
 #endif
   }
 

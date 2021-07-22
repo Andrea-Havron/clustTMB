@@ -185,7 +185,7 @@ head.name <- function(x) { x }
 ##' 3. parenthesized term: \emph{if} the head of the head is | (i.e.
 ##'    it is of the form (xx|gg), then convert it to the default
 ##'    special type; we won't allow pathological cases like
-##'    ((xx|gg)) ... [can we detect them?]
+##'    ((xx|gg))
 ##' @examples
 ##' splitForm(quote(us(x,n=2)))
 ##' @keywords internal
@@ -217,8 +217,7 @@ fbx <- function(term,debug=FALSE,specials=character(0),
     c(fbx(term[[2]],debug,specials), fbx(term[[3]],debug,specials))
 }
 
-##' Parse a formula into fixed formula and random effect terms,
-##' treating 'special' terms (of the form foo(x|g[,m])) appropriately
+##' Parse a formula into fixed formula and random effect terms, from glmmTMB
 ##'
 ##' Taken from Steve Walker's lme4ord,
 ##' ultimately from the flexLambda branch of lme4

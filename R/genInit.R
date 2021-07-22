@@ -1,6 +1,5 @@
 #' genInit: generates initial values for cluster model
 #'
-#' @param init.method Method as string used to generate initial values. Options include: "random", "hc"
 #' @param Data List containing TMB data objects
 #' @param family Distribution family
 #' @param dim.list List of model dimensions
@@ -10,19 +9,15 @@
 #' 3. mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
 #' 4. user - Numeric or character vector defining user specified intial classification. init.method must be set to 'user' when using this option.
 #'
-#' @importFrom stats cutree gaussian hclust runif rmultinom nlminb cor glm
+#' @importFrom stats cutree gaussian hclust runif rmultinom nlminb cor glm var
 #' @importFrom mclust unmap hclass hc hcVVV hcE hcEII hcEEE hcVII hcV
-#' @importFrom e1071 skewness
 #' @importFrom cluster daisy pam
-#' @importFrom geoR boxcoxfit
 #' @importFrom clustMixType kproto
 #' @importFrom nnet multinom
 #'
 #' @return list
 #' @keywords internal
 #' @noRd
-#'
-#' @examples
 genInit <- function(Data, family = NULL, dim.list, control = init.options()){
 
   #list2env(dim.list, environment(genStart))
@@ -40,33 +35,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
   nl.rand <- n.j*n.f.rand - (n.f.rand*(n.f.rand-1))/2
   nl.sp <- n.j*n.f.sp - (n.f.sp*(n.f.sp-1))/2
 
-
-#  if(n.j == 1) hc.options[1] <- 'E'
-
-  # ## Apply any data transformations
+  # Apply any data transformations
   y <- Data$Y
   if(Data$family == 300 | Data$family == 600){
     y <- log(y)
   }
-  # if(!is.na(data.trans)){
-  #   if(data.trans == "log+1"){
-  #     for(j in 1:n.j){
-  #       u <- runif(n.i, 0.1,1)
-  #       y[,j] <- log(Data$Y[,j]+u)
-  #     }
-  #   }
-  #   if(data.trans == "log"){
-  #     y <- log(Data$Y)
-  #   }
-  #   if(data.trans == "Yeojin Boxcox"){
-  #     for(j in 1:n.j){
-  #       u <- runif(n.i, 0.1,1)
-  #       boxlambda <- geoR::boxcoxfit(Data$Y[,j] + u, add.to.data = 0)$lambda
-  #       y[,j] <- ((Data$Y[,j] + u)^boxlambda - 1)/boxlambda
-  #     }
-  #   }
-  # }
-
   X.g <- subset(Data$Xg, select = colnames(Data$Xg) != ('(Intercept)'))
   X.d <- subset(Data$Xd, select = colnames(Data$Xd) != ('(Intercept)'))
   gate.mod <- exp.mod <- FALSE
@@ -183,20 +156,20 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
     ld_rand = matrix(0,nl.rand,n.g),
     ld_sp = matrix(0,nl.sp,n.g),
     Hg_input = matrix(0,2,(n.g-1)),
-    Hd_input = array(0, dim = c(2,n.j,n.g)), #fix in cpp - should be n.f, not n.j
+    Hd_input = array(0, dim = c(2,n.f.sp,n.g)),
     ln_kappag = rep(0, (n.g-1)),
-    ln_kappad = matrix(0,n.j,n.g), #fix in cpp - should be n.f, not n.j
-    ln_taud = matrix(0,n.j,n.g), #fix in cpp - should be n.f, not n.j
+    ln_kappad = matrix(0,n.f.sp,n.g),
+    ln_taud = matrix(0,n.f.sp,n.g),
     logit_rhog = rep(0,(n.g-1)),
     logit_rhod = matrix(0,n.j,n.g),
     ln_sigmaup = rep(0,(n.g-1)),
     ln_sigmaep = matrix(0,n.j,n.g),
     ln_sigmau = rep(0,(n.g-1)),
-    ln_sigmav = matrix(0,n.j,n.g),
+    ln_sigmav = matrix(0,n.f.rand,n.g),
     upsilon_tg = array(0, dim = c(n.t,(n.g-1))),
     epsilon_tjg = array(0, dim = c(n.t,n.j,n.g)),
     u_ig = array(0, dim = c(n.i,(n.g-1))),
-    v_ifg = array(0, dim = c(n.i,n.j,n.g)),
+    v_ifg = array(0, dim = c(n.i,n.f.rand,n.g)),
     Gamma_vg = array(0, dim = c(n.v,(n.g-1))),
     Omega_vfg = array(0, dim = c(n.v,n.f.sp,n.g))
   )
@@ -264,7 +237,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
         } else {
           mu.init <- mean(y.sub)
           var.init <- var(y.sub)
-          power.est <-  e1071::skewness(y.sub)*mu.init/sqrt(var.init)  # Clark and Thayer, 2004
+          power.est <- skewness(y.sub)*mu.init/sqrt(var.init)  # Clark and Thayer, 2004
         }
       }
 
@@ -365,10 +338,10 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
 #' @param x A numeric vector of observations for classification
 #' @param k Integer specifying the number of mixtures
 #'
+#' @importFrom stats sd quantile
 #' @return classification vector
 #'
 #' @keywords internal
-#' @noRd
 mc.qclass <- function (x, k)
 {
   x <- as.vector(x)
@@ -395,23 +368,28 @@ mc.qclass <- function (x, k)
 
 #' Initialization options
 #'
-#' @param init.method
-#' @param hc.options
-#' @param mix.method
-#' @param user.class
-#' @param defaults
+#' @param init.method Name of method used to set initial values. If init.method = 'user', must define 'user.class' with a classification vector.
+#' @param hc.options Model names and use when init.method is 'hc' following conventions of mclust::mclust.options()
+#' @param exp.init Turn on mahala initialization when expert network
+#' @param mix.method Initialization methods when data are mixed. Default method when data are Tweedie distributed.
+#' @param user.class Vector of classification vector set by user and required when init.method = 'user'
 #'
-#' @return
+#' @return list of initialization specifications
 #' @export
 #'
 #' @examples
+#' init.options()
+#' init.options(init.method = 'hc')
+#' init.options(init.method = 'mixed')
+#' init.options(init.method = 'user', user.class = c(1,1,2,1,3,3,1,2))
 init.options <- function(init.method = c("hc", "quantile", "random", "mclust", "kmeans", "mixed", "user"),
                          hc.options = list(
                            modelName = c("VVV", "EII", "EEE", "VII", "V", "E"),
                            use = c("SVD", "VARS", "STD", "SPH", "PCS", "PCR",  "RND")),
                          exp.init = list(mahala = TRUE),
                          mix.method = c("Gower kmeans", "Gower hclust", "kproto"),
-                         user.class = NULL, defaults = c()){
+                         user.class = NULL){
+  defaults = c()
   if(missing(init.method)) defaults <- c(defaults, "init.method")
   if(!missing(init.method) & length(init.method) > 1 | !is.character(init.method) ){
     stop(" 'init.method' must be a single character string, see ?init.options() for valid init.method")
@@ -501,7 +479,7 @@ init.options <- function(init.method = c("hc", "quantile", "random", "mclust", "
 #' @param max.it maximum interation
 #'
 #' @importFrom mclust map unmap
-#' @importFrom stats predict
+#' @importFrom stats lm predict
 #' @importFrom MoEClust MoE_mahala
 #'
 #' @return updated classification matrix

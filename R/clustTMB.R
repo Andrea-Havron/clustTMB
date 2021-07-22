@@ -11,8 +11,8 @@
 #' @param G Integer specifying the number of clusters.
 #' @param rr List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate ressponse to a smaller dimension independent reponse. When used, the covariance structure of the response is swicthed to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.
 #' @param covariance.structure A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.
-#' @param start set initial values for random effects parameters (fixed and random terms)
-#' @param map vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control model specification and user input is limited
+#' @param Start set initial values for random effects parameters (fixed and random terms)
+#' @param Map vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control model specification and user input is limited
 #' @param initialization.args A list consisting of initalization settings used to generate initial values.
 #' control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
 #' 1. init.method - Single character string indicating intial clustering method. Mehtods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
@@ -29,7 +29,7 @@
 #' @importFrom Matrix t
 #' @useDynLib clustTMB
 #'
-#' @return
+#' @return list of objects from fitted model
 #' @export
 #'
 #' @examples
@@ -46,9 +46,8 @@ clustTMB <- function(response = NULL,
                      G = 2,
                      rr = list(spatial = NULL, temporal = NULL, random = NULL),
                      covariance.structure = NULL,
-                     start = list(),
-                     map = list(),
-                     ##! more advanced arguments can be passed to list. How do I specify this, using ...?
+                     Start = list(),
+                     Map = list(),
                      initialization.args = list(control = init.options()),
                      spatial.list = list(loc = NULL, mesh = NULL, init.range = list(gating.range = NULL, expert.range = NULL)),
                      projection.list = list(grid.df = NULL, ##!Need more rules about grid.df spatial structure
@@ -64,10 +63,10 @@ clustTMB <- function(response = NULL,
                    n.r.e = spatial.list$init.range$expert.range, n.v = NULL)
   if(is.null(covariance.structure)){
     if(dim.list$n.j == 1){
-      covariance.structure = 'E'
+      covariance.structure <- 'E'
       warning("Setting covariance structure to univariate E")
     } else {
-      covariance.structure = 'EII'
+      covariance.structure <- 'EII'
       warning("Setting covariance structure to multivariate EII")
     }
   }
@@ -233,8 +232,8 @@ clustTMB <- function(response = NULL,
     warning('intercept removed from gatingformula when random effects specified')
   }
 
-  expert.fix.dat <- model.matrix(nobars(expertformula))
-  gating.fix.dat <- model.matrix(nobars(gatingformula))
+  expert.fix.dat <- model.matrix(nobars(expertformula), expertdata)
+  gating.fix.dat <- model.matrix(nobars(gatingformula), gatingdata)
   if( (length(dimnames(expert.fix.dat)[[2]]) == 1) &
       dimnames(expert.fix.dat)[[2]][1] == "(Intercept)" ){
     expert.fix.dat <- matrix(1, dim.list$n.i, 1, dimnames = list(NULL, '(Intercept)'))
@@ -269,7 +268,7 @@ clustTMB <- function(response = NULL,
     if(dim.list$n.j == 1){
       stop('cannot implement rank reduction on univariate models')
     }
-    if(covariance.structure != 'EII' | covariance.structure != 'VII' | covariance.structure != 'EEI' | covariance.structure != 'VVI' ){
+    if(covariance.structure == 'EEE' | covariance.structure == 'VVV' ){
       stop('Need to specify diagonal covariance structure when implementing rank reduction')
     }
   }
@@ -302,9 +301,9 @@ clustTMB <- function(response = NULL,
   init.parm <- do.call(genInit, initialization.args)
   arg.map <- mkMap(Dat$family, covariance.structure, Dat$rrStruct, Dat$reStruct, dim.list)
   #update starting values
-  for (p in names(start)) {
+  for (p in names(Start)) {
     if (!(p %in% names(init.parm$parms))) {
-      stop(sprintf('unrecognized parameter name in start: %s', p))
+      stop(sprintf('unrecognized parameter name in Start: %s', p))
     }
     if(!(p %in% start.names())){
       stop(sprintf('setting initial value unsupported for this parameter as initial value controlled by user specified cluster id: %s', p))
@@ -312,35 +311,35 @@ clustTMB <- function(response = NULL,
     if(p %in% names(arg.map)){
       warning(sprintf('parameter is not estimated in specified model, setting starting value may affect inference: %s', p))
     }
-    Ds <- dim(start[[p]])
+    Ds <- dim(Start[[p]])
     Dp <- dim(init.parm$parms[[p]])
-    if(is.null(Ds)) Ds <- length(start[[p]])
+    if(is.null(Ds)) Ds <- length(Start[[p]])
     if(is.null(Dp)) Dp <- length(init.parm$parms[[p]])
     if(!all(Ds == Dp)){
       stop(sprintf('parameter dimension mismatch, see parm.lookup() for dimensions: %s', p))
     }
-    init.parm$parms[[p]] <- start[[p]]
+    init.parm$parms[[p]] <- Start[[p]]
   }
-  for(m in names(map)){
+  for(m in names(Map)){
     if(!(m %in% names(init.parm$parms))){
-      stop(sprintf('unrecognized parameter name in map: %s', m))
+      stop(sprintf('unrecognized parameter name in Map: %s', m))
     }
-    if(!is.factor(map[[m]])){
+    if(!is.factor(Map[[m]])){
       stop(sprintf('map values need to be specified as factors, see ?TMB::MakeADFun() for details: %s', m))
     }
     if(m %in% names(arg.map)){
-      if(all(is.na(arg.map[[m]])) & !(all(is.na(map[[m]])))){
+      if(all(is.na(arg.map[[m]])) & !(all(is.na(Map[[m]])))){
         stop(sprintf('this parameter is turned off for this model specification and should not be estimated: %s', m))
       }
     }
-    Dm <- dim(map[[m]])
+    Dm <- dim(Map[[m]])
     Dp <- dim(init.parm$parms[[m]])
-    if(is.null(Dm)) Dm <- length(map[[m]])
+    if(is.null(Dm)) Dm <- length(Map[[m]])
     if(is.null(Dp)) Dp <- length(init.parm$parms[[m]])
     if(!all(Dm == Dp)){
       stop('parameter dimension mismatch, see parm.lookup() for dimensions')
     }
-    arg.map[[m]] <- map[[m]]
+    arg.map[[m]] <- Map[[m]]
   }
   if(control$check.input == TRUE){
     clustTMB.mod <- list(Dat = Dat,

@@ -122,19 +122,19 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
     Map$ln_kappag <- mkFac(d = n.g-1, f = rep(1, n.g-1))
   }
   if(reStruct[2,1] == 0){
-    Map$Hd_input <- mkFac(d = c(2,n.j, n.g), f = rep(NA,2*n.j*n.g))
-    Map$ln_kappad <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
-    Map$ln_taud <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
-    Map$Omega_vfg <- mkFac(d = c(n.v, n.j, n.g), f = rep(NA, n.v*n.j*n.g))
+    Map$Hd_input <- mkFac(d = c(2,n.f.sp, n.g), f = rep(NA,2*n.f.sp*n.g))
+    Map$ln_kappad <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp*n.g))
+    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp*n.g))
+    Map$Omega_vfg <- mkFac(d = c(n.v, n.f.sp, n.g), f = rep(NA, n.v*n.f.sp*n.g))
   }
   if(reStruct[2,1] > 0){
    # use when anisotropy turned on Map$Hd_input <- mkFac(d = c(2,n.j, n.g), f = rep(rep(c(1,2),n.j),n.g))
-    Map$Hd_input <- mkFac(d = c(2,n.j, n.g), f = rep(NA,2*n.j*n.g))
-    Map$ln_kappad <- mkFac(d = c(n.j, n.g), f = rep(1, n.j*n.g))
-    Map$ln_taud <- mkFac(d = c(n.j, n.g), f = rep(1, n.j*n.g))
+    Map$Hd_input <- mkFac(d = c(2,n.f.sp, n.g), f = rep(NA,2*n.f.sp*n.g))
+    Map$ln_kappad <- mkFac(d = c(n.f.sp, n.g), f = rep(1, n.f.sp*n.g))
+    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(1, n.f.sp*n.g))
   }
   if(rrStruct[2] == 1){
-    Map$ln_taud <- mkFac(d = c(n.j,n.g), f = rep(NA, n.j*n.g))
+    Map$ln_taud <- mkFac(d = c(n.f.sp,n.g), f = rep(NA, n.f.sp*n.g))
   }
   if(reStruct[1,2] == 0){
     Map$logit_rhog <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
@@ -150,18 +150,22 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
     Map$ln_sigmau <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
     Map$u_ig <- mkFac(d = c(n.i,n.g-1), f = rep(NA, n.i*(n.g-1)))
   }
-  if(reStruct[2,3] == 0){
-    Map$ln_sigmav <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
-    Map$v_ifg <- mkFac(d = c(n.i,n.j,n.g), f = rep(NA, n.i*n.j*n.g))
+  if(reStruct[2,3] == 0 | rrStruct[1] == 1){
+    Map$ln_sigmav <- mkFac(d = c(n.f.rand, n.g), f = rep(NA, n.f.rand*n.g))
+    if(rrStruct[1] == 0){
+      Map$v_ifg <- mkFac(d = c(n.i,n.f.rand,n.g), f = rep(NA, n.i*n.f.rand*n.g))
+    }
   }
-  if(rrStruct[1] == 1){
-    Map$ln_sigmav <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
-  }
+  # if(rrStruct[1] == 1){
+  #   Map$ln_sigmav <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
+  # }
   return(Map)
 }
 
 
-
+#' Tweedie family and link specification
+#'
+#' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
 tweedie <- function(link="log") {
@@ -171,9 +175,12 @@ tweedie <- function(link="log") {
   return(f)
 }
 
+#' Lognormal family and link specification
+#'
+#' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
-lognormal <- function(link="log") {
+lognormal <- function(link="identity") {
   r <- list(family="lognormal")
   f <- c(r, list(link=link),make.link(link))
   class(f) <- "family"
@@ -218,7 +225,8 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   n.j <- dim.list$n.j
   n.t <- dim.list$n.t
   n.g <- dim.list$n.g
-  n.f <- dim.list$n.f
+  n.f.rand <- dim.list$n.f.rand
+  n.f.sp <- dim.list$n.f.sp
   n.v <- dim.list$n.v
   #list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
   loc <- spatial.list$loc
@@ -297,8 +305,8 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   )
 
   Dat$spde <- spdeStruct(mesh)
-  Dat$family <- clustTMB:::.valid_family[family[[1]]]
-  Dat$link <- clustTMB:::.valid_link[family[[2]]]
+  Dat$family <- .valid_family[family[[1]]]
+  Dat$link <- .valid_link[family[[2]]]
   Dat$loglike <- ll.method
   if(fixStruct == 'E' | fixStruct == 'V'){
     Dat$fixStruct <- 10
@@ -319,13 +327,12 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 #' Fixed Covariance Structure names
 #' @export
-fixStruct.names <- function(...){
+fixStruct.names <- function(){
   return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE'))
 }
 
 #' Names of parameters with initial values that can be modified
-#' @export
-start.names <- function(...){
+start.names <- function(){
   return(c('thetaf', 'ln_kappa_g', 'ln_kappa_d', 'ln_tau_d', 'logit_rhog',
     'logit_rhod', 'ln_sigmaup', 'ln_sigma_ep', 'ln_sigmau', 'ln_sigmav',
     'upsilon_tg', 'epsilon_tjg', 'u_ig', 'v_ifg', 'Gamma_vg', 'Omega_vfg'))
@@ -404,4 +411,19 @@ parm.lookup <- function(){
   )
   out <- list(parm = df, key = key)
   return(out)
+}
+
+
+#' Calculates skewness
+#'
+#' @param x numeric vector of values for which skewness is calculated
+#'
+#' @return skewness value of x
+#' @export
+#'
+skewness <- function(x){
+  n <- length(x)
+  x <- x - mean(x)
+  y <- sqrt(n) * sum(x^3)/(sum(x^2)^(3/2))
+  y <- y * ((1 - 1/n))^(3/2)
 }

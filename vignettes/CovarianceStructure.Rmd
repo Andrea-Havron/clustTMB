@@ -1,0 +1,35 @@
+---
+title: "Covariance Structure"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Covariance Structure}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+This vignette details the different spatio-temporal covariance structures available in clustTMB. 
+
+For position (pos), $s$, time, $t$, and species (spp) $j$, the following covariance structures are avilable in clustTMB:
+\begin{align*}
+Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \epsilon_{t,j} \\
+Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \omega_{s,t,j} \\
+Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \omega_{s,t,j} + \epsilon_{t,j}\\
+Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \epsilon_{t,j} + \omega_{s,j}\times\epsilon_{t,j} \\
+\end{align*}
+Rank Reduction Models:
+Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \epsilon_{t,j} \\
+Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \sum^{F}_{f=1}L_{j,f}\omega_{s,t,j} \\
+Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \omega_{s,t,j} + \epsilon_{t,j}\\
+Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \epsilon_{t,j} + \omega_{s,j}\times\epsilon_{t,j} \\
+
+# ```{r, echo = FALSE}
+# library(knitr)
+# df <- data.frame(
+#   Covariance = c('AR(1)', 'Spatial GMRF', 'SFA GMRF', 'EOF', 'Dynamic SFA GMRF', 'EOF SFA GMRF'),
+#   Notation = c('ar1()))
+# ```

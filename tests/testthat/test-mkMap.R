@@ -122,7 +122,7 @@ test_that('mvn with expert random effects and rank reduction', {
                expert.dat = as.matrix(rep(1, dim.list$n.i)),
                gating.dat = as.matrix(rep(1, dim.list$n.i)),
                ll.method = 0,
-               fixStruct = 'VVV',
+               fixStruct = 'VVI',
                rrStruct = rep(0,2),
                reStruct = matrix(0,2,3),
                dim.list =  dim.list
@@ -135,7 +135,7 @@ test_that('mvn with expert random effects and rank reduction', {
   init.parm <-genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
   map.names <- names(map.list)
-  exp.map.names <- c("thetaf", "ld_sp", "Hg_input", "Hd_input",
+  exp.map.names <- c("thetaf", "ld_sp", "Hg_input", "Hd_input", "logit_corr_fix",
                      "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
                      "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
                      "epsilon_tjg", "u_ig",  "Gamma_vg", "Omega_vfg" )
@@ -176,44 +176,53 @@ test_that('mvn with expert random effects and rank reduction', {
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 
-  expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list$n.g*dim.list$n.j)
-  expect_equal(sum(is.na(map.list$ln_taud)), dim.list$n.g*dim.list$n.j)
+  expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list$n.g*dim.list$n.f.sp)
+  expect_equal(sum(is.na(map.list$ln_taud)), dim.list$n.g*dim.list$n.f.sp)
 
 })
 
 context('test user specified start/map')
 test_that('map tests', {
-  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, map = list(Sigma = runif(10,0,1))))
-  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, map = list(thetaf = runif(10,0,1))))
+  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, Map = list(Sigma = runif(10,0,1))))
+  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, Map = list(thetaf = runif(10,0,1))))
   map.thetaf <- factor(matrix(1.6,n.j,n.g))
   expect_error(clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
-                        covariance.structure = 'VII', G = n.g, map = list(thetaf = map.thetaf)))
+                        covariance.structure = 'VII', G = n.g, Map = list(thetaf = map.thetaf)))
   dim(map.thetaf) <- c(n.j,n.g)
   mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
-                  covariance.structure = 'VII', G = n.g, map = list(thetaf = map.thetaf),
+                  covariance.structure = 'VII', G = n.g, Map = list(thetaf = map.thetaf),
                   control = run.options(check.input = TRUE))
   expect_equal(map.thetaf, mod$map$thetaf)
   mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
-                  covariance.structure = 'VII', G = n.g, map = list(thetaf = map.thetaf))
+                  covariance.structure = 'EII', G = n.g, Map = list(thetaf = map.thetaf))
+  expect_equal(n.j*n.g+1+n.g-1+1, length(mod$opt$par))
+  mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
+                  covariance.structure = 'VII', G = n.g, Map = list(thetaf = map.thetaf))
+  expect_equal(n.j*n.g+n.g+n.g-1+1, length(mod$opt$par))
+  mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
+                  covariance.structure = 'EEI', G = n.g, Map = list(thetaf = map.thetaf))
+  expect_equal(n.j*n.g+n.j+n.g-1+1, length(mod$opt$par))
+  mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
+                  covariance.structure = 'VVI', G = n.g, Map = list(thetaf = map.thetaf))
   expect_equal(n.j*n.g*2+n.g-1+1, length(mod$opt$par))
   init.thetaf <- matrix(1.6,n.j,n.g)
   map.thetaf <- factor(matrix(NA,n.j,n.g))
   dim(map.thetaf) <- c(n.j,n.g)
   mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'),
                   covariance.structure = 'VII', G = n.g,
-                  start = list(thetaf = init.thetaf), map = list(thetaf = map.thetaf))
+                  Start = list(thetaf = init.thetaf), Map = list(thetaf = map.thetaf))
   expect_equal(init.thetaf, attributes(mod$obj$env$parameters$thetaf)$shape)
 })
 test_that('start tests', {
-  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, start = list(theta = matrix(1.6,n.j,n.g))))
+  expect_error(clustTMB(y, covariance.structure = 'VVV', G = n.g, Start = list(theta = matrix(1.6,n.j,n.g))))
   ##Fix Me! expect_condition(try(clustTMB(y, covariance.structure = 'VVV', G = n.g,
   #                         start = list(u_ig = matrix(rnorm(n.i*(n.g-1)),n.i,n.g-1)))))
   expect_error(clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'), G = n.g,
-                        start = list(thetaf = rep(1.6,3)),
+                        Start = list(thetaf = rep(1.6,3)),
                         covariance.structure = 'VII'))
   init.thetaf <- matrix(1.6,n.j,n.g)
   mod <- clustTMB(log(y-min(y)+1), family = tweedie(link = 'log'), G = n.g,
-           start = list(thetaf = init.thetaf), covariance.structure = 'VII',
+           Start = list(thetaf = init.thetaf), covariance.structure = 'VII',
                         control = run.options(check.input = TRUE))
   expect_equal(init.thetaf, mod$inits$parms$thetaf)
 })

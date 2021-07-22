@@ -1,13 +1,16 @@
 Package: clustTMB
-Title: GLMM finite mixture model
+Title: Spatio-temporal Finite Mixture Model using TMB
 Version: 0.0.1.0
 Authors@R: 
     person(given = "Andrea",
            family = "Havron",
            role = c("aut", "cre"),
            email = "ahavron@uw.edu")
-Description: Fits a glmm finite cluster model using TMB. Spatial and temporal random effects can be incorporated into the gating and.or expert formula
-License: MIT + file LICENSE
+Description: Fits a spatio-temporal finite mixture model using TMB. 
+    Spatial and temporal random effects can be incorporated into the 
+    gating formula using multinomial logistic regression, the expert 
+    formula using a generalized linear mixed model framework, or both.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
@@ -23,8 +26,6 @@ Imports:
     tweedie,
     glmmTMB,
     cluster,
-    e1071,
-    geoR,
     clustMixType,
     mvnfast,
     MoEClust,
@@ -37,4 +38,12 @@ LinkingTo:
 NeedsCompilation: yes
 SystemRequirements: GNU make
 Suggests: 
-    testthat
+    testthat,
+    knitr,
+    rmarkdown,
+    kableExtra,
+    ggplot2,
+    inlabru,
+    sp,
+    splancs
+VignetteBuilder: knitr

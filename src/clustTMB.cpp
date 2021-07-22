@@ -1,3 +1,4 @@
+#define TMB_LIB_INIT R_init_clustTMB
 #include <TMB.hpp>
 
 using namespace density;
@@ -11,7 +12,6 @@ bool isNA(Type x){
   return R_IsNA(asDouble(x));
 }
 
-//dirichlet distribution
 template<class Type>
 Type lddirichlet(vector<Type> q, vector<Type> alpha){
   Type ans = 0;
@@ -19,7 +19,7 @@ Type lddirichlet(vector<Type> q, vector<Type> alpha){
   ans += lgamma(alpha.sum());
   for(int a=0; a<n_a; a++){
     ans -= lgamma(alpha(a));
-    ans += pow(q(a), (alpha(a)-Type(1)));
+    ans -= (alpha(a)-Type(1)) * log(q(a));
   }
   return ans;
 }
@@ -298,15 +298,16 @@ array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
   int nf = d(1);
   int ng = d(2);
   array<Type> ans(ni,nj,ng);
-  int cnt = 0;
+  int cnt;
   switch(rrStruct){
     case reduce_rrStruct:
       for(int g=0; g<ng; g++){
+        cnt = 0;
         matrix<Type> L(nj, nf);
         for(int f=0; f<nf; f++){
         for(int j=0; j<nj; j++){
           if(j>=f){
-            L(j,f) = l(cnt);
+            L(j,f) = l(cnt,g);
             cnt ++;
           } else {
             L(j,f) = 0.0;
@@ -366,16 +367,16 @@ Type objective_function<Type>::operator() ()
   PARAMETER_MATRIX( ld_rand ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
   PARAMETER_MATRIX( ld_sp ); //!!!! length of ld may not be equal for each g - need to fix code to account for this -- read in as vector with separate id vector
   PARAMETER_MATRIX( Hg_input ); //dims: 2, n_g-1
-  PARAMETER_ARRAY( Hd_input ); //dims: 2, n_j, n_g
+  PARAMETER_ARRAY( Hd_input ); //dims: 2, (Multivariate:n_j, RR:n_f), n_g
   PARAMETER_VECTOR( ln_kappag );   //dims: n_g-1
-  PARAMETER_MATRIX( ln_kappad );   //dims: n_j, n_g
-  PARAMETER_MATRIX( ln_taud );     //dims: n_j, n_g
+  PARAMETER_MATRIX( ln_kappad );   //dims: (Multivariate:n_j, RR:n_f), n_g
+  PARAMETER_MATRIX( ln_taud );     //dims: (Multivariate:n_j, RR:n_f), n_g
   PARAMETER_VECTOR( logit_rhog );    //dims: n_g-1
   PARAMETER_MATRIX( logit_rhod ); //dims: n_j, n_g
   PARAMETER_VECTOR( ln_sigmaup );   //dims: ng-1
   PARAMETER_MATRIX( ln_sigmaep ); //dims: n_j, n_g
   PARAMETER_VECTOR( ln_sigmau );    //dims: n_g-1
-  PARAMETER_MATRIX( ln_sigmav );   //dims: n_j, n_g
+  PARAMETER_MATRIX( ln_sigmav );   //dims: (Multivariate:n_j, RR:n_f), n_g
   PARAMETER_ARRAY( upsilon_tg ); //dims: n_t, n_g-1
   PARAMETER_ARRAY( epsilon_tjg ); //dims: n_t, n_j, n_g
   PARAMETER_ARRAY( u_ig ); //dims: n_i, n_g-1
@@ -415,10 +416,14 @@ Type objective_function<Type>::operator() ()
   matrix<Type> sigmav(n_j, n_g);
   for(int g=0; g<n_g; g++){
     for(int j=0; j<n_j; j++){
-      kappad(j,g) = exp(ln_kappad(j,g));
-      taud(j,g) = exp(ln_taud(j,g));
       rhod(j,g) = invlogit(logit_rhod(j,g));
       sigmaep(j,g) = exp(ln_sigmaep(j,g));
+    }
+    for(int j=0; j<ln_kappad.col(0).size(); j++){
+      kappad(j,g) = exp(ln_kappad(j,g));
+      taud(j,g) = exp(ln_taud(j,g));
+    }
+    for(int j=0; j<ln_sigmav.col(0).size(); j++){
       sigmav(j,g) = exp(ln_sigmav(j,g));
     }
   }

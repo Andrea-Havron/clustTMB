@@ -4,32 +4,97 @@ output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Covariance Structure}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+```
+
+This vignette details the different covariance structures available in clustTMB. 
+
+## Random Effect Covariace Matrices
+
+```{r table, echo = FALSE, warnings = FALSE}
+tbl <- data.frame(
+  'Covariance' = c('Spatial GMRF', 'AR(1)', 'Rank Reduction', 'Spatial Rank Reduction'),
+  'Notation' = c('gmrf', 'ar1', 'rr(random = H)', 'rr(spatial = H)' ),
+  'No. of Parameters' = c('2', '2', 'JH - (H(H-1))/2', '1 + JH - (H(H-1))/2'),
+  'Data requirements' = c('spatial coordinates', 'unit spaced levels', '', 'spatial coordinates')
+)
+kbl(tbl, booktabs = TRUE)
 ```
 
 
-This vignette details the different spatio-temporal covariance structures available in clustTMB. 
+### Spatial GMRF
 
-For position (pos), $s$, time, $t$, and species (spp) $j$, the following covariance structures are avilable in clustTMB:
-\begin{align*}
-Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \epsilon_{t,j} \\
-Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \omega_{s,t,j} \\
-Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \omega_{s,t,j} + \epsilon_{t,j}\\
-Y_{s,t,j} &= \beta_{0_{j,t}} + \omega_{s,j} + \epsilon_{t,j} + \omega_{s,j}\times\epsilon_{t,j} \\
-\end{align*}
-Rank Reduction Models:
-Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \epsilon_{t,j} \\
-Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \sum^{F}_{f=1}L_{j,f}\omega_{s,t,j} \\
-Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \omega_{s,t,j} + \epsilon_{t,j}\\
-Y_{s,t,j} &= \beta_{0_{j,t}} + \sum^{F}_{f=1}L_{j,f}\omega_{s,f} + \epsilon_{t,j} + \omega_{s,j}\times\epsilon_{t,j} \\
+clustTMB fits spatial random effects using a Gaussian Markov Random Field (GMRF). The precision matrix, $Q$, of the GMRF is the inverse of a Mat\'{e}rn covariance function and takes two parameters: 1) $\kappa$, which is the spatial decay parameter and a scaled function of the spatial range, $\phi = \sqrt{8}/\kappa$, the distance at which two locations are considered independent; and 2) $\tau$, which is a function of $\kappa$ and the marginal spatial variance $\sigma^{2}$:
 
-# ```{r, echo = FALSE}
-# library(knitr)
-# df <- data.frame(
-#   Covariance = c('AR(1)', 'Spatial GMRF', 'SFA GMRF', 'EOF', 'Dynamic SFA GMRF', 'EOF SFA GMRF'),
-#   Notation = c('ar1()))
-# ```
+$$\tau = \frac{1}{2\sqrt{\pi}\kappa\sigma}.$$
+The precision matrix is approximated following the SPDE-FEM approach \citep{Lindgren2011}, where a constrained Delaunay triangulation network is used to discretize the spatial extent in order to determine a GMRF for a set of irregularly spaced locations, i$. 
+
+$$\omega_{i} \sim GMRF(Q[\kappa, \tau])$$
+
+#### Spatial Example
+Prior to fitting a spatial cluster model with clustTMB, users need to set up the constrained Delaunay Triangulation network using INLA. For guidance on setting up an appropriate mesh, see [Triangulation details and examples](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh) and [Tools for mesh assessment](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) from 
+```{r spatial example, include = FALSE}
+library(clustTMB)
+library(sp)
+library(INLA)
+data("meuse")
+```
+
+```{r run INLA meshbuilder, eval = FALSE}
+library(clustTMB)
+library(sp)
+library(INLA)
+data("meuse")
+meshbuilder() #launches INLA mesh shiny app
+```
+
+In this example, the following mesh specifications were used:
+```{r meuse mesh}
+Loc <- meuse[,1:2]
+Bnd <- inla.nonconvex.hull(as.matrix(Loc), convex=200)
+meuse.mesh <- inla.mesh.2d(as.matrix(Loc),
+                           max.edge = c(300,1000),
+                           boundary = Bnd)
+```
+
+```{r fig1, fig.height = 3, fig.width = 5, echo = FALSE}
+library(ggplot2)
+library(inlabru)
+ggplot() + gg(meuse.mesh) +  
+  geom_point(mapping = aes(x=Loc[,1],y=Loc[,2], size=0.5), size = 0.5) +
+  theme_classic()
+```
+
+Coordinates are converted to a spatial point dataframe and read into the clustTMB model, along with the mesh, using the spatial.list argument. The gating formula is specified using the gmrf() command:
+```{r set up model}
+  sp::coordinates(Loc) <- ~ x*y
+ mod <- clustTMB(response = meuse[,3:6], 
+                     family = lognormal(link = 'identity'),
+                     gatingformula =  ~ gmrf(0 + 1|loc),
+                     G=4, covariance.structure = 'VVV', 
+                     spatial.list = list(loc = Loc, mesh = meuse.mesh)
+)
+```
+
+Models are optimized with nlminb(), model results can be viewed with nlminb commands:
+```{r view results}
+#Estimated fixed parameters
+mod$opt$par
+#Minimum negative log likelihood
+mod$opt$objective
+```
+## Gating Network Examples
+
+When random effects, $\mathbb{u}$, are specified in the gating network, the probability of cluster membership $\pi_{i,g}$ for observation $i$ is fit using multinomial regression: 
+
+$$
+\begin{align}
+ \mathbb{\eta}_{,g} &= X\mathbb{\beta}_{,g} + \mathbb{u}_{,g} \\
+ \mathbb{\pi}_{,g} &= \frac{ exp(\mathbb{\eta}_{,g})}{\sum^{G}_{g=1}exp(\mathbb{\eta}_{,g})} 
+ \end{align}
+$$

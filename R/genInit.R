@@ -164,11 +164,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
     logit_rhod = matrix(0,n.j,n.g),
     ln_sigmaup = rep(0,(n.g-1)),
     ln_sigmaep = matrix(0,n.j,n.g),
-    ln_sigmau = rep(0,(n.g-1)),
+    #ln_sigmau = rep(0,(n.g-1)),
     ln_sigmav = matrix(0,n.f.rand,n.g),
     upsilon_tg = array(0, dim = c(n.t,(n.g-1))),
     epsilon_tjg = array(0, dim = c(n.t,n.j,n.g)),
-    u_ig = array(0, dim = c(n.i,(n.g-1))),
+    #u_ig = array(0, dim = c(n.i,(n.g-1))),
     v_ifg = array(0, dim = c(n.i,n.f.rand,n.g)),
     Gamma_vg = array(0, dim = c(n.v,(n.g-1))),
     Omega_vfg = array(0, dim = c(n.v,n.f.sp,n.g))
@@ -265,6 +265,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
       } else {
         cor.mat <- cor(y.mat)
       }
+      #Apply correction if NA in cor.mat
       if(sum(is.na(cor.mat))>0){
         idx.na <- which(is.na(cor.mat), arr.ind = TRUE)
         tmp.pa <- matrix(0, nrow(y.mat), n.j)
@@ -289,7 +290,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()){
             (tmp.confusion[1,1]*tmp.confusion[2,2] - tmp.confusion[1,2]*tmp.confusion[2,1]) /
             sqrt(denom)
         }
-      }
+      } # end correction
       corvec <- cor.mat[lower.tri(cor.mat)]
       #L.mat <- t(chol(cor.mat))
       if(Data$fixStruct == 30){

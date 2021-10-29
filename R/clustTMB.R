@@ -212,6 +212,10 @@ clustTMB <- function(response = NULL,
       reStruct[1,2] <- 2
       random.names <- c(random.names, "upsilon_tg")
     }
+    # if(gating.re.names[i] == "norm"){
+    #   reStruct[1,3] <- 1
+    #   random.names <- c(random.names, "u_ig")
+    # }
   }
   for(i in seq_along(expert.re.names)){
     if(expert.re.names[i] == "gmrf"){
@@ -226,6 +230,10 @@ clustTMB <- function(response = NULL,
       reStruct[2,2] <- 2
       random.names <- c(random.names, "epsilon_tjg")
     }
+    # if(expert.re.names[i] == "norm"){
+    #   reStruct[2,3] <- 1
+    #   random.names <- c(random.names, "v_ifg")
+    # }
   }
   if(sum(reStruct[1,]>0) & attributes(terms(gatingformula))$intercept == 1){
     gatingformula <- update(gatingformula, ~ . -1)
@@ -247,16 +255,18 @@ clustTMB <- function(response = NULL,
   #clustTMB currently allows for spatial and random rank reduction
   rrStruct = c(0,0)
   if(!is.null(rr$random)){
-    if(rr$random == dim.list$n.j){
+    if(rr$random >= dim.list$n.j){
       stop("random rank reduction must be smaller than the number of columns in the response")
     }
     rrStruct[1] <- 1
     dim.list$n.f.rand = rr$random
+    random.names <- c(random.names, "v_ifg")
+
   } else {
     dim.list$n.f.rand = dim.list$n.j
   }
   if(!is.null(rr$spatial)){
-    if(rr$spatial == dim.list$n.j){
+    if(rr$spatial >= dim.list$n.j){
       stop("spatial rank reduction must be smaller than the number of columns in the response")
     }
     rrStruct[2] <- 1
@@ -273,12 +283,11 @@ clustTMB <- function(response = NULL,
     }
   }
 
-  # turn this warning off for now until random error formula updated
-  #if((rrStruct[1] == 1) & reStruct[2,3] == 0){
-  #  stop ("You have specified an random error rank reduction in the expert model and therefore need to specify a normal overdispersion model in the expertformula")
-  #}
+  # if((rrStruct[1] == 1) & reStruct[2,3] == 0){
+  #   stop ("You have specified an random error rank reduction in the expert model and therefore need to specify a normal overdispersion model in the expertformula")
+  # }
   if(rrStruct[2] == 1 & reStruct[2,1] == 0){
-    stop ("You have specified a spatal rank reduction in th expert model and therefore need to specify a spatial model in the expertformula")
+    stop ("You have specified a spatal rank reduction in the expert model and therefore need to specify a spatial model in the expertformula")
   }
 
   ##! fix time component of .cpp to distinguish between gating/expert. Implement something similar to glmmTMB?
@@ -378,5 +387,4 @@ run.options <- function(check.input = NULL, run.model = NULL,
               do.sdreport = do.sdreport))
 }
 
-#map.control <- function(args)
 

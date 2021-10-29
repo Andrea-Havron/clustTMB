@@ -375,11 +375,11 @@ Type objective_function<Type>::operator() ()
   PARAMETER_MATRIX( logit_rhod ); //dims: n_j, n_g
   PARAMETER_VECTOR( ln_sigmaup );   //dims: ng-1
   PARAMETER_MATRIX( ln_sigmaep ); //dims: n_j, n_g
-  PARAMETER_VECTOR( ln_sigmau );    //dims: n_g-1
+  //PARAMETER_VECTOR( ln_sigmau );    //dims: n_g-1 //!not implemented yet
   PARAMETER_MATRIX( ln_sigmav );   //dims: (Multivariate:n_j, RR:n_f), n_g
   PARAMETER_ARRAY( upsilon_tg ); //dims: n_t, n_g-1
   PARAMETER_ARRAY( epsilon_tjg ); //dims: n_t, n_j, n_g
-  PARAMETER_ARRAY( u_ig ); //dims: n_i, n_g-1
+  //PARAMETER_ARRAY( u_ig ); //dims: n_i, n_g-1 //!not implemented yet
   PARAMETER_ARRAY( v_ifg ); //dims: n_i, (Multivariate:n_j, RR:n_f), n_g
   PARAMETER_ARRAY( Gamma_vg ); //dims: n_v, n_g-1
   PARAMETER_ARRAY( Omega_vfg ); //dims: n_v, (Multivariate:n_j, RR:n_f), n_g
@@ -408,7 +408,7 @@ Type objective_function<Type>::operator() ()
   vector<Type> taug = 1 / (sqrt(4*M_PI)*kappag);
   vector<Type> rhog = invlogit(logit_rhog);
   vector<Type> sigmaup = exp(ln_sigmaup);
-  vector<Type> sigmau = exp(ln_sigmau);
+  //vector<Type> sigmau = exp(ln_sigmau); //!not implemented yet
   matrix<Type> kappad(n_j, n_g);
   matrix<Type> taud(n_j, n_g);
   matrix<Type> rhod(n_j, n_g);
@@ -454,8 +454,8 @@ Type objective_function<Type>::operator() ()
   tParmg.setZero();
   vector<Type> spParmg(4);
   spParmg.setZero();
-  vector<Type> ovParmg(1);
-  ovParmg.setZero();
+  //vector<Type> ovParmg(1);
+  //ovParmg.setZero();
 
 
   for(int g=0; g<(n_g-1); g++){
@@ -465,7 +465,7 @@ Type objective_function<Type>::operator() ()
     spParmg(3) = Hg_input(1,g);
     tParmg(0) = rhog(g);
     tParmg(1) = sigmaup(g);
-    ovParmg(0) = sigmau(g);
+    //ovParmg(0) = sigmau(g);
     //Spatial effect
 
     nll_re += spNll(Gamma_vg.col(g), spParmg, spde, reStruct(0,0), this->do_simulate);
@@ -474,7 +474,7 @@ Type objective_function<Type>::operator() ()
     nll_re += reNll(upsilon_tg.col(g), tParmg, reStruct(0,1), this->do_simulate);
 
     //Overdispersion
-    nll_re += reNll(u_ig.col(g), ovParmg, reStruct(0,2), this->do_simulate);
+    //nll_re += reNll(u_ig.col(g), ovParmg, reStruct(0,2), this->do_simulate);
   }
 
   //////// Expert
@@ -539,7 +539,7 @@ Type objective_function<Type>::operator() ()
   matrix<Type> etag = Xg*betag;
   for(int g=0; g<(n_g-1); g++){
     for(int i=0; i<n_i; i++){
-      etag(i,g) += Gamma_ig(i,g) + upsilon_tg(t(i),g) + u_ig(i,g);
+      etag(i,g) += Gamma_ig(i,g) + upsilon_tg(t(i),g);// + u_ig(i,g);
     }
   }
   matrix<Type> pi(n_i, n_g);
@@ -986,6 +986,7 @@ Type objective_function<Type>::operator() ()
   REPORT( Corr_mat_g );
   REPORT( residual );
   REPORT( Omega_vjg );
+  REPORT( v_ijg );
   REPORT( etad_pred );
   REPORT( mu_pred );
 
@@ -993,7 +994,7 @@ Type objective_function<Type>::operator() ()
     REPORT( Y );
     REPORT( upsilon_tg );
     REPORT( epsilon_tjg );
-    REPORT( u_ig );
+  //  REPORT( u_ig );
     REPORT( v_ifg );
     REPORT( Gamma_vg );
     REPORT( Omega_vfg );

@@ -3,7 +3,7 @@
 #'
 #' @param obj.args List of arguments for TMB MakeADFun() function
 #' @param opt.args List of arguments for nlminb() function
-#' @param control List controling model runs and standard error reporting
+#' @param control List controlling model runs and standard error reporting
 #'
 #' @return Fitted objective function, nlminb output, reported values from model, sdreport if true
 #'
@@ -146,10 +146,10 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
     Map$ln_sigmaep <-  mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
     Map$epsilon_tjg <- mkFac(d = c(n.t,n.j,n.g), f = rep(NA, n.t*n.j*n.g))
   }
-  if(reStruct[1,3] == 0){
-    Map$ln_sigmau <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
-    Map$u_ig <- mkFac(d = c(n.i,n.g-1), f = rep(NA, n.i*(n.g-1)))
-  }
+  # if(reStruct[1,3] == 0){
+  #   Map$ln_sigmau <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
+  #   Map$u_ig <- mkFac(d = c(n.i,n.g-1), f = rep(NA, n.i*(n.g-1)))
+  # }
   if(reStruct[2,3] == 0 | rrStruct[1] == 1){
     Map$ln_sigmav <- mkFac(d = c(n.f.rand, n.g), f = rep(NA, n.f.rand*n.g))
     if(rrStruct[1] == 0){
@@ -334,9 +334,9 @@ fixStruct.names <- function(){
 #' Names of parameters with initial values that can be modified
 start.names <- function(){
   return(c('thetaf', 'ln_kappa_g', 'ln_kappa_d', 'ln_tau_d', 'logit_rhog',
-    'logit_rhod', 'ln_sigmaup', 'ln_sigma_ep', 'ln_sigmau', 'ln_sigmav',
-    'upsilon_tg', 'epsilon_tjg', 'u_ig', 'v_ifg', 'Gamma_vg', 'Omega_vfg'))
-}
+    'logit_rhod', 'ln_sigmaup', 'ln_sigma_ep',  'ln_sigmav',
+    'upsilon_tg', 'epsilon_tjg', 'v_ifg', 'Gamma_vg', 'Omega_vfg'))
+} #removed ln_sigmau, u_ig
 
 #' Parameter Information
 #'
@@ -351,19 +351,21 @@ parm.lookup <- function(){
       'betag', 'betad', 'betapz', 'theta', 'thetaf', 'logit_corr_fix',
       'ld_rand', 'ld_sp', 'Hg_input', 'Hd_input', 'ln_kappa_g', 'ln_kappa_d',
       'ln_tau_d', 'logit_rhog', 'logit_rhod', 'ln_sigmaup', 'ln_sigmaep',
-      'ln_sigmau', 'ln_sigmav', 'upsilon_tg', 'epsilon_tjg', 'u_ig', 'v_ifg',
+      'ln_sigmav', 'upsilon_tg', 'epsilon_tjg', 'v_ifg',
       'Gamma_vg', 'Omega_vfg'
-    ),
-    type = c(rep('Fixed', 19), rep('Random', 6)),
+    ), #removed ln_sigmau, u_ig
+    type = c(rep('Fixed', 18), rep('Random', 5)), #Fixed 19 -> 18; Random 6 -> 5
     str = c(
       'Matrix', 'Array', 'Array', rep('Matrix',6), 'Array',
       'Vector', 'Matrix', 'Matrix', 'Vector', 'Matrix', 'Vector',
-      'Matrix', 'Vector', 'Matrix', rep('Array', 6)
+      # 'Matrix', 'Vector', 'Matrix', rep('Array', 6)
+      'Matrix', 'Matrix', rep('Array', 5)
     ),
     dim = c(
       'Kg,G-1', 'Kd,J,G', 'M,J,G', 'J,G', 'J,G', '(J^2-J)/2', 'Fr,G', "Fs,G",
-      '2,G-1', '2,J,G', 'G-1', 'J,G', 'J,G', 'G-1', 'J,G', 'G-1', 'J,G', 'G-1',
-      'J,G', 'T,G-1', 'T,J,G', 'N,G-1', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
+      '2,G-1', '2,J,G', 'G-1', 'J,G', 'J,G', 'G-1', 'J,G', 'G-1', 'J,G', #'G-1',
+      # 'J,G', 'T,G-1', 'T,J,G',  'N,G-1', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
+      'Fr,G', 'T,G-1', 'T,J,G', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
     ),
     descr = c(
       'Gating covariate coefficients',
@@ -383,11 +385,11 @@ parm.lookup <- function(){
       'Temporal expert correlation (logit)',
       'Temporal gating variance (natural log)',
       'Temporal expert variance (natural log)',
-      'Overdispersion gating standard deviation (natural log)',
+      # 'Overdispersion gating standard deviation (natural log)',
       'Overdispersion expert standard deviation (natural log)',
       'Temporal gating random effect',
       'Temporal expert random effect',
-      'Overdispersion gating random effect',
+      # 'Overdispersion gating random effect',
       'Overdispersion expert random effect',
       'Spatial gating random effect',
       'Spatial expert random effect'
@@ -409,7 +411,8 @@ parm.lookup <- function(){
       'Number of vertices in INLA mesh'
     )
   )
-  out <- list(parm = df, key = key)
+  note <- list('ln_sigma_v not estimated - fixed to ln(1)')
+  out <- list(parm = df, key = key, note = note)
   return(out)
 }
 

@@ -28,8 +28,8 @@ test_that('mvn with no random effect, no rank reduction', {
   map.names <- names(map.list)
   exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
                      "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
-                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
-                     "epsilon_tjg", "u_ig", "v_ifg", "Gamma_vg", "Omega_vfg"   )
+                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmav", "upsilon_tg",
+                     "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"   ) #rm ln_sigmau, u_ig
   for(m in 1:length(map.names)){
     expect_equal(sapply(map.list[map.names[m]], dim), sapply(init.parm$parms[map.names[m]], dim))
   }
@@ -49,8 +49,8 @@ test_that('mvn with gating random effects, no rank reduction', {
   dim.list$n.v <- Dat$spde$n_s
   exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
                      "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
-                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
-                     "epsilon_tjg", "u_ig", "v_ifg", "Gamma_vg", "Omega_vfg"   )
+                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmav", "upsilon_tg",
+                     "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"   )  #rm ln_sigmau, u_ig
   reNum <- c(3, 2, 1)
   parmName <- list("Gamma_vg", c("logit_rhog", "ln_sigmaup", "upsilon_tg"), c("ln_sigmau","u_ig"))
   for(j in 1:3){
@@ -61,8 +61,8 @@ test_that('mvn with gating random effects, no rank reduction', {
     map.names <- names(map.list)
     exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
                        "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
-                       "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
-                       "epsilon_tjg", "u_ig", "v_ifg", "Gamma_vg", "Omega_vfg"   )
+                       "ln_sigmaup",  "ln_sigmaep", "ln_sigmav", "upsilon_tg",
+                       "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"   )  #rm ln_sigmau, u_ig
     for(i in 1:length(parmName[[j]])){
       exp.map.names <- exp.map.names[exp.map.names != parmName[[j]][i]]
     }
@@ -96,8 +96,8 @@ test_that('mvn with expert random effects, no rank reduction', {
     map.names <- names(map.list)
     exp.map.names <- c("thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
                        "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
-                       "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
-                       "epsilon_tjg", "u_ig", "v_ifg", "Gamma_vg", "Omega_vfg"   )
+                       "ln_sigmaup",  "ln_sigmaep", "ln_sigmav", "upsilon_tg",
+                       "epsilon_tjg",  "v_ifg", "Gamma_vg", "Omega_vfg"   )   #rm ln_sigmau, u_ig
     for(i in 1:length(parmName[[j]])){
       exp.map.names <- exp.map.names[exp.map.names != parmName[[j]][i]]
     }
@@ -137,15 +137,20 @@ test_that('mvn with expert random effects and rank reduction', {
   map.names <- names(map.list)
   exp.map.names <- c("thetaf", "ld_sp", "Hg_input", "Hd_input", "logit_corr_fix",
                      "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
-                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
-                     "epsilon_tjg", "u_ig",  "Gamma_vg", "Omega_vfg" )
+                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmav", "upsilon_tg",
+                     "epsilon_tjg", "Gamma_vg", "Omega_vfg" )  #rm ln_sigmau, u_ig
 
   for(m in 1:length(map.names)){
     expect_equal(sapply(map.list[map.names[m]], dim), sapply(init.parm$parms[map.names[m]], dim))
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 
-  expect_equal(sum(is.na(map.list$ln_sigmaep)), dim.list$n.g*dim.list$n.j)
+  expect_equal(sum(is.na(map.list$ln_sigmav)), dim.list$n.g*dim.list$n.f.rand)
+
+  expect_equal(dim(init.parm$parms$v_ifg), c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g))
+
+  expect_equal(dim(init.parm$parms$ld_rand)[1], c(dim.list$n.j*dim.list$n.f.rand -
+                                                    (dim.list$n.f.rand*(dim.list$n.f.rand-1))/2))
 
   ## spatial reduction
   dim.list <- list(n.i = n.i, n.j = n.j, n.t = 1,
@@ -168,8 +173,8 @@ test_that('mvn with expert random effects and rank reduction', {
   map.names <- names(map.list)
   exp.map.names <- c("thetaf", "ld_rand", "Hg_input", "Hd_input",
                      "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
-                     "ln_sigmaup",  "ln_sigmaep", "ln_sigmau", "ln_sigmav", "upsilon_tg",
-                     "epsilon_tjg", "u_ig", "v_ifg", "Gamma_vg"  )
+                     "ln_sigmaup",  "ln_sigmaep",  "ln_sigmav", "upsilon_tg",
+                     "epsilon_tjg", "v_ifg", "Gamma_vg"  )  #rm ln_sigmau, u_ig
 
   for(m in 1:length(map.names)){
     expect_equal(sapply(map.list[map.names[m]], dim), sapply(init.parm$parms[map.names[m]], dim))
@@ -178,6 +183,11 @@ test_that('mvn with expert random effects and rank reduction', {
 
   expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list$n.g*dim.list$n.f.sp)
   expect_equal(sum(is.na(map.list$ln_taud)), dim.list$n.g*dim.list$n.f.sp)
+
+  expect_equal(dim(init.parm$parms$Omega_vfg), c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g))
+
+  expect_equal(dim(init.parm$parms$ld_sp)[1], c(dim.list$n.j*dim.list$n.f.sp -
+                                                    (dim.list$n.f.sp*(dim.list$n.f.sp-1))/2))
 
 })
 

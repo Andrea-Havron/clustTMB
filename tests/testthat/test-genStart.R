@@ -54,7 +54,7 @@ test_that("Class", {
 test_that("Random Effects dim", {
   expect_equal(c(dim.list$n.t, dim.list$n.g-1), dim(init.parm.clustTMB$parms$upsilon_tg))
   expect_equal(c(dim.list$n.t, dim.list$n.j, dim.list$n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
-  expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
+  #expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
   expect_equal(c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), dim(init.parm.clustTMB$parms$v_ifg))
   expect_equal(c(dim.list$n.v, dim.list$n.g-1), dim(init.parm.clustTMB$parms$Gamma_vg))
   expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
@@ -112,7 +112,7 @@ test_that("Class", {
 test_that("Random Effects dim", {
   expect_equal(c(dim.list$n.t, dim.list$n.g-1), dim(init.parm.clustTMB$parms$upsilon_tg))
   expect_equal(c(dim.list$n.t, dim.list$n.j, dim.list$n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
-  expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
+  #expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
   expect_equal(c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), dim(init.parm.clustTMB$parms$v_ifg))
   expect_equal(c(dim.list$n.v, dim.list$n.g-1), dim(init.parm.clustTMB$parms$Gamma_vg))
   expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
@@ -307,6 +307,7 @@ adj.z <- init.z(y. = as.matrix(hema),
 test_that("class",{
   expect_equal(new.z, adj.z)
 })
+
 
 # test_that("mu", {
 #   expect_equal(as.vector(init.parm.mclust$mu$g1), init.parm.clustTMB$parms$betad[1,,1])

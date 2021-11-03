@@ -243,12 +243,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
   }
   if((!is.null(mesh)|!is.null(loc)) & is.null(grid.df)){
-    warning("grid.df is null. Need to provide locations in projection.list$grid.df for spatial predictions")
-  }
-  if(is.null(loc)&is.null(mesh)){
-    #create dummy mesh for model - not used in inference or projection
-    loc <- matrix(runif(n.i*2,0,1), ncol=2)
-    mesh <- inla.mesh.create(as.matrix(loc))
+    warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
   }
   if(!is.null(loc)& is.null(mesh)){
     #default mesh - in future add options to include arguments for inla.mesh.2d
@@ -267,14 +262,19 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
       loc <- mesh$loc[mesh$idx$loc,1:2]
     }
   }
-  n.v <- mesh$n
-  A <- inla.spde.make.A(mesh, loc)
+  if(is.null(mesh)){
+    A <- as(matrix(0, n.i, 1), 'dgCMatrix')
+    n.v <- 1
+  } else {
+    A <- inla.spde.make.A(mesh, loc)
+    n.v <- mesh$n
+  }
 
   if(is.null(grid.df)){
-    #create dummy projection grid - ##! be sure to turn off projection when reporting out
-    grid.loc <- as.matrix(expand.grid(x = seq(0,1,.1), y = seq(0,1,.1)))
-    Xd_proj = matrix(1, nrow(grid.loc), 1)
-    Xg_proj = matrix(1, nrow(grid.loc), 1)
+    Xd_proj = matrix(1)
+    Xg_proj = matrix(1)
+    doProj <- FALSE
+    A.proj <- as(matrix(0), 'dgCMatrix')
   } else {
     grid.loc <- as.matrix(grid.df@coords)
     if(class(grid.df) == "SpatialPoints" ){ ##!is this the best way to do this?
@@ -285,8 +285,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
       Xd_proj <- as.matrix(grid.data[expert.pred.names])
       Xg_proj <- as.matrix(grid.data[gating.pred.names])
     }
+    doProj <- TRUE
+    A.proj <- inla.spde.make.A(mesh, grid.loc)
   }
-  A.proj <- inla.spde.make.A(mesh, grid.loc)
 
 
   if(is.null(offset)) offset = rep(1, dim.list$n.i)
@@ -300,8 +301,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     Offset = offset,
     A = A,
     A_proj = A.proj,
-    Xd_proj = matrix(1, nrow(grid.loc), 1),
-    Xg_proj = matrix(1, nrow(grid.loc), 1)
+    doProj = doProj,
+    Xd_proj = Xd_proj,
+    Xg_proj = Xg_proj
   )
 
   Dat$spde <- spdeStruct(mesh)

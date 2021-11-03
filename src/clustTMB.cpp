@@ -163,13 +163,15 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
   H(1,0) = parmVec(3);
   H(0,1) = parmVec(3);
   H(1,1) = ( 1 + pow(parmVec(3),2) )/exp(parmVec(2));
+  int nq = reVec.size();
 
-  SparseMatrix<Type> Q = Q_spde(Spde, parmVec(0), H);
+  SparseMatrix<Type> Q(nq,nq);
   switch(reStruct){
       case na_reStruct:
         ans += 0;
         break;
       case gmrf_reStruct:
+        Q = Q_spde(Spde, parmVec(0), H);
         ans += SCALE(GMRF(Q),1/parmVec(1))( reVec );
         if(do_simulate){
            vector<Type>simVec(reVec.size());
@@ -178,6 +180,7 @@ Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int
         }
         break;
       case gmrf_speedup_reStruct:
+        Q = Q_spde(Spde, parmVec(0), H);
         ans += SCALE(GMRF(Q, false),1/parmVec(1))( reVec );
         if(do_simulate){
            vector<Type>simVec(reVec.size());
@@ -342,6 +345,7 @@ Type objective_function<Type>::operator() ()
   DATA_MATRIX( Xpz ); //Static Covariates that drive zero inflation: i x m for m covariates
   DATA_SPARSE_MATRIX( A ); // Map vertex v to site s
   DATA_SPARSE_MATRIX( A_proj ); // Map vertex v to projection grid n
+  DATA_INTEGER( doProj );
   DATA_MATRIX( Xd_proj ); //Distribution covariates used for prediction
   DATA_MATRIX( Xg_proj ); //Cluster covariates used for prediction
 
@@ -915,46 +919,53 @@ Type objective_function<Type>::operator() ()
   }
 
   //// Prediction ===========================================================================
-  matrix<Type> Gamma_xg = A_proj * gamma_vg;
+  if(doProj){
+    matrix<Type> Gamma_xg = A_proj * gamma_vg;
 
 
-  matrix<Type> etapi_pred = Xg_proj * betag;
-  matrix<Type> pi_pred(n_x,n_g);
-  vector<int> Class_pred(n_x);
-  for(int g=0; g<(n_g-1); g++){
-    etapi_pred.col(g) += Gamma_xg.col(g);
-  }
-  for(int n=0; n<n_x; n++){
-    pi_pred.row(n) = inverse_mlogit(vector<Type>(etapi_pred.row(n)));
+    matrix<Type> etapi_pred = Xg_proj * betag;
+    matrix<Type> pi_pred(n_x,n_g);
+    vector<int> Class_pred(n_x);
+    for(int g=0; g<(n_g-1); g++){
+      etapi_pred.col(g) += Gamma_xg.col(g);
+    }
+    for(int n=0; n<n_x; n++){
+      pi_pred.row(n) = inverse_mlogit(vector<Type>(etapi_pred.row(n)));
+      for(int g=0; g<n_g; g++){
+        if(pi_pred(n,g) == max(vector<Type>(pi_pred.row(n)))) Class_pred(n) = g;
+      }
+    }
+
+    //density prediction only implemented for spatial
+    array<Type> Omega_xjg(n_x, n_j, n_g);
+    matrix<Type> tmp_omega2(n_v, n_j);
     for(int g=0; g<n_g; g++){
-      if(pi_pred(n,g) == max(vector<Type>(pi_pred.row(n)))) Class_pred(n) = g;
+      tmp_omega2.setZero();
+      for(int v=0; v<n_v; v++){
+        for(int j=0; j<n_j; j++){
+          tmp_omega2(v,j) = Omega_vjg(v,j,g);
+        }
+      }
+      Omega_xjg.col(g) = A_proj * tmp_omega2;
     }
-  }
 
-  //density prediction only implemented for spatial
-  array<Type> Omega_xjg(n_x, n_j, n_g);
-  matrix<Type> tmp_omega2(n_v, n_j);
-  for(int g=0; g<n_g; g++){
-    tmp_omega2.setZero();
-    for(int v=0; v<n_v; v++){
+    matrix<Type> etad_pred(n_x, n_j);
+    etad_pred.setZero();
+    matrix<Type> mu_pred(n_x, n_j);
+    for(int n=0; n<n_x; n++){
       for(int j=0; j<n_j; j++){
-        tmp_omega2(v,j) = Omega_vjg(v,j,g);
+        for(int k=0; k<n_k; k++){
+          etad_pred(n,j) += Xd_proj(n,k) * betad(k,j,Class_pred(n));
+        }
+        etad_pred(n,j) += Omega_xjg(n,j,Class_pred(n));
+        mu_pred(n,j) = inverse_linkfun(etad_pred(n,j), link);
       }
     }
-    Omega_xjg.col(g) = A_proj * tmp_omega2;
-  }
-
-  matrix<Type> etad_pred(n_x, n_j);
-  etad_pred.setZero();
-  matrix<Type> mu_pred(n_x, n_j);
-  for(int n=0; n<n_x; n++){
-    for(int j=0; j<n_j; j++){
-      for(int k=0; k<n_k; k++){
-        etad_pred(n,j) += Xd_proj(n,k) * betad(k,j,Class_pred(n));
-      }
-      etad_pred(n,j) += Omega_xjg(n,j,Class_pred(n));
-      mu_pred(n,j) = inverse_linkfun(etad_pred(n,j), link);
-    }
+    REPORT( Gamma_xg );
+    REPORT( pi_pred );
+    REPORT( Class_pred );
+    REPORT( etad_pred );
+    REPORT( mu_pred );
   }
 
 
@@ -975,10 +986,7 @@ Type objective_function<Type>::operator() ()
   REPORT( nll_data );
   //REPORT( nll );
   REPORT( zhat );
-  REPORT( Gamma_xg );
-  REPORT( pi_pred );
   REPORT( classification );
-  REPORT( Class_pred );
 
   REPORT( tmp_ll );
   REPORT( Gamma_ig );
@@ -987,8 +995,6 @@ Type objective_function<Type>::operator() ()
   REPORT( residual );
   REPORT( Omega_vjg );
   REPORT( v_ijg );
-  REPORT( etad_pred );
-  REPORT( mu_pred );
 
   SIMULATE{
     REPORT( Y );
@@ -999,9 +1005,6 @@ Type objective_function<Type>::operator() ()
     REPORT( Gamma_vg );
     REPORT( Omega_vfg );
     REPORT( Omega_vjg );
-    REPORT( mu_pred );
-    REPORT( etad_pred );
-
   }
 
  //// ===================================================================================================

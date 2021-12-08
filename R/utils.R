@@ -282,8 +282,16 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
       Xg_proj = matrix(1, nrow(grid.loc), 1)
     } else {
       grid.data <- grid.df@data
-      Xd_proj <- as.matrix(grid.data[expert.pred.names])
-      Xg_proj <- as.matrix(grid.data[gating.pred.names])
+      if(is.null(expert.pred.names)){
+        Xd_proj = matrix(1, nrow(grid.loc), 1)
+      } else {
+        Xd_proj <- as.matrix(grid.data[expert.pred.names])
+      }
+      if(is.null(gating.pred.names)){
+        Xg_proj = matrix(1, nrow(grid.loc), 1)
+      } else {
+        Xg_proj <- as.matrix(grid.data[gating.pred.names])
+      }
     }
     doProj <- TRUE
     A.proj <- inla.spde.make.A(mesh, grid.loc)

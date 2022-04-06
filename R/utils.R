@@ -8,15 +8,17 @@
 #' @return Fitted objective function, nlminb output, reported values from model, sdreport if true
 #'
 #' @noRd
-fit.tmb <- function(obj.args, opt.args = list(control = list(iter = 800, eval = 800),
-                                              hessian = NULL, scale = 1,
-                                              lower = -Inf, upper = Inf ),
-                    control = list(run.model = TRUE, do.sdreport = TRUE)){
+fit.tmb <- function(obj.args, opt.args = list(
+                      control = list(iter = 800, eval = 800),
+                      hessian = NULL, scale = 1,
+                      lower = -Inf, upper = Inf
+                    ),
+                    control = list(run.model = TRUE, do.sdreport = TRUE)) {
   obj <- do.call(MakeADFun, obj.args)
-  if(control$run.model){
-    opt <- with(obj, do.call(nlminb,  c(list(par, fn, gr), opt.args) ))
+  if (control$run.model) {
+    opt <- with(obj, do.call(nlminb, c(list(par, fn, gr), opt.args)))
     report <- obj$report(obj$env$last.par.best)
-    if(control$do.sdreport){
+    if (control$do.sdreport) {
       sdr <- sdreport(obj)
       fit.results <- list(obj = obj, opt = opt, report = report, sdr = sdr)
     } else {
@@ -36,9 +38,9 @@ fit.tmb <- function(obj.args, opt.args = list(control = list(iter = 800, eval = 
 #' @return Integer or vector of factors
 #' @keywords internal
 #' @noRd
-mkFac <- function(d, f = NA){
+mkFac <- function(d, f = NA) {
   ans <- factor(f)
-  if(length(d)>1){
+  if (length(d) > 1) {
     dim(ans) <- d
   }
   return(ans)
@@ -57,8 +59,8 @@ mkFac <- function(d, f = NA){
 #' @return List defining how to optionally collect and fix parameters
 #' @keywords internal
 #' @noRd
-mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL){
-  #list2env(dim.list, environment(mkMap))
+mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL) {
+  # list2env(dim.list, environment(mkMap))
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
   n.t <- dim.list$n.t
@@ -66,94 +68,106 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
   n.f.sp <- dim.list$n.f.sp
   n.f.rand <- dim.list$n.f.rand
   n.v <- dim.list$n.v
-  nl.rand <- n.j*n.f.rand - (n.f.rand*(n.f.rand-1))/2
-  nl.sp <- n.j*n.f.sp - (n.f.sp*(n.f.sp-1))/2
-  nl.fix <- ifelse(n.j>1, (n.j^2-n.j)/2, 1)
+  nl.rand <- n.j * n.f.rand - (n.f.rand * (n.f.rand - 1)) / 2
+  nl.sp <- n.j * n.f.sp - (n.f.sp * (n.f.sp - 1)) / 2
+  nl.fix <- ifelse(n.j > 1, (n.j^2 - n.j) / 2, 1)
 
-  #Map out parameters based on model structure
+  # Map out parameters based on model structure
   Map <- list()
   # if(sum(reStruct[1,]>0)){ ##! Rather than map out intercept, change formula to remove intercept and include warning
   #   Map$betag = mkFac(d = c(1,n.g-1), f = rep(NA, n.g-1)) #map out betag if random effects terms
   # }
-  if(Family != 700) Map$thetaf <- mkFac(d = c(n.j,n.g), f = rep(NA, n.j*n.g))
-  if( covstruct != 30  ){ # if not a general covariance structure
-    Map$logit_corr_fix <- mkFac(d = c(nl.fix, n.g), f = rep(NA, nl.fix*n.g))
+  if (Family != 700) Map$thetaf <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j * n.g))
+  if (covstruct != 30) { # if not a general covariance structure
+    Map$logit_corr_fix <- mkFac(d = c(nl.fix, n.g), f = rep(NA, nl.fix * n.g))
   }
-  if(rrStruct[1] == 0){
-    Map$ld_rand <- mkFac(d = c(nl.rand, n.g), f = rep(NA, nl.rand*n.g))
+  if (rrStruct[1] == 0) {
+    Map$ld_rand <- mkFac(d = c(nl.rand, n.g), f = rep(NA, nl.rand * n.g))
   }
-  if(rrStruct[2] == 0){
-    Map$ld_sp <- mkFac(d = c(nl.sp, n.g), f = rep(NA, nl.sp*n.g))
+  if (rrStruct[2] == 0) {
+    Map$ld_sp <- mkFac(d = c(nl.sp, n.g), f = rep(NA, nl.sp * n.g))
   }
-  if(covstruct == 'EII'){ #Diagonal, equal variance within and between cluster
-    Map$theta <- mkFac(d = c(n.j, n.g), f = rep(1, n.j*n.g))
+  if (covstruct == "EII") { # Diagonal, equal variance within and between cluster
+    Map$theta <- mkFac(d = c(n.j, n.g), f = rep(1, n.j * n.g))
   }
-  if(covstruct == 'VII'){ #Diagonal, equal variance within cluster, variable variance between clusters
-    Map$theta <- mkFac(d = c(n.j, n.g),
-                       f = as.vector(
-                         matrix(rep(1:n.g, each = n.j), n.j, n.g)
-                       ))
+  if (covstruct == "VII") { # Diagonal, equal variance within cluster, variable variance between clusters
+    Map$theta <- mkFac(
+      d = c(n.j, n.g),
+      f = as.vector(
+        matrix(rep(1:n.g, each = n.j), n.j, n.g)
+      )
+    )
   }
-  if(covstruct == 'EEI'){ #Diagonal, variable variance within cluster, equal variance between clusters
-    Map$theta <- mkFac(d = c(n.j, n.g),
-                       f = as.vector(
-                         matrix(rep(1:n.j, each = n.g), n.j, n.g, byrow = TRUE)
-                       ))
+  if (covstruct == "EEI") { # Diagonal, variable variance within cluster, equal variance between clusters
+    Map$theta <- mkFac(
+      d = c(n.j, n.g),
+      f = as.vector(
+        matrix(rep(1:n.j, each = n.g), n.j, n.g, byrow = TRUE)
+      )
+    )
   }
-  if(covstruct == 'EEE'){ #General, variable variance and covariance within cluster, equal variance and covariance between clusters
-    Map$logit_corr_fix <- mkFac(d = c(nl.fix, n.g),
-                                f = as.vector(
-                                  matrix(rep(1:nl.fix, each = n.g),
-                                         nl.fix, n.g, byrow = TRUE)
-                                  ))
-    Map$theta <- mkFac(d = c(n.j, n.g),
-                       f = as.vector(
-                         matrix(rep(1:n.j, each = n.g),
-                                n.j, n.g, byrow = TRUE)
-                       ))
+  if (covstruct == "EEE") { # General, variable variance and covariance within cluster, equal variance and covariance between clusters
+    Map$logit_corr_fix <- mkFac(
+      d = c(nl.fix, n.g),
+      f = as.vector(
+        matrix(rep(1:nl.fix, each = n.g),
+          nl.fix, n.g,
+          byrow = TRUE
+        )
+      )
+    )
+    Map$theta <- mkFac(
+      d = c(n.j, n.g),
+      f = as.vector(
+        matrix(rep(1:n.j, each = n.g),
+          n.j, n.g,
+          byrow = TRUE
+        )
+      )
+    )
   }
-  if(reStruct[1,1] == 0){
-    Map$Hg_input <- mkFac(d = c(2,n.g-1), f = rep(NA, 2*(n.g-1)))
-    Map$ln_kappag <- mkFac(d = n.g-1, f = rep(NA, n.g-1))
-    Map$Gamma_vg <- mkFac(d = c(n.v,n.g-1), f = rep(NA, n.v*(n.g-1)))
+  if (reStruct[1, 1] == 0) {
+    Map$Hg_input <- mkFac(d = c(2, n.g - 1), f = rep(NA, 2 * (n.g - 1)))
+    Map$ln_kappag <- mkFac(d = n.g - 1, f = rep(NA, n.g - 1))
+    Map$Gamma_vg <- mkFac(d = c(n.v, n.g - 1), f = rep(NA, n.v * (n.g - 1)))
   }
-  if(reStruct[1,1] > 0){
-    Map$Hg_input = mkFac(d = c(2,n.g-1), f = rep(NA, 2*(n.g-1)))
-    Map$ln_kappag <- mkFac(d = n.g-1, f = rep(1, n.g-1))
+  if (reStruct[1, 1] > 0) {
+    Map$Hg_input <- mkFac(d = c(2, n.g - 1), f = rep(NA, 2 * (n.g - 1)))
+    Map$ln_kappag <- mkFac(d = n.g - 1, f = rep(1, n.g - 1))
   }
-  if(reStruct[2,1] == 0){
-    Map$Hd_input <- mkFac(d = c(2,n.f.sp, n.g), f = rep(NA,2*n.f.sp*n.g))
-    Map$ln_kappad <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp*n.g))
-    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp*n.g))
-    Map$Omega_vfg <- mkFac(d = c(n.v, n.f.sp, n.g), f = rep(NA, n.v*n.f.sp*n.g))
+  if (reStruct[2, 1] == 0) {
+    Map$Hd_input <- mkFac(d = c(2, n.f.sp, n.g), f = rep(NA, 2 * n.f.sp * n.g))
+    Map$ln_kappad <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp * n.g))
+    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp * n.g))
+    Map$Omega_vfg <- mkFac(d = c(n.v, n.f.sp, n.g), f = rep(NA, n.v * n.f.sp * n.g))
   }
-  if(reStruct[2,1] > 0){
-   # use when anisotropy turned on Map$Hd_input <- mkFac(d = c(2,n.j, n.g), f = rep(rep(c(1,2),n.j),n.g))
-    Map$Hd_input <- mkFac(d = c(2,n.f.sp, n.g), f = rep(NA,2*n.f.sp*n.g))
-    Map$ln_kappad <- mkFac(d = c(n.f.sp, n.g), f = rep(1, n.f.sp*n.g))
-    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(1, n.f.sp*n.g))
+  if (reStruct[2, 1] > 0) {
+    # use when anisotropy turned on Map$Hd_input <- mkFac(d = c(2,n.j, n.g), f = rep(rep(c(1,2),n.j),n.g))
+    Map$Hd_input <- mkFac(d = c(2, n.f.sp, n.g), f = rep(NA, 2 * n.f.sp * n.g))
+    Map$ln_kappad <- mkFac(d = c(n.f.sp, n.g), f = rep(1, n.f.sp * n.g))
+    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(1, n.f.sp * n.g))
   }
-  if(rrStruct[2] == 1){
-    Map$ln_taud <- mkFac(d = c(n.f.sp,n.g), f = rep(NA, n.f.sp*n.g))
+  if (rrStruct[2] == 1) {
+    Map$ln_taud <- mkFac(d = c(n.f.sp, n.g), f = rep(NA, n.f.sp * n.g))
   }
-  if(reStruct[1,2] == 0){
-    Map$logit_rhog <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
-    Map$ln_sigmaup <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
-    Map$upsilon_tg <- mkFac(d = c(n.t,n.g-1), f = rep(NA, n.t*(n.g-1)))
+  if (reStruct[1, 2] == 0) {
+    Map$logit_rhog <- mkFac(d = c(n.g - 1), f = rep(NA, n.g - 1))
+    Map$ln_sigmaup <- mkFac(d = c(n.g - 1), f = rep(NA, n.g - 1))
+    Map$upsilon_tg <- mkFac(d = c(n.t, n.g - 1), f = rep(NA, n.t * (n.g - 1)))
   }
-  if(reStruct[2,2] == 0){
-    Map$logit_rhod <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
-    Map$ln_sigmaep <-  mkFac(d = c(n.j, n.g), f = rep(NA, n.j*n.g))
-    Map$epsilon_tjg <- mkFac(d = c(n.t,n.j,n.g), f = rep(NA, n.t*n.j*n.g))
+  if (reStruct[2, 2] == 0) {
+    Map$logit_rhod <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j * n.g))
+    Map$ln_sigmaep <- mkFac(d = c(n.j, n.g), f = rep(NA, n.j * n.g))
+    Map$epsilon_tjg <- mkFac(d = c(n.t, n.j, n.g), f = rep(NA, n.t * n.j * n.g))
   }
   # if(reStruct[1,3] == 0){
   #   Map$ln_sigmau <- mkFac(d = c(n.g-1), f = rep(NA, n.g-1))
   #   Map$u_ig <- mkFac(d = c(n.i,n.g-1), f = rep(NA, n.i*(n.g-1)))
   # }
-  if(reStruct[2,3] == 0 | rrStruct[1] == 1){
-    Map$ln_sigmav <- mkFac(d = c(n.f.rand, n.g), f = rep(NA, n.f.rand*n.g))
-    if(rrStruct[1] == 0){
-      Map$v_ifg <- mkFac(d = c(n.i,n.f.rand,n.g), f = rep(NA, n.i*n.f.rand*n.g))
+  if (reStruct[2, 3] == 0 | rrStruct[1] == 1) {
+    Map$ln_sigmav <- mkFac(d = c(n.f.rand, n.g), f = rep(NA, n.f.rand * n.g))
+    if (rrStruct[1] == 0) {
+      Map$v_ifg <- mkFac(d = c(n.i, n.f.rand, n.g), f = rep(NA, n.i * n.f.rand * n.g))
     }
   }
   # if(rrStruct[1] == 1){
@@ -168,9 +182,9 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
 #' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
-tweedie <- function(link="log") {
-  r <- list(family="tweedie")
-  f <- c(r, list(link=link),make.link(link))
+tweedie <- function(link = "log") {
+  r <- list(family = "tweedie")
+  f <- c(r, list(link = link), make.link(link))
   class(f) <- "family"
   return(f)
 }
@@ -180,9 +194,9 @@ tweedie <- function(link="log") {
 #' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
-lognormal <- function(link="identity") {
-  r <- list(family="lognormal")
-  f <- c(r, list(link=link),make.link(link))
+lognormal <- function(link = "identity") {
+  r <- list(family = "lognormal")
+  f <- c(r, list(link = link), make.link(link))
   class(f) <- "family"
   return(f)
 }
@@ -216,11 +230,13 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
                   fixStruct, rrStruct, reStruct, dim.list,
                   offset = NULL,
                   spatial.list = list(loc = NULL, mesh = NULL),
-                  projection.list = list(grid.df = NULL, ##!Need more rules about grid.df spatial structure
-                                         ##!need to ensure order of covariates preserved somehow
-                                         ##?match names from expert.dat/gating.dat to grid.df?
-                                         expert.pred.names = NULL,
-                                         gating.pred.names = NULL)){
+                  projection.list = list(
+                    grid.df = NULL, ## !Need more rules about grid.df spatial structure
+                    ## !need to ensure order of covariates preserved somehow
+                    ## ?match names from expert.dat/gating.dat to grid.df?
+                    expert.pred.names = NULL,
+                    gating.pred.names = NULL
+                  )) {
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
   n.t <- dim.list$n.t
@@ -228,67 +244,67 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   n.f.rand <- dim.list$n.f.rand
   n.f.sp <- dim.list$n.f.sp
   n.v <- dim.list$n.v
-  #list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
+  # list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
   loc <- spatial.list$loc
-  if(!is.null(loc)){
+  if (!is.null(loc)) {
     loc <- loc@coords
   }
   mesh <- spatial.list$mesh
-  #list2env(spatial.list, environment(mkDat))
+  # list2env(spatial.list, environment(mkDat))
   grid.df <- projection.list$grid.df
   expert.pred.names <- projection.list$expert.pred.names
   gating.pred.names <- projection.list$gating.pred.names
-  #list2env(projection.list)
-  if((is.null(mesh)&is.null(loc)) & !is.null(grid.df)){
+  # list2env(projection.list)
+  if ((is.null(mesh) & is.null(loc)) & !is.null(grid.df)) {
     warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
   }
-  if((!is.null(mesh)|!is.null(loc)) & is.null(grid.df)){
+  if ((!is.null(mesh) | !is.null(loc)) & is.null(grid.df)) {
     warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
   }
-  if(!is.null(loc)& is.null(mesh)){
-    #default mesh - in future add options to include arguments for inla.mesh.2d
-    #for now, user can supply mesh if a more complex mesh is needed
+  if (!is.null(loc) & is.null(mesh)) {
+    # default mesh - in future add options to include arguments for inla.mesh.2d
+    # for now, user can supply mesh if a more complex mesh is needed
     mesh <- inla.mesh.create(loc@coords)
     warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
             the simple mesh may result in spatial bias. Consider bulding a
             more appropriate mesh using INLA::meshbuilder()")
   }
-  if(is.null(loc)&!is.null(mesh)){
-    if(is.null(mesh$idx$loc)){
-      #if user-supplied mesh built without observation locations, the user must also provide observation lovations
-      stop ("Need to provide locations for observations in spatial.list$loc")
+  if (is.null(loc) & !is.null(mesh)) {
+    if (is.null(mesh$idx$loc)) {
+      # if user-supplied mesh built without observation locations, the user must also provide observation lovations
+      stop("Need to provide locations for observations in spatial.list$loc")
     } else {
-      #if user-supplied mesh built using observation locations, these can be obtained from the mesh if not provided
-      loc <- mesh$loc[mesh$idx$loc,1:2]
+      # if user-supplied mesh built using observation locations, these can be obtained from the mesh if not provided
+      loc <- mesh$loc[mesh$idx$loc, 1:2]
     }
   }
-  if(is.null(mesh)){
-    A <- as(matrix(0, n.i, 1), 'dgCMatrix')
+  if (is.null(mesh)) {
+    A <- as(matrix(0, n.i, 1), "dgCMatrix")
     n.v <- 1
   } else {
     A <- inla.spde.make.A(mesh, loc)
     n.v <- mesh$n
   }
 
-  if(is.null(grid.df)){
-    Xd_proj = matrix(1)
-    Xg_proj = matrix(1)
+  if (is.null(grid.df)) {
+    Xd_proj <- matrix(1)
+    Xg_proj <- matrix(1)
     doProj <- FALSE
-    A.proj <- as(matrix(0), 'dgCMatrix')
+    A.proj <- as(matrix(0), "dgCMatrix")
   } else {
     grid.loc <- as.matrix(grid.df@coords)
-    if(class(grid.df) == "SpatialPoints" ){ ##!is this the best way to do this?
-      Xd_proj = matrix(1, nrow(grid.loc), 1)
-      Xg_proj = matrix(1, nrow(grid.loc), 1)
+    if (class(grid.df) == "SpatialPoints") { ## !is this the best way to do this?
+      Xd_proj <- matrix(1, nrow(grid.loc), 1)
+      Xg_proj <- matrix(1, nrow(grid.loc), 1)
     } else {
       grid.data <- grid.df@data
-      if(is.null(expert.pred.names)){
-        Xd_proj = matrix(1, nrow(grid.loc), 1)
+      if (is.null(expert.pred.names)) {
+        Xd_proj <- matrix(1, nrow(grid.loc), 1)
       } else {
         Xd_proj <- as.matrix(grid.data[expert.pred.names])
       }
-      if(is.null(gating.pred.names)){
-        Xg_proj = matrix(1, nrow(grid.loc), 1)
+      if (is.null(gating.pred.names)) {
+        Xg_proj <- matrix(1, nrow(grid.loc), 1)
       } else {
         Xg_proj <- as.matrix(grid.data[gating.pred.names])
       }
@@ -298,7 +314,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   }
 
 
-  if(is.null(offset)) offset = rep(1, dim.list$n.i)
+  if (is.null(offset)) offset <- rep(1, dim.list$n.i)
 
   Dat <- list(
     Y = as.array(response),
@@ -318,13 +334,13 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   Dat$family <- .valid_family[family[[1]]]
   Dat$link <- .valid_link[family[[2]]]
   Dat$loglike <- ll.method
-  if(fixStruct == 'E' | fixStruct == 'V'){
+  if (fixStruct == "E" | fixStruct == "V") {
     Dat$fixStruct <- 10
   }
-  if(fixStruct == 'EII' | fixStruct == 'VII' | fixStruct == 'EEI' | fixStruct == 'VVI'){
+  if (fixStruct == "EII" | fixStruct == "VII" | fixStruct == "EEI" | fixStruct == "VVI") {
     Dat$fixStruct <- 20
   }
-  if(fixStruct == "VVV" | fixStruct == 'EEE'){
+  if (fixStruct == "VVV" | fixStruct == "EEE") {
     Dat$fixStruct <- 30
   }
   Dat$rrStruct <- rrStruct
@@ -337,16 +353,18 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 #' Fixed Covariance Structure names
 #' @export
-fixStruct.names <- function(){
-  return(c('E', 'V', 'EII', 'VII', 'EEI', 'VVI', 'VVV', 'EEE'))
+fixStruct.names <- function() {
+  return(c("E", "V", "EII", "VII", "EEI", "VVI", "VVV", "EEE"))
 }
 
 #' Names of parameters with initial values that can be modified
-start.names <- function(){
-  return(c('thetaf', 'ln_kappa_g', 'ln_kappa_d', 'ln_tau_d', 'logit_rhog',
-    'logit_rhod', 'ln_sigmaup', 'ln_sigma_ep',  'ln_sigmav',
-    'upsilon_tg', 'epsilon_tjg', 'v_ifg', 'Gamma_vg', 'Omega_vfg'))
-} #removed ln_sigmau, u_ig
+start.names <- function() {
+  return(c(
+    "thetaf", "ln_kappa_g", "ln_kappa_d", "ln_tau_d", "logit_rhog",
+    "logit_rhod", "ln_sigmaup", "ln_sigma_ep", "ln_sigmav",
+    "upsilon_tg", "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"
+  ))
+} # removed ln_sigmau, u_ig
 
 #' Parameter Information
 #'
@@ -355,73 +373,74 @@ start.names <- function(){
 #'
 #' @examples
 #' parm.lookup()
-parm.lookup <- function(){
+parm.lookup <- function() {
   df <- data.frame(
     parm = c(
-      'betag', 'betad', 'betapz', 'theta', 'thetaf', 'logit_corr_fix',
-      'ld_rand', 'ld_sp', 'Hg_input', 'Hd_input', 'ln_kappa_g', 'ln_kappa_d',
-      'ln_tau_d', 'logit_rhog', 'logit_rhod', 'ln_sigmaup', 'ln_sigmaep',
-      'ln_sigmav', 'upsilon_tg', 'epsilon_tjg', 'v_ifg',
-      'Gamma_vg', 'Omega_vfg'
-    ), #removed ln_sigmau, u_ig
-    type = c(rep('Fixed', 18), rep('Random', 5)), #Fixed 19 -> 18; Random 6 -> 5
+      "betag", "betad", "betapz", "theta", "thetaf", "logit_corr_fix",
+      "ld_rand", "ld_sp", "Hg_input", "Hd_input", "ln_kappa_g", "ln_kappa_d",
+      "ln_tau_d", "logit_rhog", "logit_rhod", "ln_sigmaup", "ln_sigmaep",
+      "ln_sigmav", "upsilon_tg", "epsilon_tjg", "v_ifg",
+      "Gamma_vg", "Omega_vfg"
+    ), # removed ln_sigmau, u_ig
+    type = c(rep("Fixed", 18), rep("Random", 5)), # Fixed 19 -> 18; Random 6 -> 5
     str = c(
-      'Matrix', 'Array', 'Array', rep('Matrix',6), 'Array',
-      'Vector', 'Matrix', 'Matrix', 'Vector', 'Matrix', 'Vector',
+      "Matrix", "Array", "Array", rep("Matrix", 6), "Array",
+      "Vector", "Matrix", "Matrix", "Vector", "Matrix", "Vector",
       # 'Matrix', 'Vector', 'Matrix', rep('Array', 6)
-      'Matrix', 'Matrix', rep('Array', 5)
+      "Matrix", "Matrix", rep("Array", 5)
     ),
     dim = c(
-      'Kg,G-1', 'Kd,J,G', 'M,J,G', 'J,G', 'J,G', '(J^2-J)/2', 'Fr,G', "Fs,G",
-      '2,G-1', '2,J,G', 'G-1', 'J,G', 'J,G', 'G-1', 'J,G', 'G-1', 'J,G', #'G-1',
+      "Kg,G-1", "Kd,J,G", "M,J,G", "J,G", "J,G", "(J^2-J)/2", "Fr,G", "Fs,G",
+      "2,G-1", "2,J,G", "G-1", "J,G", "J,G", "G-1", "J,G", "G-1", "J,G", #' G-1',
       # 'J,G', 'T,G-1', 'T,J,G',  'N,G-1', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
-      'Fr,G', 'T,G-1', 'T,J,G', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
+      "Fr,G", "T,G-1", "T,J,G", "N,J/Fr,G", "N,G-1", "V,J/Fs,G"
     ),
     descr = c(
-      'Gating covariate coefficients',
-      'Expert covariate coefficients',
-      'Zero-inflation covariate coefficients',
-      'Observation variance terms (natural log)',
-      'Tweedie power parameter (adjusted logit)',
-      'Observation multivariate correlation (logit)',
-      'Overdispersion rank reduction loadings',
-      'Spatial rank reduction loadings',
-      'Anisotropy terms in spatial gating',
-      'Anisotropy terms in spatial expert',
-      'Spatial gating decay (natural log)',
-      'Spatial expert decay (natural log)',
-      'Spatial expert precision (natural log)',
-      'Temporal gating correlation (logit)',
-      'Temporal expert correlation (logit)',
-      'Temporal gating variance (natural log)',
-      'Temporal expert variance (natural log)',
+      "Gating covariate coefficients",
+      "Expert covariate coefficients",
+      "Zero-inflation covariate coefficients",
+      "Observation variance terms (natural log)",
+      "Tweedie power parameter (adjusted logit)",
+      "Observation multivariate correlation (logit)",
+      "Overdispersion rank reduction loadings",
+      "Spatial rank reduction loadings",
+      "Anisotropy terms in spatial gating",
+      "Anisotropy terms in spatial expert",
+      "Spatial gating decay (natural log)",
+      "Spatial expert decay (natural log)",
+      "Spatial expert precision (natural log)",
+      "Temporal gating correlation (logit)",
+      "Temporal expert correlation (logit)",
+      "Temporal gating variance (natural log)",
+      "Temporal expert variance (natural log)",
       # 'Overdispersion gating standard deviation (natural log)',
-      'Overdispersion expert standard deviation (natural log)',
-      'Temporal gating random effect',
-      'Temporal expert random effect',
+      "Overdispersion expert standard deviation (natural log)",
+      "Temporal gating random effect",
+      "Temporal expert random effect",
       # 'Overdispersion gating random effect',
-      'Overdispersion expert random effect',
-      'Spatial gating random effect',
-      'Spatial expert random effect'
-    ))
-  key <- data.frame(
-    dim = c(
-      'Fr', 'Fs', 'G', 'J', 'Kd', 'Kg', 'M', 'N', 'T', 'V'
-    ),
-    descr = c(
-      'Rank reduction on random error',
-      'Rank reduction on spatial effects',
-      'Number of clusters',
-      'Number of columns in the response',
-      'Number of covariates in gating',
-      'Number of covariates in expert',
-      'Number of covariates in zero inflation',
-      'Number of observations in the response',
-      'Number of unique temporal units',
-      'Number of vertices in INLA mesh'
+      "Overdispersion expert random effect",
+      "Spatial gating random effect",
+      "Spatial expert random effect"
     )
   )
-  note <- list('ln_sigma_v not estimated - fixed to ln(1)')
+  key <- data.frame(
+    dim = c(
+      "Fr", "Fs", "G", "J", "Kd", "Kg", "M", "N", "T", "V"
+    ),
+    descr = c(
+      "Rank reduction on random error",
+      "Rank reduction on spatial effects",
+      "Number of clusters",
+      "Number of columns in the response",
+      "Number of covariates in gating",
+      "Number of covariates in expert",
+      "Number of covariates in zero inflation",
+      "Number of observations in the response",
+      "Number of unique temporal units",
+      "Number of vertices in INLA mesh"
+    )
+  )
+  note <- list("ln_sigma_v not estimated - fixed to ln(1)")
   out <- list(parm = df, key = key, note = note)
   return(out)
 }
@@ -434,9 +453,9 @@ parm.lookup <- function(){
 #' @return skewness value of x
 #' @export
 #'
-skewness <- function(x){
+skewness <- function(x) {
   n <- length(x)
   x <- x - mean(x)
-  y <- sqrt(n) * sum(x^3)/(sum(x^2)^(3/2))
-  y <- y * ((1 - 1/n))^(3/2)
+  y <- sqrt(n) * sum(x^3) / (sum(x^2)^(3 / 2))
+  y <- y * ((1 - 1 / n))^(3 / 2)
 }

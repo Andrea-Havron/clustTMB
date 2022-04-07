@@ -5,11 +5,13 @@ Authors@R:
     person(given = "Andrea",
            family = "Havron",
            role = c("aut", "cre"),
-           email = "ahavron@uw.edu")
+           email = "andrea.havron@noaa.gov")
 Description: Fits a spatio-temporal finite mixture model using TMB. 
     Spatial and temporal random effects can be incorporated into the 
     gating formula using multinomial logistic regression, the expert 
     formula using a generalized linear mixed model framework, or both.
+URL: https://github.com/Andrea-Havron/clustTMB
+BugReports: https://github.com/Andrea-Havron/clustTMB/issues
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

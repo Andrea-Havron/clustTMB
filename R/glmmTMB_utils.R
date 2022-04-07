@@ -532,63 +532,6 @@ dropHead <- function(term, value) {
   }
 }
 
-
-## UNUSED (same function as drop.special2?)
-# drop.special(x~a + b+ offset(z))
-drop.special <- function(term, value = quote(offset)) {
-  if (length(term) == 2 && identical(term[[1]], value)) {
-    return(NULL)
-  }
-  if (length(term) == 1) {
-    return(term)
-  }
-  ## recurse, treating unary and binary operators separately
-  nb2 <- drop.special(term[[2]])
-  nb3 <- if (length(term) == 3) {
-    drop.special(term[[3]])
-  } else {
-    NULL
-  }
-  if (is.null(nb2)) { ## RHS was special-only
-    nb3
-  } else if (is.null(nb3)) { ## LHS was special-only
-    nb2
-  } else {
-    ## insert values into daughters and return
-    term[[2]] <- nb2
-    term[[3]] <- nb3
-    return(term)
-  }
-}
-
-##' drop terms matching a particular value from an expression
-##' @rdname formFuns
-## from Gabor Grothendieck: recursive solution
-## http://stackoverflow.com/questions/40308944/removing-offset-terms-from-a-formula
-##' @param x formula
-##' @param value term to remove from formula
-##' @param preserve (integer) retain the specified occurrence of "value"
-##' @keywords internal
-drop.special2 <- function(x, value = quote(offset), preserve = NULL) {
-  k <- 0
-  proc <- function(x) {
-    if (length(x) == 1) {
-      return(x)
-    }
-    if (x[[1]] == value && !((k <<- k + 1) %in% preserve)) {
-      return(x[[1]])
-    }
-    replace(x, -1, lapply(x[-1], proc))
-  }
-  ## handle 1- and 2-sided formulas
-  if (length(x) == 2) {
-    newform <- substitute(~ . - x, list(x = value))
-  } else {
-    newform <- substitute(. ~ . - x, list(x = value))
-  }
-  return(update(proc(x), newform))
-}
-
 ## Sparse Schur complement (Marginal of precision matrix)
 ##' @importFrom Matrix Cholesky solve
 GMRFmarginal <- function(Q, i, ...) {

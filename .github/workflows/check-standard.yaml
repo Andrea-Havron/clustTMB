@@ -29,6 +29,9 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
+      - name: Install INLA dependency
+        run: Rscript -e 'install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)'
+        
       - uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-pandoc@v1

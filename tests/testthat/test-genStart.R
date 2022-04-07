@@ -41,9 +41,12 @@ Dat <- mkDat(
   dim.list = dim.list
 )
 dim.list$n.v <- Dat$spde$n_s
-init.parm.clustTMB <- genInit(Dat, family = gaussian(link = "identity"), dim.list, 
-                              control = init.options(hc.options = list(
-                                modelName = "VVV", use = "VARS")))
+init.parm.clustTMB <- genInit(Dat,
+  family = gaussian(link = "identity"), dim.list,
+  control = init.options(hc.options = list(
+    modelName = "VVV", use = "VARS"
+  ))
+)
 
 context("equal mvn init parameters")
 test_that("mu", {

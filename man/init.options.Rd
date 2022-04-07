@@ -32,7 +32,7 @@ Initialization options
 }
 \examples{
 init.options()
-init.options(init.method = 'hc')
-init.options(init.method = 'mixed')
-init.options(init.method = 'user', user.class = c(1,1,2,1,3,3,1,2))
+init.options(init.method = "hc")
+init.options(init.method = "mixed")
+init.options(init.method = "user", user.class = c(1, 1, 2, 1, 3, 3, 1, 2))
 }

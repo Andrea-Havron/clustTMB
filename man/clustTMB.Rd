@@ -74,5 +74,5 @@ Fit a finite mixture model using TMB
 \examples{
 data("faithful")
 m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
-plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification+1)
+plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification + 1)
 }

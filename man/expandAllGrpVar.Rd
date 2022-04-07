@@ -13,10 +13,10 @@ expandAllGrpVar(bb)
 Modeled after lme4:::expandSlash, by Doug Bates
 }
 \examples{
-ff <- glmmTMB:::fbx(y~1+(x|f/g))
-glmmTMB:::expandAllGrpVar(ff)
-glmmTMB:::expandAllGrpVar(quote(1|(f/g)/h))
-glmmTMB:::expandAllGrpVar(quote(1|f/g/h))
-glmmTMB:::expandAllGrpVar(quote(1|f*g))
+ff <- clustTMB:::fbx(y~1+(x|f/g))
+clustTMB:::expandAllGrpVar(ff)
+clustTMB:::expandAllGrpVar(quote(1|(f/g)/h))
+clustTMB:::expandAllGrpVar(quote(1|f/g/h))
+clustTMB:::expandAllGrpVar(quote(1|f*g))
 }
 \keyword{internal}

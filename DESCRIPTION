@@ -33,7 +33,7 @@ Imports:
     MoEClust,
     nnet
 Depends:
-    R (>= 4.1.3)
+    R (>= 4.0.0)
 LinkingTo:
     TMB,
     RcppEigen

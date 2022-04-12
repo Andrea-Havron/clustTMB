@@ -4,7 +4,6 @@
 \alias{inForm}
 \alias{extractForm}
 \alias{dropHead}
-\alias{drop.special2}
 \title{test formula: does it contain a particular element?}
 \usage{
 inForm(form, value)
@@ -12,17 +11,11 @@ inForm(form, value)
 extractForm(term, value)
 
 dropHead(term, value)
-
-drop.special2(x, value = quote(offset), preserve = NULL)
 }
 \arguments{
-\item{value}{term to remove from formula}
+\item{value}{head of terms to extract}
 
 \item{term}{expression/formula}
-
-\item{x}{formula}
-
-\item{preserve}{(integer) retain the specified occurrence of "value"}
 }
 \value{
 a list of expressions
@@ -34,8 +27,6 @@ extract terms with a given head from an expression/formula
 
 return a formula/expression with a given value stripped, where
 it occurs as the head of a term
-
-drop terms matching a particular value from an expression
 }
 \examples{
 inForm(z~.,quote(.))

@@ -4,3 +4,5 @@
 *.dll
 *.o
 *.Rproj
+inst/doc
+/.vscode

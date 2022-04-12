@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/workflows/R-CMD-check/badge.svg)](https://github.com/Andrea-Havron/clustTMB/actions)
 <!-- badges: end -->
 
 clustTMB fits finite mixture models that incorporate both covariate and

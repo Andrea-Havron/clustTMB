@@ -10,7 +10,7 @@ Description: Fits a spatio-temporal finite mixture model using TMB.
     Spatial and temporal random effects can be incorporated into the 
     gating formula using multinomial logistic regression, the expert 
     formula using a generalized linear mixed model framework, or both.
-URL: https://github.com/Andrea-Havron/clustTMB
+URL: https://github.com/Andrea-Havron/clustTMB, https://andrea-havron.github.io/clustTMB
 BugReports: https://github.com/Andrea-Havron/clustTMB/issues
 License: GPL-3
 Encoding: UTF-8
@@ -19,7 +19,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
     methods,
-    TMB (>= 1.7.14),
+    TMB (>= 1.8.1),
     Matrix,
     INLA,
     stats,
@@ -33,7 +33,7 @@ Imports:
     MoEClust,
     nnet
 Depends:
-    R (>= 3.2.0)
+    R (>= 4.1.3)
 LinkingTo:
     TMB,
     RcppEigen
@@ -47,5 +47,11 @@ Suggests:
     ggplot2,
     inlabru,
     sp,
-    splancs
+    splancs,
+    GGally,
+    cowplot,
+    ggspatial,
+    giscoR,
+    sf,
+    wesanderson
 VignetteBuilder: knitr

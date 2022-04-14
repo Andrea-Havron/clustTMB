@@ -6,8 +6,7 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/workflows/R-CMD-check/badge.svg)](https://github.com/Andrea-Havron/clustTMB/actions)
-[![Codecov test
-coverage](https://codecov.io/gh/Andrea-Havron/clustTMB/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Andrea-Havron/clustTMB?branch=main)
+[![codecov](https://codecov.io/gh/Andrea-Havron/clustTMB/branch/main/graph/badge.svg?token=kfHYcSdj88)](https://codecov.io/gh/Andrea-Havron/clustTMB)
 <!-- badges: end -->
 
 clustTMB fits finite mixture models that incorporate both covariate and
@@ -49,25 +48,25 @@ library(clustTMB)
 data("faithful")
 m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
 #> Autopar work split
-#> Chunk 0: 0.705004
-#> Chunk 1: 0.755924
-#> Chunk 2: 0.75572
-#> Chunk 3: 0.755516
-#> Chunk 4: 0.756331
-#> Chunk 5: 0.757146
-#> Chunk 6: 0.757349
-#> Chunk 7: 0.757282
+#> Chunk 0: 0.705444
+#> Chunk 1: 0.756288
+#> Chunk 2: 0.756084
+#> Chunk 3: 0.755881
+#> Chunk 4: 0.756694
+#> Chunk 5: 0.757508
+#> Chunk 6: 0.757711
+#> Chunk 7: 0.757644
 ```
 
     #> Autopar work split
-    #> Chunk 0: 0.705004
-    #> Chunk 1: 0.755924
-    #> Chunk 2: 0.75572
-    #> Chunk 3: 0.755516
-    #> Chunk 4: 0.756331
-    #> Chunk 5: 0.757146
-    #> Chunk 6: 0.757349
-    #> Chunk 7: 0.757282
+    #> Chunk 0: 0.705444
+    #> Chunk 1: 0.756288
+    #> Chunk 2: 0.756084
+    #> Chunk 3: 0.755881
+    #> Chunk 4: 0.756694
+    #> Chunk 5: 0.757508
+    #> Chunk 6: 0.757711
+    #> Chunk 7: 0.757644
 
 <img src="man/figures/README-pressure-1.png" width="100%" />
 

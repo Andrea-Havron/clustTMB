@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/workflows/R-CMD-check/badge.svg)](https://github.com/Andrea-Havron/clustTMB/actions)
-[![Codecov test coverage](https://codecov.io/gh/Andrea-Havron/clustTMB/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Andrea-Havron/clustTMB?branch=main)
+[![codecov](https://codecov.io/gh/Andrea-Havron/clustTMB/branch/main/graph/badge.svg?token=kfHYcSdj88)](https://codecov.io/gh/Andrea-Havron/clustTMB)
 <!-- badges: end -->
 
 clustTMB fits finite mixture models that incorporate both covariate and random effect

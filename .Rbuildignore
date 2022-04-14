@@ -5,4 +5,5 @@
 ^LICENSE\.md$
 src/*.o
 src/*.dll
+src/*.so
 ^codecov\.yml$

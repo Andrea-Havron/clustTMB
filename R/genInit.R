@@ -4,10 +4,10 @@
 #' @param family Distribution family
 #' @param dim.list List of model dimensions
 #' @param control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
-#' 1. init.method - Single character string indicating intial clustering method. Mehtods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
+#' 1. init.method - Single character string indicating initial clustering method. Methods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
 #' 2. hc.options - Named list of two character strings specifying hc modelName and hcUse when init.method = 'hc'. The default modelName is 'VVV' and the default use is 'SVD' unless gating/expert covariates specified, in which case default in VARS. See ?mclust::mclust.options for complete list of options.
 #' 3. mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
-#' 4. user - Numeric or character vector defining user specified intial classification. init.method must be set to 'user' when using this option.
+#' 4. user - Numeric or character vector defining user specified initial classification. init.method must be set to 'user' when using this option.
 #'
 #' @importFrom stats cutree gaussian hclust runif rmultinom nlminb cor glm var
 #' @importFrom mclust unmap hclass hc hcVVV hcE hcEII hcEEE hcVII hcV
@@ -338,7 +338,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   return(gen.init)
 }
 
-#' mc.qclass: quantile function from mclust. Defaults used to initate 'E' or 'V' models when no covariates in expert/gating model
+#' mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model
 #'
 #' @param x A numeric vector of observations for classification
 #' @param k Integer specifying the number of mixtures

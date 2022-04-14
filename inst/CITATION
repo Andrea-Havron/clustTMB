@@ -1,0 +1,12 @@
+citHeader("To cite clustTMB in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "clustTMB: spatial finite mixture model",
+  author   = "Andrea Havron",
+  year     = 2022,
+  url      = "https://github.com/Andrea-Havron/clustTMB",
+  textVersion = paste(
+  "Havron, Andrea. 2022. clustTMB: spatial finite mixture model. R package version 0.0.1.0. https://github.com/Andrea-Havron/clustTMB"
+  )
+)

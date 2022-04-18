@@ -3,7 +3,7 @@
 #'
 #' @param response A numeric vector, matrix, or data frame of observations. When data are multivariate, rows correspond to observations and columns correspond to the multivariate response.
 #' @param expertformula Formula defining expert model. This formula corresponds to the covariates included in the response densities. Defaults to intercept only (~1) when no covariates are used.
-#' @param gatingformula formula defining gating model.  This formula corresponds to the covariates included in the mixing proportions (logistic regression). Defaults to intercept only (~1) when no covariates are used. When a random effects term is included in the gating network, this formula will be updated so that the intercept term is removed.
+#' @param gatingformula Formula defining gating model.  This formula corresponds to the covariates included in the mixing proportions (logistic regression). Defaults to intercept only (~1) when no covariates are used. When a random effects term is included in the gating network, this formula will be updated so that the intercept term is removed.
 #' @param expertdata Data frame containing expert model covariates.
 #' @param gatingdata Data frame containing gating model covariates.
 #' @param family Statistical distribution and link function of observations.
@@ -58,12 +58,18 @@ clustTMB <- function(response = NULL,
                        gating.pred.names = NULL
                      ),
                      control = run.options()) {
+  
+  # set str of response to matrix
   response <- as.matrix(response)
+  
+  # initialize dim.list to keep track of data/parameter dimensions
   dim.list <- list(
     n.i = nrow(response), n.j = ncol(response), n.t = NULL,
     n.g = G, n.f.sp = NULL, n.f.rand = NULL, n.r.g = spatial.list$init.range$gating.range,
     n.r.e = spatial.list$init.range$expert.range, n.v = NULL
   )
+   
+  # exception-handling
   if (is.null(covariance.structure)) {
     if (dim.list$n.j == 1) {
       covariance.structure <- "E"
@@ -121,130 +127,33 @@ clustTMB <- function(response = NULL,
     }
   }
 
-
-  # coding this way might increase risk of mismatched data and coordinates due to reordering
-  # when data are spatial, it might be more interesting to include everything in as a spatial data frame
-  # or is it better to keep structure simple using glmmTMB's numFactor method?
+  # set up factors for locations in expert/gating data when spatial data present
   if (!is.null(spatial.list$loc)) {
     expertdata$loc <- factor(row.names(spatial.list$loc@coords))
     gatingdata$loc <- factor(row.names(spatial.list$loc@coords))
   }
 
-  expert.split <- splitForm(expertformula)
-  expert.re.names <- expert.split$reTrmClasses
-  gating.split <- splitForm(gatingformula)
-  gating.re.names <- gating.split$reTrmClasses
-
-  if (("gmrf" %in% expert.re.names | "gmrfSpeedup" %in% expert.re.names) &
-    (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
-    stop("You have specified a spatal model and need to provide location or
-          mesh data in the spatial.list argument")
-  }
-  if (("gmrf" %in% gating.re.names | "gmrfSpeedup" %in% gating.re.names) &
-    (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
-    stop("You have specified a spatal model and need to provide location or
-          mesh data in the spatial.list argument")
-  }
-
-  specials <- c("ar1", "gmrf", "gmrfSpeedup")
-  if (length(expert.re.names) > 0) {
-    for (i in 1:length(expert.re.names)) {
-      if (!(expert.re.names[i] %in% specials)) {
-        stop("Currently clustTMB only works with spatio-temporal random effects")
-      }
-    }
-  }
-  if (length(gating.re.names) > 0) {
-    for (i in 1:length(gating.re.names)) {
-      if (!(gating.re.names[i] %in% specials)) {
-        stop("Currently clustTMB only works with spatio-temporal random effects")
-      }
-    }
-  }
-
-  if ("ar1" %in% expert.re.names) {
-    idx <- which(expert.re.names == "ar1")
-    ar1.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
-    ## ! make sure this enters TMB as numeric - although consider using glmmTMB factor approach
-    expert.time <- model.frame(subbars(ar1.form), expertdata)
-  } else {
-    expert.time <- rep(1, dim.list$n.i)
-  }
-  ## ! fix time component of .cpp to distinguish between gating/expert. Implement something similar to glmmTMB?
+  # set up random component of model
+  reOut <- mkRandom(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list)
+  reStruct <- reOut$reStruct
+  random.names <- reOut$random.names
+  expert.time <- reOut$expert.time
+  
+  # update dim.list
+  ## TODO: develop time component of .cpp to distinguish between gating/expert.
   dim.list$n.t <- length(unique(expert.time))
-
-  if ("ar1" %in% gating.re.names) {
-    idx <- which(gating.re.names == "ar1")
-    ar1.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
-    gating.time <- model.frame(subbars(ar1.form), gatingdata)
-  } else {
-    gating.time <- rep(1, dim.list$n.i)
-  }
-
-  if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
-    idx <- which((expert.re.names == "gmrf") | (expert.re.names == "gmrfSpeedup"))
-    gmrf.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
-    expert.gmrf <- model.frame(subbars(gmrf.form), expertdata)
-  } else {
-    expert.gmrf <- NA
-  }
-
-  if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
-    idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
-    gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
-    gating.gmrf <- model.frame(subbars(gmrf.form), gatingdata)
-  } else {
-    gating.gmrf <- NA
-  }
-
-  ## ! expert/gating .ar1 and .gmrf provide information about interactions between space/time
-  ## !! Spatio-temporal interactions not implemented yet!!
-  reStruct <- matrix(0, 2, 3)
-  random.names <- c()
-
-  for (i in seq_along(gating.re.names)) {
-    if (gating.re.names[i] == "gmrf") {
-      reStruct[1, 1] <- 3
-      random.names <- c(random.names, "Gamma_vg")
-    }
-    if (gating.re.names[i] == "gmrfSpeedup") {
-      reStruct[1, 1] <- 4
-      random.names <- c(random.names, "Gamma_vg")
-    }
-    if (gating.re.names[i] == "ar1") {
-      reStruct[1, 2] <- 2
-      random.names <- c(random.names, "upsilon_tg")
-    }
-    # if(gating.re.names[i] == "norm"){
-    #   reStruct[1,3] <- 1
-    #   random.names <- c(random.names, "u_ig")
-    # }
-  }
-  for (i in seq_along(expert.re.names)) {
-    if (expert.re.names[i] == "gmrf") {
-      reStruct[2, 1] <- 3
-      random.names <- c(random.names, "Omega_vfg")
-    }
-    if (expert.re.names[i] == "gmrfSpeedup") {
-      reStruct[2, 1] <- 4
-      random.names <- c(random.names, "Omega_vfg")
-    }
-    if (expert.re.names[i] == "ar1") {
-      reStruct[2, 2] <- 2
-      random.names <- c(random.names, "epsilon_tjg")
-    }
-    # if(expert.re.names[i] == "norm"){
-    #   reStruct[2,3] <- 1
-    #   random.names <- c(random.names, "v_ifg")
-    # }
-  }
+  
+  # remove intercept from gatingformula when random effects specified
   if (sum(reStruct[1, ] > 0) & attributes(terms(gatingformula))$intercept == 1) {
     gatingformula <- update(gatingformula, ~ . - 1)
     warning("intercept removed from gatingformula when random effects specified")
   }
-
+  
+  # set up input expert/gating covariate data
   expert.fix.dat <- model.matrix(nobars(expertformula), expertdata)
   gating.fix.dat <- model.matrix(nobars(gatingformula), gatingdata)
+  
+  # 
   if ((length(dimnames(expert.fix.dat)[[2]]) == 1) &
     dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
     expert.fix.dat <- matrix(1, dim.list$n.i, 1, dimnames = list(NULL, "(Intercept)"))

@@ -350,9 +350,134 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   return(Dat)
 }
 
+#' mkRandom: set up random effects component of the model
+#'
+#' @param expertformula 
+#' @param gatingformula 
+#' @param expertdata 
+#' @param gatingdata 
+#' @param spatial.list 
+#' @param dim.list 
+#'
+#' @return
+mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
+  expert.split <- splitForm(expertformula)
+  expert.re.names <- expert.split$reTrmClasses
+  gating.split <- splitForm(gatingformula)
+  gating.re.names <- gating.split$reTrmClasses
+  
+  if (("gmrf" %in% expert.re.names | "gmrfSpeedup" %in% expert.re.names) &
+      (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
+    stop("You have specified a spatal model and need to provide location or
+          mesh data in the spatial.list argument")
+  }
+  if (("gmrf" %in% gating.re.names | "gmrfSpeedup" %in% gating.re.names) &
+      (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
+    stop("You have specified a spatal model and need to provide location or
+          mesh data in the spatial.list argument")
+  }
+  
+  specials <- c("ar1", "gmrf", "gmrfSpeedup")
+  if (length(expert.re.names) > 0) {
+    for (i in 1:length(expert.re.names)) {
+      if (!(expert.re.names[i] %in% specials)) {
+        stop("Currently clustTMB only works with spatio-temporal random effects")
+      }
+    }
+  }
+  if (length(gating.re.names) > 0) {
+    for (i in 1:length(gating.re.names)) {
+      if (!(gating.re.names[i] %in% specials)) {
+        stop("Currently clustTMB only works with spatio-temporal random effects")
+      }
+    }
+  }
+  
+  if ("ar1" %in% expert.re.names) {
+    idx <- which(expert.re.names == "ar1")
+    ar1.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
+    ## ! make sure this enters TMB as numeric - although consider using glmmTMB factor approach
+    expert.time <- model.frame(subbars(ar1.form), expertdata)
+  } else {
+    expert.time <- rep(1, dim.list$n.i)
+  }
+ 
+  ## TODO: lines 396-418 currently not used
+  if ("ar1" %in% gating.re.names) {
+    idx <- which(gating.re.names == "ar1")
+    ar1.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
+    gating.time <- model.frame(subbars(ar1.form), gatingdata)
+  } else {
+    gating.time <- rep(1, dim.list$n.i)
+  }
+  
+  if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
+    idx <- which((expert.re.names == "gmrf") | (expert.re.names == "gmrfSpeedup"))
+    gmrf.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
+    expert.gmrf <- model.frame(subbars(gmrf.form), expertdata)
+  } else {
+    expert.gmrf <- NA
+  }
+  
+  if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
+    idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
+    gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
+    gating.gmrf <- model.frame(subbars(gmrf.form), gatingdata)
+  } else {
+    gating.gmrf <- NA
+  }
+  
+  ## TODO: expert/gating .ar1 and .gmrf provide information about interactions between space/time
+  ## TODO: Spatio-temporal interactions not implemented yet!!
+  reStruct <- matrix(0, 2, 3)
+  random.names <- c()
+  
+  for (i in seq_along(gating.re.names)) {
+    if (gating.re.names[i] == "gmrf") {
+      reStruct[1, 1] <- 3
+      random.names <- c(random.names, "Gamma_vg")
+    }
+    if (gating.re.names[i] == "gmrfSpeedup") {
+      reStruct[1, 1] <- 4
+      random.names <- c(random.names, "Gamma_vg")
+    }
+    if (gating.re.names[i] == "ar1") {
+      reStruct[1, 2] <- 2
+      random.names <- c(random.names, "upsilon_tg")
+    }
+    # if(gating.re.names[i] == "norm"){
+    #   reStruct[1,3] <- 1
+    #   random.names <- c(random.names, "u_ig")
+    # }
+  }
+  for (i in seq_along(expert.re.names)) {
+    if (expert.re.names[i] == "gmrf") {
+      reStruct[2, 1] <- 3
+      random.names <- c(random.names, "Omega_vfg")
+    }
+    if (expert.re.names[i] == "gmrfSpeedup") {
+      reStruct[2, 1] <- 4
+      random.names <- c(random.names, "Omega_vfg")
+    }
+    if (expert.re.names[i] == "ar1") {
+      reStruct[2, 2] <- 2
+      random.names <- c(random.names, "epsilon_tjg")
+    }
+    # if(expert.re.names[i] == "norm"){
+    #   reStruct[2,3] <- 1
+    #   random.names <- c(random.names, "v_ifg")
+    # }
+  }
+
+  out <- list(reStruct = reStruct, random.names = random.names, expert.time = expert.time)
+  return(out)
+}
+
 
 #' Fixed Covariance Structure names
 #' @export
+#' @examples
+#' fixStruct.names()
 fixStruct.names <- function() {
   return(c("E", "V", "EII", "VII", "EEI", "VVI", "VVV", "EEE"))
 }
@@ -452,7 +577,8 @@ parm.lookup <- function() {
 #'
 #' @return skewness value of x
 #' @export
-#'
+#' @examples
+#' skewness(rgamma(100,1,1))
 skewness <- function(x) {
   n <- length(x)
   x <- x - mean(x)

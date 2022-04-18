@@ -9,3 +9,6 @@ fixStruct.names()
 \description{
 Fixed Covariance Structure names
 }
+\examples{
+fixStruct.names()
+}

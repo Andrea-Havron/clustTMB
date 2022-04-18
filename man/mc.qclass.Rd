@@ -2,7 +2,7 @@
 % Please edit documentation in R/genInit.R
 \name{mc.qclass}
 \alias{mc.qclass}
-\title{mc.qclass: quantile function from mclust. Defaults used to initate 'E' or 'V' models when no covariates in expert/gating model}
+\title{mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model}
 \usage{
 mc.qclass(x, k)
 }
@@ -15,6 +15,6 @@ mc.qclass(x, k)
 classification vector
 }
 \description{
-mc.qclass: quantile function from mclust. Defaults used to initate 'E' or 'V' models when no covariates in expert/gating model
+mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model
 }
 \keyword{internal}

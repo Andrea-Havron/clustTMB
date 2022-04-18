@@ -15,3 +15,6 @@ skewness value of x
 \description{
 Calculates skewness
 }
+\examples{
+skewness(rgamma(100,1,1))
+}

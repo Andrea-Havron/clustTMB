@@ -157,53 +157,7 @@ test_that("Random Effects dim", {
   expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
 })
 
-context("test init.options()")
-test_that("init.options(), init.method", {
-  expect_error(init.options(init.method = c("hc", "random")))
-  expect_error(init.options(init.method = c("invalid.method")))
-  expect_error(init.options(init.method = 1))
-  expect_equal(init.options()$init.method, "hc")
-})
-test_that("init.options(), hc.option", {
-  expect_equal(
-    init.options()$hc.options,
-    list(modelName = "VVV", use = "SVD")
-  )
-  expect_equal(
-    init.options(hc.options = list("VVV", "SVD"))$hc.options,
-    list(modelName = "VVV", use = "SVD")
-  )
-  expect_error(init.options(hc.options = c(modelName = "VVV", use = "SVD")))
-  expect_error(init.options(hc.options = "VVV"))
-  expect_error(init.options(hc.options = list(a = "VVV", b = "SVD")))
-  expect_error(init.options(hc.options = c(modelName = "VVV", use = "SVD")))
-  expect_error(init.options(hc.options = list(method = "hc", modelName = "VVV", use = "SVD")))
-  expect_equal(
-    init.options(hc.options = list(modelName = "VII"))$hc.options,
-    list(modelName = "VII", use = "SVD")
-  )
-  expect_equal(
-    init.options(hc.options = list(use = "VARS"))$hc.options,
-    list(use = "VARS", modelName = "VVV")
-  )
-  expect_error(init.options(hc.options = list("SVD", "VVV")))
-  expect_error(init.options(hc.options = list("V", "SVD")))
-  expect_error(init.options(hc.options = list("VVV", "random")))
-})
 
-test_that("init.options(), mix.method", {
-  expect_error(init.options(init.method = "mixed", mix.method = 1))
-  expect_error(init.options(init.method = "mixed", mix.method = "mix"))
-  expect_error(init.options(init.method = "mixed", mix.method = c("Gower kmeans", "kproto")))
-  expect_equal(init.options(init.method = "mixed", mix.method = "kproto")$mix.method, "kproto")
-  expect_equal(init.options(init.method = "mixed")$mix.method, "Gower kmeans")
-  expect_equal(init.options(init.method = "mixed")$init.method, "mixed")
-})
-test_that("init.options(), user.class", {
-  expect_error(init.options(init.method = "user"))
-  expect_error(init.options(init.method = "user", user.class = mclust::unmap(c(1, 2, 2, 1, 4, 4, 2, 3))))
-  expect_error(init.options(init.method = "user", user.class = data.frame(x = runif(10), y = runif(10))))
-})
 
 context("univariate normal data with covaraites")
 data(CO2data)

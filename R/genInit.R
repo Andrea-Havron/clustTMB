@@ -386,94 +386,131 @@ mc.qclass <- function(x, k) {
 #' init.options(init.method = "hc")
 #' init.options(init.method = "mixed")
 #' init.options(init.method = "user", user.class = c(1, 1, 2, 1, 3, 3, 1, 2))
-init.options <- function(init.method = c("hc", "quantile", "random", "mclust", "kmeans", "mixed", "user"),
+init.options <- function(init.method = "hc",
                          hc.options = list(
-                           modelName = c("VVV", "EII", "EEE", "VII", "V", "E"),
-                           use = c("SVD", "VARS", "STD", "SPH", "PCS", "PCR", "RND")
-                         ),
+                           modelName = "VVV",
+                           use = "SVD"),
                          exp.init = list(mahala = TRUE),
-                         mix.method = c("Gower kmeans", "Gower hclust", "kproto"),
-                         user.class = NULL) {
+                         mix.method = "Gower kmeans",
+                         user.class = integer()) {
+  
   defaults <- c()
   if (missing(init.method)) defaults <- c(defaults, "init.method")
-  if (!missing(init.method) & length(init.method) > 1 | !is.character(init.method)) {
-    stop(" 'init.method' must be a single character string, see ?init.options() for valid init.method")
+  if (missing(hc.options)) defaults <- c(defaults, "hcName", "hcUse")
+  if (missing(mix.method)) defaults <- c(defaults, "mix.method")
+ 
+  new_init <- function(method,names){
+    stopifnot(is.character(method))
+    stopifnot(length(method)==1)
+    stopifnot(is.character(names))
+    method <- match.arg(method, names)
+    
+    structure(method,
+              class = "Init")
   }
-  if (!missing(init.method)) {
-    if (!is.element(init.method, c("quantile", "hc", "random", "mclust", "kmeans", "mixed", "user"))) {
-      stop(" specified init.method not supported, see ?init.options() for valid init.method")
-    }
-  }
-  init.method <- match.arg(init.method)
+  
+  new_init_method <- new_init(method = init.method, 
+                          names = c("hc", "quantile", "random", "mclust", 
+                                    "kmeans", "mixed", "user"))
 
-  if (init.method == "hc") {
-    if (length(hc.options) > 2 | !is.list(hc.options)) {
-      stop("hc.options must be list of two items: modelName and use, see ?init.options() for details")
-    }
-    if (missing(hc.options)) {
-      hc.options <- list(modelName = "VVV", use = "SVD")
-      defaults <- c(defaults, "hcName", "hcUse")
-    }
-    nm <- names(hc.options)
-    if (!is.null(nm) & (!(all(is.element(nm, c("modelName", "use")))))) {
-      stop("hc.options must be a named list of two items: modelName and use, see ?init.options() for details")
-    }
-    if (is.null(nm) & length(hc.options) == 2) {
-      names(hc.options) <- c("modelName", "use")
-    }
-    if (is.null(nm) & length(hc.options) == 1) {
-      stop("ambiguous specification of hc.options, see ?init.options() for details")
-    }
-    if (length(nm) == 1) {
-      if (nm == "modelName") {
-        hc.options$use <- "SVD"
-        defaults <- c(defaults, "hcUse")
-      }
-      if (nm == "use") {
-        hc.options$modelName <- "VVV"
-        defaults <- c(defaults, "hcName")
+  new_mix_method <- new_init(method = mix.method,
+                         names = c("Gower kmeans", "Gower hclust", "kproto"))
+  
+  hc_init <- function(methods = list(), defaults = character()){
+    
+    stopifnot(is.list(methods))
+    stopifnot(length(methods) <= 2)
+    modelName <- c( "VVV", "EII", "EEE",  "VII", "V", "E")
+    use <- c("SVD", "VARS", "STD", "SPH",  "PCS", "PCR", "RND")
+
+    #match up unnamed list to correct names
+    nms <- names(methods)
+    if(is.null(nms) & length(methods) > 0){
+      for(i in 1:length(methods)){
+        if(methods[[i]] %in% modelName){
+          names(methods)[i] <- "modelName"
+        }
+        if(methods[[i]] %in% use){
+          names(methods)[i] <- "use"
+        }
       }
     }
-    if (!is.element(hc.options$modelName, c("VVV", "EII", "EEE", "VII"))) {
-      stop(" hc.options modelName not supported, see ?init.options()")
+    #list must have correct names
+    stopifnot(names(methods) %in% c("modelName", "use"))
+
+    # #assign defaults if missing
+    if ( !("modelName" %in% names(methods)) ){
+      defaults <- c(defaults, "hcName")
     }
-    if (!is.element(hc.options$use, c("VARS", "STD", "SPH", "PCS", "PCR", "SVD", "RND"))) {
-      stop(" hc.options use not supported, see ?init.options()")
+    if ( !("use" %in% names(methods)) ){
+         defaults <- c(defaults, "hcUse")
     }
+ 
+    methods <- list(modelName = match.arg(methods$modelName, modelName),
+                    use = match.arg(methods$use, use))
+    
+    if(is.null(defaults)) defaults <- c("")
+    
+    structure(methods,
+              defaults = defaults,
+              class = "HcInit")
+    
   }
-  if (init.method == "mixed") {
-    if (!missing(mix.method) & length(mix.method) > 1 | !is.character(mix.method)) {
-      stop("mix.method needs to be a single character string, see ?init.options() for details")
-    }
-    if (missing(mix.method)) {
-      mix.method <- match.arg(mix.method)
-      defaults <- c(defaults, "mix.method")
-    }
-    if (!is.element(mix.method, c("Gower kmeans", "Gower hclust", "kproto"))) {
-      stop("mix.method not supported, see ?init.options() for details")
-    }
-  }
-  if (init.method == "user") {
-    if (is.null(user.class)) {
+  
+  new_hc_init = hc_init(methods = hc.options, defaults = defaults)
+
+
+  validate_user_class <- function(user,
+                                  method){
+    if( length(user)==0 & method == "user" ){
       stop("user.class must be a vector of classification characters or integers when 'init.method = user'")
     }
-    if (!is.vector(user.class)) {
-      stop("user.class must be a vector of classification characters or integers when 'init.method = user'")
-    }
-    if (is.character(user.class)) {
-      user.class <- as.numeric(as.factor(user.class))
-    }
+    stopifnot(is.integer(user))
   }
+  
+  user_class <- function(user, method = character()){
+    
+    #cast data to integer if is.integer not true
+    if(!is.integer(user)){
+      if (is.character(user)) {
+        user <- as.integer(user)
+        message("User input initial class character values converted to integer")
+      }
+      if (is.factor(user)) {
+        user <- as.integer(as.factor(user.class))
+        message("User input initial class factor values converted to integer")
+      }
+      if (is.numeric(user)) {
+        user <- as.integer((user.class))
+        message("User input initial class numeric values converted to integer")
+      }
+    }
 
-  return(list(
-    init.method = init.method,
-    hc.options = hc.options,
+ 
+    
+    validate_user_class(user, method)
+
+    structure(user,
+              class = "user")
+  }
+ 
+  new_user_class <- user_class(user = user.class, method = init.method)
+  
+
+  out <- list(
+    init.method = new_init_method[1],
+    hc.options = new_hc_init[1:2],
     exp.init = exp.init,
-    mix.method = mix.method,
-    user.class = user.class,
-    defaults = defaults
-  ))
+    mix.method = new_mix_method[1],
+    user.class = new_user_class[1],
+    defaults = attributes(new_hc_init)$defaults
+  )
+  class(out) <- "InitOptions"
+  
+  return(out)
 }
+
+
 
 #' Updates initial class when covariates in expert formula using the Mahalanobis distance criteria
 #'

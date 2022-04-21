@@ -5,12 +5,11 @@
 \title{Initialization options}
 \usage{
 init.options(
-  init.method = c("hc", "quantile", "random", "mclust", "kmeans", "mixed", "user"),
-  hc.options = list(modelName = c("VVV", "EII", "EEE", "VII", "V", "E"), use = c("SVD",
-    "VARS", "STD", "SPH", "PCS", "PCR", "RND")),
+  init.method = "hc",
+  hc.options = list(modelName = "VVV", use = "SVD"),
   exp.init = list(mahala = TRUE),
-  mix.method = c("Gower kmeans", "Gower hclust", "kproto"),
-  user.class = NULL
+  mix.method = "Gower kmeans",
+  user.class = integer()
 )
 }
 \arguments{

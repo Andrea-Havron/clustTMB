@@ -27,7 +27,7 @@ mkRandom(
 \item{dim.list}{List of model dimensions}
 }
 \value{
-
+list vector containing random effects components of the model
 }
 \description{
 mkRandom: set up random effects component of the model

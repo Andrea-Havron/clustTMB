@@ -359,7 +359,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
 #' @param dim.list List of model dimensions
 #'
-#' @return
+#' @return list vector containing random effects components of the model
 mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
   expert.split <- splitForm(expertformula)
   expert.re.names <- expert.split$reTrmClasses

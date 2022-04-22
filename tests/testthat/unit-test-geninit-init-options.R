@@ -89,6 +89,9 @@ test_that("test correct user input", {
 })
 test_that("test incorrect user input", {
   expect_error(init.options(hc.options = c("VVV", "SVD")))
+  expect_error(init.options(hc.options = list(modelName = "a")))
+  expect_error(init.options(hc.options = list(use = "a")))
+  expect_error(init.options(hc.options = "VVV"))
   expect_error(init.options(hc.options = list(a = "VVV", b = "SVD")))
   expect_error(init.options(hc.options = list(modelName = c("VVV", "EEE"))))
   expect_error(init.options(hc.options = list("VVV", "EEE", "SVD")))
@@ -125,13 +128,10 @@ test_that("test correct input", {
   expect_equal(input.class, init.options(
     init.method = "user", 
     user.class = input.class)$user.class)
-  expect_equal(input.class,
-               init.options(user.class = input.class)$user.class)
-  expect_equal("user",
-               init.options(user.class = input.class)$init.method)
-  expect_equal(input.class+1,
-               init.options(user.class = c("a", "b", "c", "d")[input.class+1])$user.class)
-  set.seed(123)
+  expect_equal(as.integer(as.factor(c("a", "b", "c", "d"))),
+               init.options(user.class = c("a", "b", "c", "d"))$user.class)
+  expect_equal(as.integer(as.factor(c("a", "b", "c", "d"))),
+               init.options(user.class = as.factor(c("a", "b", "c", "d")))$user.class)
   input.class <- c(2.1, 2.1, 2.1, 4.0, 4.0, 4.0, 5.3, 5.3)
   expect_equal(as.numeric(factor(input.class)),
                init.options(user.class = input.class)$user.class)
@@ -146,53 +146,3 @@ test_that("test default", {
   expect_equal(c("init.method", "hcName", "hcUse", "mix.method"),
                init.options()$defaults)
 })
-
-
-# #Copied from genStart, check for redundancy
-# context("test init.options()")
-# test_that("init.options(), init.method", {
-#   expect_error(init.options(init.method = c("hc", "random")))
-#   expect_error(init.options(init.method = c("invalid.method")))
-#   expect_error(init.options(init.method = 1))
-#   expect_equal(init.options()$init.method, "hc")
-# })
-# test_that("init.options(), hc.option", {
-#   expect_equal(
-#     init.options()$hc.options,
-#     list(modelName = "VVV", use = "SVD")
-#   )
-#   expect_equal(
-#     init.options(hc.options = list("VVV", "SVD"))$hc.options,
-#     list(modelName = "VVV", use = "SVD")
-#   )
-#   expect_error(init.options(hc.options = c(modelName = "VVV", use = "SVD")))
-#   expect_error(init.options(hc.options = "VVV"))
-#   expect_error(init.options(hc.options = list(a = "VVV", b = "SVD")))
-#   expect_error(init.options(hc.options = c(modelName = "VVV", use = "SVD")))
-#   expect_error(init.options(hc.options = list(method = "hc", modelName = "VVV", use = "SVD")))
-#   expect_equal(
-#     init.options(hc.options = list(modelName = "VII"))$hc.options,
-#     list(modelName = "VII", use = "SVD")
-#   )
-#   expect_equal(
-#     init.options(hc.options = list(use = "VARS"))$hc.options,
-#     list(use = "VARS", modelName = "VVV")
-#   )
-#   expect_error(init.options(hc.options = list("SVD", "VVV")))
-#   expect_error(init.options(hc.options = list("V", "SVD")))
-#   expect_error(init.options(hc.options = list("VVV", "random")))
-# })
-# 
-# test_that("init.options(), mix.method", {
-#   expect_error(init.options(init.method = "mixed", mix.method = 1))
-#   expect_error(init.options(init.method = "mixed", mix.method = "mix"))
-#   expect_error(init.options(init.method = "mixed", mix.method = c("Gower kmeans", "kproto")))
-#   expect_equal(init.options(init.method = "mixed", mix.method = "kproto")$mix.method, "kproto")
-#   expect_equal(init.options(init.method = "mixed")$mix.method, "Gower kmeans")
-#   expect_equal(init.options(init.method = "mixed")$init.method, "mixed")
-# })
-# test_that("init.options(), user.class", {
-#   expect_error(init.options(init.method = "user"))
-#   expect_error(init.options(init.method = "user", user.class = mclust::unmap(c(1, 2, 2, 1, 4, 4, 2, 3))))
-#   expect_error(init.options(init.method = "user", user.class = data.frame(x = runif(10), y = runif(10))))
-# })

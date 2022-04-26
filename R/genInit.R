@@ -19,21 +19,22 @@
 #' @keywords internal
 #' @noRd
 genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
-
+  
+ 
   # list2env(dim.list, environment(genStart))
-  n.i <- dim.list$n.i
-  n.j <- dim.list$n.j
-  n.t <- dim.list$n.t
+  n.i <- dim.list@n.i
+  n.j <- dim.list@n.j
+  n.t <- dim.list@n.t
   n.k.g <- ncol(Data$Xg)
   n.k.e <- ncol(Data$Xd)
-  n.g <- dim.list$n.g
-  n.f.rand <- dim.list$n.f.rand
-  n.f.sp <- dim.list$n.f.sp
-  n.f <- dim.list$n.f
-  n.v <- dim.list$n.v
-  nl.fix <- ifelse(n.j > 1, (n.j^2 - n.j) / 2, 1)
-  nl.rand <- n.j * n.f.rand - (n.f.rand * (n.f.rand - 1)) / 2
-  nl.sp <- n.j * n.f.sp - (n.f.sp * (n.f.sp - 1)) / 2
+  n.g <- dim.list@n.g
+  n.f.rand <- dim.list@n.f.rand
+  n.f.sp <- dim.list@n.f.sp
+  n.f <- dim.list@n.f
+  n.v <- dim.list@n.v
+  nl.fix <- dim.list@nl.fix
+  nl.rand <- dim.list@nl.rand
+  nl.sp <- dim.list@nl.sp
 
   # Apply any data transformations
   y <- Data$Y
@@ -46,29 +47,8 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (ncol(X.g) > 0) gate.mod <- TRUE
   if (ncol(X.d) > 0) exp.mod <- TRUE
 
-  ## reset defaults based on family, dimension, and expert/gating models
-  if (Data$family == 700) {
-    if (control$init.method != "mixed") {
-      if (is.element("init.method", control$defaults)) {
-        control$init.method <- "mixed"
-        control$mix.method <- "Gower kmeans"
-      } else {
-        warning("mixed init.method recommended when Tweedie family specified")
-      }
-    }
-  } else {
-    if (dim.list$n.j == 1 & is.element("init.method", control$defaults)) {
-      control$init.method <- "quantile"
-    }
-    # default when covariate in expert or gating model and not Tweedie
-    if (gate.mod | exp.mod) {
-      # default when data are univariate and not Tweedie and when no covariates in expert/gating
-      if (dim.list$n.j == 1 & is.element("init.method", control$defaults)) {
-        control$init.method <- "hc"
-      }
-      control$hc.options$use <- "VARS"
-    }
-  }
+  control <- reset.defaults(control)
+
 
   if (gate.mod) {
     y <- cbind(y, X.g)
@@ -78,73 +58,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   }
   y <- y[, !duplicated(t(y))]
 
-  # Apply classification method
-  if (control$init.method == "random") {
-    pi.init <- rep(1 / n.g, n.g)
-    Class <- t(rmultinom(n.i, 1, pi.init)) ## FIXME: write my own rmultinom function to avoid dependency here
-  }
-
-  if (control$init.method == "quantile") {
-    classify <- mc.qclass(y, as.numeric(n.g))
-    Class <- matrix(0, n.i, n.g)
-    for (i in 1:n.i) {
-      Class[i, classify[i]] <- 1
-    }
-    pi.init <- apply(Class, 2, sum) / n.i
-  }
-
-  if (control$init.method == "hc") {
-    classify <- as.vector(hclass(
-      hc(y,
-        modelName = control$hc.options$modelName,
-        use = control$hc.options$use
-      ), n.g
-    ))
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-  if (control$init.method == "kmeans") {
-    classify <- cluster::pam(diss, k = n.g)$clustering
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-  if (control$init.method == "mixed") {
-    tmp.pa <- matrix(NA, n.i, n.j)
-    y1 <- as.data.frame(matrix(NA, n.i, n.j))
-    for (j in 1:n.j) {
-      tmp.pa[, j] <- ifelse(y[, j] == 0, "A", "P")
-      y1[, j] <- as.factor(tmp.pa[, j])
-    }
-    y <- data.frame(cbind(y1, y))
-
-
-    if (control$mix.method != "kproto") {
-      diss <- cluster::daisy(y, metric = "gower")
-      if (control$mix.method == "Gower kmeans") {
-        classify <- cluster::pam(diss, k = n.g)$clustering
-      }
-      if (control$mix.method == "Gower hclust") {
-        classify <- cutree(hclust(diss), n.g)
-      }
-    } else {
-      classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
-    }
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-  if (control$init.method == "user") {
-    classify <- control$user.class
-    if (length(unique(classify)) != n.g) {
-      stop("Number of unique classes does not equal number of clusters specified in model")
-    }
-
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
+  classify <- genInitMethods(n.g, n.i, n.j,
+                             control, y)
+  Class <- unmap(classify)
+  pi.init <- apply(Class, 2, function(x) sum(x) / n.i)
+  
 
   # setup ParList
   ParList <- list(
@@ -195,14 +113,14 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 
   # Set initial values for kappa and tau if n.r provided
   if (Data$reStruct[1, 1] > 2) {
-    if (!is.null(dim.list$n.r.g)) {
-      ParList$ln_kappag <- rep(log(sqrt(8) / (dim.list$n.r.g / 2)), (n.g - 1))
+    if (!is.null(dim.list@n.r.g)) {
+      ParList$ln_kappag <- rep(log(sqrt(8) / (dim.list@n.r.g / 2)), (n.g - 1))
     }
   }
   if (Data$reStruct[2, 1] > 2) {
-    if (!is.null(dim.list$n.r.e)) {
-      ParList$ln_kappad <- matrix(log(sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
-      ParList$ln_taud <- matrix(1 / (2 * sqrt(pi) * sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
+    if (!is.null(dim.list@n.r.e)) {
+      ParList$ln_kappad <- matrix(log(sqrt(8) / (dim.list@n.r.e / 2)), n.j, n.g)
+      ParList$ln_taud <- matrix(1 / (2 * sqrt(pi) * sqrt(8) / (dim.list@n.r.e / 2)), n.j, n.g)
     }
   }
 
@@ -338,6 +256,154 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   return(gen.init)
 }
 
+
+#' Generate model dimension list
+#'
+#' @param ni Number of observations
+#' @param nj Number of response columns
+#' @param ng Number of clusters
+#' @param nrg Rank reduction in the gating model
+#' @param nre Rank reduction in the expert model
+#'
+#' @return List of model dimensions
+#' @importFrom R7 new_class  class_any class_numeric class_integer
+#' 
+DimList <- function(ni, nj, ng,
+                    nrg, nre){
+  
+  dim.list <- new_class("DimList",
+               properties = list(
+                 n.i = class_integer,
+                 n.j = class_integer,
+                 n.t = class_integer,
+                 n.k.g = class_integer,
+                 n.k.e = class_integer,
+                 n.g = class_numeric,
+                 n.r.g = class_any,
+                 n.r.e = class_any,
+                 n.f.rand = class_integer,
+                 n.f.sp = class_integer,
+                 n.f = class_integer,
+                 n.v = class_integer,
+                 nl.fix = class_integer,
+                 nl.rand = class_integer,
+                 nl.sp = class_integer
+               ),
+               validator = function(self){
+                 if(round(self@n.g) != self@n.g){
+                   "number of clusters, G, must be an integer"
+                 }
+               })
+  
+  dim.list <- DimList(n.i = ni, n.j = nj, n.g = ng,
+                      n.r.g = nrg, n.r.e = nre)
+  dim.list@n.g <- as.integer(dim.list@n.g)
+  
+  dim.list@nl.fix <- ifelse(dim.list@n.j > 1, (dim.list@n.j^2 - dim.list@n.j) / 2, as.integer(1))
+  
+  return(dim.list)
+  
+}
+
+
+#genInit helper functions
+
+#' Apply classification method dependent on init.method
+#'
+#' @param n.g Number of clusters
+#' @param n.i Number of observations
+#' @param n.j Number of columns
+#' @param control Classification settings from init.options()
+#' @param y 
+#'
+#' @return classification vector
+genInitMethods <- function(n.g, n.i, n.j,
+                           control, y){
+  # Apply classification method
+  if (control$init.method == "random") {
+    classify <- sample(1:n.g, n.i, replace = TRUE)
+  }
+  
+  if (control$init.method == "quantile") {
+    classify <- mc.qclass(y, as.numeric(n.g))
+  }
+  
+  if (control$init.method == "hc") {
+    classify <- as.vector(hclass(
+      hc(y,
+         modelName = control$hc.options$modelName,
+         use = control$hc.options$use
+      ), n.g
+    ))
+    
+  }
+  
+  if (control$init.method == "kmeans") {
+    classify <- cluster::pam(y, k = n.g)$clustering
+  }
+  
+  if (control$init.method == "mixed") {
+    tmp.pa <- matrix(NA, n.i, n.j)
+    y1 <- as.data.frame(matrix(NA, n.i, n.j))
+    for (j in 1:n.j) {
+      tmp.pa[, j] <- ifelse(y[, j] == 0, "A", "P")
+      y1[, j] <- as.factor(tmp.pa[, j])
+    }
+    y <- data.frame(cbind(y1, y))
+    
+    
+    if (control$mix.method != "kproto") {
+      diss <- cluster::daisy(y, metric = "gower")
+      if (control$mix.method == "Gower kmeans") {
+        classify <- cluster::pam(diss, k = n.g)$clustering
+      }
+      if (control$mix.method == "Gower hclust") {
+        classify <- cutree(hclust(diss), n.g)
+      }
+    } else {
+      classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
+    }
+  }
+  
+  if (control$init.method == "user") {
+    classify <- control$user.class
+    if (length(unique(classify)) != n.g) {
+      stop("Number of unique classes does not equal number of clusters specified in model")
+    }
+    
+  }
+  
+  return(classify)
+  
+}
+
+## reset defaults based on family, dimension, and expert/gating models
+reset.defaults <- function(fam, control, gate.mod, exp.mod){
+  if (fam == 700) {
+    if (control$init.method != "mixed") {
+      if (is.element("init.method", control$defaults)) {
+        control$init.method <- "mixed"
+        control$mix.method <- "Gower kmeans"
+      } else {
+        warning("mixed init.method recommended when Tweedie family specified")
+      }
+    }
+  } else {
+    if (dim.list@n.j == 1 & is.element("init.method", control$defaults)) {
+      control$init.method <- "quantile"
+    }
+    # default when covariate in expert or gating model and not Tweedie
+    if (gate.mod | exp.mod) {
+      # TODO: check and fix comment/code default when data are univariate and not Tweedie and when no covariates in expert/gating
+      if (dim.list@n.j == 1 & is.element("init.method", control$defaults)) {
+        control$init.method <- "hc"
+      }
+      control$hc.options$use <- "VARS"
+    }
+  }
+  return(control)
+}
+
 #' mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model
 #'
 #' @param x A numeric vector of observations for classification
@@ -386,7 +452,7 @@ mc.qclass <- function(x, k) {
 #' init.options(init.method = "hc")
 #' init.options(init.method = "mixed")
 #' init.options(init.method = "user", user.class = c(1, 1, 2, 1, 3, 3, 1, 2))
-init.options.s3 <- function(init.method = "hc",
+init.options <- function(init.method = "hc",
                          hc.options = list(
                            modelName = "VVV",
                            use = "SVD"),
@@ -469,7 +535,7 @@ init.options.s3 <- function(init.method = "hc",
   
   new_hc_init = hc_init(methods = hc.options)
 
-  new_user_class <- user_class(user = cast.user(user.class), method = init.method)
+  new_user_class <- user_class(user = user.class, method = init.method)
   
 
   out <- list(
@@ -639,7 +705,7 @@ init.options.s4 <- function(init.method = "hc",
 #' @param exp.init Turn on mahala initialization when expert network
 #' @param mix.method Initialization methods when data are mixed. Default method when data are Tweedie distributed.
 #' @param user.class Vector of classification vector set by user and required when init.method = 'user'
-#' @importFrom R7 new_class new_generic R7_dispatch
+#' @importFrom R7 new_class new_generic R7_dispatch method class_any class_character class_integer
 #'
 #' @return list of initialization specifications
 #' @export
@@ -649,7 +715,7 @@ init.options.s4 <- function(init.method = "hc",
 #' init.options(init.method = "hc")
 #' init.options(init.method = "mixed")
 #' init.options(init.method = "user", user.class = c(1, 1, 2, 1, 3, 3, 1, 2))
-init.options <-  function(init.method = "hc",
+init.options.r7 <-  function(init.method = "hc",
                              hc.options = list(
                                modelName = "VVV",
                                use = "SVD"),
@@ -794,10 +860,6 @@ name.hc.options <- function(methods){
   return(methods)
 }
 
-
-# genInitMethods <- function(){
-#   
-# }
 
 
 #' Updates initial class when covariates in expert formula using the Mahalanobis distance criteria

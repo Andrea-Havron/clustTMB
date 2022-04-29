@@ -13,7 +13,6 @@
 #' @importFrom mclust unmap hclass hc hcVVV hcE hcEII hcEEE hcVII hcV
 #' @importFrom cluster daisy pam
 #' @importFrom clustMixType kproto
-#' @importFrom nnet multinom
 #'
 #' @return list
 #' @keywords internal
@@ -370,7 +369,7 @@ mc.qclass <- function(x, k) {
   return(cl)
 }
 
-#' Initialization options
+#' Initialization options with S3 classes
 #'
 #' @param init.method Name of method used to set initial values. If init.method = 'user', must define 'user.class' with a classification vector.
 #' @param hc.options Model names and use when init.method is 'hc' following conventions of mclust::mclust.options()
@@ -386,93 +385,127 @@ mc.qclass <- function(x, k) {
 #' init.options(init.method = "hc")
 #' init.options(init.method = "mixed")
 #' init.options(init.method = "user", user.class = c(1, 1, 2, 1, 3, 3, 1, 2))
-init.options <- function(init.method = c("hc", "quantile", "random", "mclust", "kmeans", "mixed", "user"),
+init.options <- function(init.method = "hc",
                          hc.options = list(
-                           modelName = c("VVV", "EII", "EEE", "VII", "V", "E"),
-                           use = c("SVD", "VARS", "STD", "SPH", "PCS", "PCR", "RND")
-                         ),
+                           modelName = "VVV",
+                           use = "SVD"),
                          exp.init = list(mahala = TRUE),
-                         mix.method = c("Gower kmeans", "Gower hclust", "kproto"),
-                         user.class = NULL) {
-  defaults <- c()
+                         mix.method = "Gower kmeans",
+                         user.class = integer()) {
+  
+  #track defaults
+  defaults <- character()
   if (missing(init.method)) defaults <- c(defaults, "init.method")
-  if (!missing(init.method) & length(init.method) > 1 | !is.character(init.method)) {
-    stop(" 'init.method' must be a single character string, see ?init.options() for valid init.method")
+  if (missing(hc.options)) defaults <- c(defaults, "hcName", "hcUse")
+  if (missing(mix.method)) defaults <- c(defaults, "mix.method")
+  
+  #match up unnamed list to correct names
+  hc.options <- name.hc.options(hc.options)
+  #assign hc.option defaults if one missing
+  if ( !("modelName" %in% names(hc.options)) ){
+    defaults <- c(defaults, "hcName")
   }
-  if (!missing(init.method)) {
-    if (!is.element(init.method, c("quantile", "hc", "random", "mclust", "kmeans", "mixed", "user"))) {
-      stop(" specified init.method not supported, see ?init.options() for valid init.method")
-    }
+  if ( !("use" %in% names(hc.options)) ){
+    defaults <- c(defaults, "hcUse")
   }
-  init.method <- match.arg(init.method)
-
-  if (init.method == "hc") {
-    if (length(hc.options) > 2 | !is.list(hc.options)) {
-      stop("hc.options must be list of two items: modelName and use, see ?init.options() for details")
-    }
-    if (missing(hc.options)) {
-      hc.options <- list(modelName = "VVV", use = "SVD")
-      defaults <- c(defaults, "hcName", "hcUse")
-    }
-    nm <- names(hc.options)
-    if (!is.null(nm) & (!(all(is.element(nm, c("modelName", "use")))))) {
-      stop("hc.options must be a named list of two items: modelName and use, see ?init.options() for details")
-    }
-    if (is.null(nm) & length(hc.options) == 2) {
-      names(hc.options) <- c("modelName", "use")
-    }
-    if (is.null(nm) & length(hc.options) == 1) {
-      stop("ambiguous specification of hc.options, see ?init.options() for details")
-    }
-    if (length(nm) == 1) {
-      if (nm == "modelName") {
-        hc.options$use <- "SVD"
-        defaults <- c(defaults, "hcUse")
-      }
-      if (nm == "use") {
-        hc.options$modelName <- "VVV"
-        defaults <- c(defaults, "hcName")
-      }
-    }
-    if (!is.element(hc.options$modelName, c("VVV", "EII", "EEE", "VII"))) {
-      stop(" hc.options modelName not supported, see ?init.options()")
-    }
-    if (!is.element(hc.options$use, c("VARS", "STD", "SPH", "PCS", "PCR", "SVD", "RND"))) {
-      stop(" hc.options use not supported, see ?init.options()")
-    }
+  
+  #convert user.class to integer
+  user.class <- as.integer(as.factor(user.class))
+  
+  #Set up S3 classes
+  
+  new_init <- function(method,names){
+    stopifnot(is.character(method))
+    stopifnot(is.character(names))
+    method <- match.arg(method, names)
+    
+    structure(method,
+              class = "Init")
   }
-  if (init.method == "mixed") {
-    if (!missing(mix.method) & length(mix.method) > 1 | !is.character(mix.method)) {
-      stop("mix.method needs to be a single character string, see ?init.options() for details")
-    }
-    if (missing(mix.method)) {
-      mix.method <- match.arg(mix.method)
-      defaults <- c(defaults, "mix.method")
-    }
-    if (!is.element(mix.method, c("Gower kmeans", "Gower hclust", "kproto"))) {
-      stop("mix.method not supported, see ?init.options() for details")
-    }
+  
+  hc_init <- function(methods = list()){
+    
+    stopifnot(is.list(methods))
+    stopifnot(length(methods) <= 2)
+    
+    methods <- list(
+      modelName = match.arg(methods$modelName,  
+                            c( "VVV", "EII", "EEE", 
+                               "VII", "V", "E")),
+      use = match.arg(methods$use, 
+                      c("SVD", "VARS", "STD", "SPH",
+                        "PCS", "PCR", "RND"))
+    )
+    
+    structure(methods,
+              class = "HcInit")
+    
   }
-  if (init.method == "user") {
-    if (is.null(user.class)) {
+  
+  validate_user_class <- function(user,
+                                  method){
+    if( length(user)==0 & method == "user" ){
       stop("user.class must be a vector of classification characters or integers when 'init.method = user'")
     }
-    if (!is.vector(user.class)) {
-      stop("user.class must be a vector of classification characters or integers when 'init.method = user'")
-    }
-    if (is.character(user.class)) {
-      user.class <- as.numeric(as.factor(user.class))
-    }
+    stopifnot(is.integer(user))
   }
-
-  return(list(
-    init.method = init.method,
-    hc.options = hc.options,
+  
+  user_class <- function(user, method = character()){
+    
+    validate_user_class(user, method)
+    
+    structure(user,
+              class = "user")
+  }
+  
+  #Create S3 objects
+  new_init_method <- new_init(method = init.method, 
+                              names = c("hc", "quantile", "random", "mclust", 
+                                        "kmeans", "mixed", "user"))
+  
+  new_mix_method <- new_init(method = mix.method,
+                             names = c("Gower kmeans", "Gower hclust", "kproto"))
+  
+  new_hc_init = hc_init(methods = hc.options)
+  
+  new_user_class <- user_class(user = user.class, method = init.method)
+  
+  
+  out <- list(
+    init.method = new_init_method[1],
+    hc.options = new_hc_init[1:2],
     exp.init = exp.init,
-    mix.method = mix.method,
-    user.class = user.class,
+    mix.method = new_mix_method[1],
+    user.class = unclass(new_user_class),
     defaults = defaults
-  ))
+  )
+  class(out) <- "InitOptions"
+  
+  return(out)
+}
+
+#' init.options() helper function: assigns names to hc.options list if missing
+#'
+#' @param methods list of hc.option methods
+#'
+#' @return named list of hc.option methods
+name.hc.options <- function(methods){
+  modelName <- c( "VVV", "EII", "EEE",  "VII", "V", "E")
+  use <- c("SVD", "VARS", "STD", "SPH",  "PCS", "PCR", "RND")
+  
+  #match up unnamed list to correct names
+  nms <- names(methods)
+  if(is.null(nms) & length(methods) > 0){
+    for(i in 1:length(methods)){
+      if(methods[[i]] %in% modelName){
+        names(methods)[i] <- "modelName"
+      }
+      if(methods[[i]] %in% use){
+        names(methods)[i] <- "use"
+      }
+    }
+  }
+  return(methods)
 }
 
 #' Updates initial class when covariates in expert formula using the Mahalanobis distance criteria

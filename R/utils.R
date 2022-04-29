@@ -360,23 +360,23 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' @param dim.list Class object containing model dimensions
 #'
 #' @return list vector containing random effects components of the model
-mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
+mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list) {
   expert.split <- splitForm(expertformula)
   expert.re.names <- expert.split$reTrmClasses
   gating.split <- splitForm(gatingformula)
   gating.re.names <- gating.split$reTrmClasses
-  
+
   if (("gmrf" %in% expert.re.names | "gmrfSpeedup" %in% expert.re.names) &
-      (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
+    (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
     stop("You have specified a spatal model and need to provide location or
           mesh data in the spatial.list argument")
   }
   if (("gmrf" %in% gating.re.names | "gmrfSpeedup" %in% gating.re.names) &
-      (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
+    (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
     stop("You have specified a spatal model and need to provide location or
           mesh data in the spatial.list argument")
   }
-  
+
   specials <- c("ar1", "gmrf", "gmrfSpeedup")
   if (length(expert.re.names) > 0) {
     for (i in 1:length(expert.re.names)) {
@@ -392,7 +392,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
       }
     }
   }
-  
+
   if ("ar1" %in% expert.re.names) {
     idx <- which(expert.re.names == "ar1")
     ar1.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
@@ -401,7 +401,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   } else {
     expert.time <- rep(1, dim.list$n.i)
   }
- 
+
   ## TODO: lines 396-418 currently not used
   if ("ar1" %in% gating.re.names) {
     idx <- which(gating.re.names == "ar1")
@@ -410,7 +410,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   } else {
     gating.time <- rep(1, dim.list$n.i)
   }
-  
+
   if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
     idx <- which((expert.re.names == "gmrf") | (expert.re.names == "gmrfSpeedup"))
     gmrf.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
@@ -418,7 +418,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   } else {
     expert.gmrf <- NA
   }
-  
+
   if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
     idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
     gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
@@ -426,12 +426,12 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   } else {
     gating.gmrf <- NA
   }
-  
+
   ## TODO: expert/gating .ar1 and .gmrf provide information about interactions between space/time
   ## TODO: Spatio-temporal interactions not implemented yet!!
   reStruct <- matrix(0, 2, 3)
   random.names <- c()
-  
+
   for (i in seq_along(gating.re.names)) {
     if (gating.re.names[i] == "gmrf") {
       reStruct[1, 1] <- 3
@@ -578,7 +578,7 @@ parm.lookup <- function() {
 #' @return skewness value of x
 #' @export
 #' @examples
-#' skewness(rgamma(100,1,1))
+#' skewness(rgamma(100, 1, 1))
 skewness <- function(x) {
   n <- length(x)
   x <- x - mean(x)

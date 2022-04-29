@@ -14,20 +14,20 @@ mkRandom(
 )
 }
 \arguments{
-\item{expertformula}{}
+\item{expertformula}{Formula defining expert model.}
 
-\item{gatingformula}{}
+\item{gatingformula}{Formula defining gating model.}
 
-\item{expertdata}{}
+\item{expertdata}{Data frame containing expert model covariates.}
 
-\item{gatingdata}{}
+\item{gatingdata}{Data frame containing gating model covariates.}
 
-\item{spatial.list}{}
+\item{spatial.list}{List of data objects needed when fitting a spatial GMRF model}
 
-\item{dim.list}{}
+\item{dim.list}{Class object containing model dimensions}
 }
 \value{
-
+list vector containing random effects components of the model
 }
 \description{
 mkRandom: set up random effects component of the model

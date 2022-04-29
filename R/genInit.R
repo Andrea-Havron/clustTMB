@@ -388,89 +388,104 @@ mc.qclass <- function(x, k) {
 init.options <- function(init.method = "hc",
                          hc.options = list(
                            modelName = "VVV",
-                           use = "SVD"),
+                           use = "SVD"
+                         ),
                          exp.init = list(mahala = TRUE),
                          mix.method = "Gower kmeans",
                          user.class = integer()) {
-  
-  #track defaults
+
+  # track defaults
   defaults <- character()
   if (missing(init.method)) defaults <- c(defaults, "init.method")
   if (missing(hc.options)) defaults <- c(defaults, "hcName", "hcUse")
   if (missing(mix.method)) defaults <- c(defaults, "mix.method")
-  
-  #match up unnamed list to correct names
+
+  # match up unnamed list to correct names
   hc.options <- name.hc.options(hc.options)
-  #assign hc.option defaults if one missing
-  if ( !("modelName" %in% names(hc.options)) ){
+  # assign hc.option defaults if one missing
+  if (!("modelName" %in% names(hc.options))) {
     defaults <- c(defaults, "hcName")
   }
-  if ( !("use" %in% names(hc.options)) ){
+  if (!("use" %in% names(hc.options))) {
     defaults <- c(defaults, "hcUse")
   }
-  
-  #convert user.class to integer
+
+  # convert user.class to integer
   user.class <- as.integer(as.factor(user.class))
-  
-  #Set up S3 classes
-  
-  new_init <- function(method,names){
+
+  # Set up S3 classes
+
+  new_init <- function(method, names) {
     stopifnot(is.character(method))
     stopifnot(is.character(names))
     method <- match.arg(method, names)
-    
+
     structure(method,
-              class = "Init")
+      class = "Init"
+    )
   }
-  
-  hc_init <- function(methods = list()){
-    
+
+  hc_init <- function(methods = list()) {
     stopifnot(is.list(methods))
     stopifnot(length(methods) <= 2)
-    
+
     methods <- list(
-      modelName = match.arg(methods$modelName,  
-                            c( "VVV", "EII", "EEE", 
-                               "VII", "V", "E")),
-      use = match.arg(methods$use, 
-                      c("SVD", "VARS", "STD", "SPH",
-                        "PCS", "PCR", "RND"))
+      modelName = match.arg(
+        methods$modelName,
+        c(
+          "VVV", "EII", "EEE",
+          "VII", "V", "E"
+        )
+      ),
+      use = match.arg(
+        methods$use,
+        c(
+          "SVD", "VARS", "STD", "SPH",
+          "PCS", "PCR", "RND"
+        )
+      )
     )
-    
+
     structure(methods,
-              class = "HcInit")
-    
+      class = "HcInit"
+    )
   }
-  
+
   validate_user_class <- function(user,
-                                  method){
-    if( length(user)==0 & method == "user" ){
+                                  method) {
+    if (length(user) == 0 & method == "user") {
       stop("user.class must be a vector of classification characters or integers when 'init.method = user'")
     }
     stopifnot(is.integer(user))
   }
-  
-  user_class <- function(user, method = character()){
-    
+
+  user_class <- function(user, method = character()) {
     validate_user_class(user, method)
-    
+
     structure(user,
-              class = "user")
+      class = "user"
+    )
   }
-  
-  #Create S3 objects
-  new_init_method <- new_init(method = init.method, 
-                              names = c("hc", "quantile", "random", "mclust", 
-                                        "kmeans", "mixed", "user"))
-  
-  new_mix_method <- new_init(method = mix.method,
-                             names = c("Gower kmeans", "Gower hclust", "kproto"))
-  
-  new_hc_init = hc_init(methods = hc.options)
-  
+
+  # Create S3 objects
+  new_init_method <- new_init(
+    method = init.method,
+    names = c(
+      "hc", "quantile", "random", "mclust",
+      "kmeans", "mixed", "user"
+    )
+  )
+
+  new_mix_method <- new_init(
+    method = mix.method,
+    names = c("Gower kmeans", "Gower hclust", "kproto")
+  )
+
+  new_hc_init <- hc_init(methods = hc.options)
+
   new_user_class <- user_class(user = user.class, method = init.method)
-  
-  
+
+
   out <- list(
     init.method = new_init_method[1],
     hc.options = new_hc_init[1:2],
@@ -480,7 +495,7 @@ init.options <- function(init.method = "hc",
     defaults = defaults
   )
   class(out) <- "InitOptions"
-  
+
   return(out)
 }
 
@@ -489,18 +504,18 @@ init.options <- function(init.method = "hc",
 #' @param methods list of hc.option methods
 #'
 #' @return named list of hc.option methods
-name.hc.options <- function(methods){
-  modelName <- c( "VVV", "EII", "EEE",  "VII", "V", "E")
-  use <- c("SVD", "VARS", "STD", "SPH",  "PCS", "PCR", "RND")
-  
-  #match up unnamed list to correct names
+name.hc.options <- function(methods) {
+  modelName <- c("VVV", "EII", "EEE", "VII", "V", "E")
+  use <- c("SVD", "VARS", "STD", "SPH", "PCS", "PCR", "RND")
+
+  # match up unnamed list to correct names
   nms <- names(methods)
-  if(is.null(nms) & length(methods) > 0){
-    for(i in 1:length(methods)){
-      if(methods[[i]] %in% modelName){
+  if (is.null(nms) & length(methods) > 0) {
+    for (i in 1:length(methods)) {
+      if (methods[[i]] %in% modelName) {
         names(methods)[i] <- "modelName"
       }
-      if(methods[[i]] %in% use){
+      if (methods[[i]] %in% use) {
         names(methods)[i] <- "use"
       }
     }

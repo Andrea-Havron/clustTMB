@@ -78,73 +78,10 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   y <- y[, !duplicated(t(y))]
 
   # Apply classification method
-  if (control$init.method == "random") {
-    pi.init <- rep(1 / n.g, n.g)
-    Class <- t(rmultinom(n.i, 1, pi.init)) ## FIXME: write my own rmultinom function to avoid dependency here
-  }
-
-  if (control$init.method == "quantile") {
-    classify <- mc.qclass(y, as.numeric(n.g))
-    Class <- matrix(0, n.i, n.g)
-    for (i in 1:n.i) {
-      Class[i, classify[i]] <- 1
-    }
-    pi.init <- apply(Class, 2, sum) / n.i
-  }
-
-  if (control$init.method == "hc") {
-    classify <- as.vector(hclass(
-      hc(y,
-        modelName = control$hc.options$modelName,
-        use = control$hc.options$use
-      ), n.g
-    ))
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-  if (control$init.method == "kmeans") {
-    classify <- cluster::pam(diss, k = n.g)$clustering
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-  if (control$init.method == "mixed") {
-    tmp.pa <- matrix(NA, n.i, n.j)
-    y1 <- as.data.frame(matrix(NA, n.i, n.j))
-    for (j in 1:n.j) {
-      tmp.pa[, j] <- ifelse(y[, j] == 0, "A", "P")
-      y1[, j] <- as.factor(tmp.pa[, j])
-    }
-    y <- data.frame(cbind(y1, y))
-
-
-    if (control$mix.method != "kproto") {
-      diss <- cluster::daisy(y, metric = "gower")
-      if (control$mix.method == "Gower kmeans") {
-        classify <- cluster::pam(diss, k = n.g)$clustering
-      }
-      if (control$mix.method == "Gower hclust") {
-        classify <- cutree(hclust(diss), n.g)
-      }
-    } else {
-      classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
-    }
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-  if (control$init.method == "user") {
-    classify <- control$user.class
-    if (length(unique(classify)) != n.g) {
-      stop("Number of unique classes does not equal number of clusters specified in model")
-    }
-
-    Class <- unmap(classify)
-    pi.init <- apply(Class, 2, function(x) sum(x) / nrow(Data$Y))
-  }
-
-
+  classify <- genInitMethods(n.g, n.i, n.j, control, y)
+  Class <- unmap(classify)
+  pi.init <- apply(Class, 2, sum) / n.i
+  
   # setup ParList
   ParList <- list(
     betag = matrix(0, n.k.g, (n.g - 1)),
@@ -335,6 +272,77 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 
   gen.init <- list(parms = ParList, class = classify)
   return(gen.init)
+}
+
+#genInit helper functions
+
+#' Apply classification method dependent on init.method
+#'
+#' @param n.g Number of clusters
+#' @param n.i Number of observations
+#' @param n.j Number of columns
+#' @param control Classification settings from init.options()
+#' @param y Observations
+#'
+#' @return classification vector
+genInitMethods <- function(n.g, n.i, n.j,
+                           control, y){
+  # Apply classification method
+  if (control$init.method == "random") {
+    classify <- sample(1:n.g, n.i, replace = TRUE)
+  }
+  
+  if (control$init.method == "quantile") {
+    classify <- mc.qclass(y, as.numeric(n.g))
+  }
+  
+  if (control$init.method == "hc") {
+    classify <- as.vector(hclass(
+      hc(y,
+         modelName = control$hc.options$modelName,
+         use = control$hc.options$use
+      ), n.g
+    ))
+    
+  }
+  
+  if (control$init.method == "kmeans") {
+    classify <- cluster::pam(y, k = n.g)$clustering
+  }
+  
+  if (control$init.method == "mixed") {
+    tmp.pa <- matrix(NA, n.i, n.j)
+    y1 <- as.data.frame(matrix(NA, n.i, n.j))
+    for (j in 1:n.j) {
+      tmp.pa[, j] <- ifelse(y[, j] == 0, "A", "P")
+      y1[, j] <- as.factor(tmp.pa[, j])
+    }
+    y <- data.frame(cbind(y1, y))
+    
+    
+    if (control$mix.method != "kproto") {
+      diss <- cluster::daisy(y, metric = "gower")
+      if (control$mix.method == "Gower kmeans") {
+        classify <- cluster::pam(diss, k = n.g)$clustering
+      }
+      if (control$mix.method == "Gower hclust") {
+        classify <- cutree(hclust(diss), n.g)
+      }
+    } else {
+      classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
+    }
+  }
+  
+  if (control$init.method == "user") {
+    classify <- control$user.class
+    if (length(unique(classify)) != n.g) {
+      stop("Number of unique classes does not equal number of clusters specified in model")
+    }
+    
+  }
+  
+  return(classify)
+  
 }
 
 #' mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model

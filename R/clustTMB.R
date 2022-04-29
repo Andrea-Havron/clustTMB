@@ -63,15 +63,20 @@ clustTMB <- function(response = NULL,
   response <- as.matrix(response)
   
   # initialize dim.list to keep track of data/parameter dimensions
-  dim.list <- list(
-    n.i = nrow(response), n.j = ncol(response), n.t = NULL,
-    n.g = G, n.f.sp = NULL, n.f.rand = NULL, n.r.g = spatial.list$init.range$gating.range,
-    n.r.e = spatial.list$init.range$expert.range, n.v = NULL
+  dim.list <- DimList(n.i = nrow(response), 
+                      n.j = ncol(response),
+                      n.g = G,
+                      n.r.g = spatial.list$init.range$gating.range,
+                      n.r.e = spatial.list$init.range$expert.range)
+  dim.list@nl.fix <- ifelse(
+    dim.list@n.j > 1, 
+    (dim.list@n.j^2 - dim.list@n.j) / 2, 
+    1
   )
-   
+
   # exception-handling
   if (is.null(covariance.structure)) {
-    if (dim.list$n.j == 1) {
+    if (dim.list@n.j == 1) {
       covariance.structure <- "E"
       warning("Setting covariance structure to univariate E")
     } else {
@@ -89,8 +94,8 @@ clustTMB <- function(response = NULL,
   } else {
     ll.method <- 2
   }
-  if (is.null(expertdata)) expertdata <- data.frame(x = rep(1, dim.list$n.i))
-  if (is.null(gatingdata)) gatingdata <- data.frame(x = rep(1, dim.list$n.i))
+  if (is.null(expertdata)) expertdata <- data.frame(x = rep(1, dim.list@n.i))
+  if (is.null(gatingdata)) gatingdata <- data.frame(x = rep(1, dim.list@n.i))
   if (!is.data.frame(expertdata)) {
     stop("expert data needs to be a data.frame")
   }
@@ -98,19 +103,19 @@ clustTMB <- function(response = NULL,
     stop("gating data needs to be a data.frame")
   }
   if (!is.null(expertdata)) {
-    if (nrow(expertdata) != dim.list$n.i) {
+    if (nrow(expertdata) != dim.list@n.i) {
       stop("expert data and response need to have the same number of observations")
     }
   }
   if (!is.null(gatingdata)) {
-    if (nrow(gatingdata) != dim.list$n.i) {
+    if (nrow(gatingdata) != dim.list@n.i) {
       stop("gating data and response need to have the same number of observations")
     }
   }
-  if ((covariance.structure == "E" | covariance.structure == "V") & dim.list$n.j > 1) {
+  if ((covariance.structure == "E" | covariance.structure == "V") & dim.list@n.j > 1) {
     stop("Need to specify multivariate covariance structure")
   }
-  if (!(covariance.structure == "E" | covariance.structure == "V") & dim.list$n.j == 1) {
+  if (!(covariance.structure == "E" | covariance.structure == "V") & dim.list@n.j == 1) {
     stop("Need to specify univariate covariance structure")
   }
   if (!(family[[1]] %in% names(.valid_family))) {
@@ -134,14 +139,15 @@ clustTMB <- function(response = NULL,
   }
 
   # set up random component of model
-  reOut <- mkRandom(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list)
+  reOut <- mkRandom(expertformula, gatingformula, expertdata, 
+                    gatingdata, spatial.list, dim.list@n.i)
   reStruct <- reOut$reStruct
   random.names <- reOut$random.names
   expert.time <- reOut$expert.time
   
   # update dim.list
   ## TODO: develop time component of .cpp to distinguish between gating/expert.
-  dim.list$n.t <- length(unique(expert.time))
+  dim.list@n.t <- length(unique(expert.time))
   
   # remove intercept from gatingformula when random effects specified
   if (sum(reStruct[1, ] > 0) & attributes(terms(gatingformula))$intercept == 1) {
@@ -156,43 +162,51 @@ clustTMB <- function(response = NULL,
   # 
   if ((length(dimnames(expert.fix.dat)[[2]]) == 1) &
     dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
-    expert.fix.dat <- matrix(1, dim.list$n.i, 1, dimnames = list(NULL, "(Intercept)"))
+    expert.fix.dat <- matrix(1, dim.list@n.i, 1, dimnames = list(NULL, "(Intercept)"))
   }
   if ((length(dimnames(gating.fix.dat)[[2]]) == 1) &
     dimnames(gating.fix.dat)[[2]][1] == "(Intercept)") {
-    gating.fix.dat <- matrix(1, dim.list$n.i, 1, dimnames = list(NULL, "(Intercept)"))
+    gating.fix.dat <- matrix(1, dim.list@n.i, 1, dimnames = list(NULL, "(Intercept)"))
   }
 
   ## Rank reduction settings
   # clustTMB currently allows for spatial and random rank reduction
   rrStruct <- c(0, 0)
   if (!is.null(rr$random)) {
-    if (rr$random >= dim.list$n.j) {
+    if (rr$random >= dim.list@n.j) {
       stop("random rank reduction must be smaller than the number of columns in the response")
     }
     rrStruct[1] <- 1
-    dim.list$n.f.rand <- rr$random
+    ## TODO: check rr$random is an integer
+    dim.lis@n.f.rand <- rr$random
     random.names <- c(random.names, "v_ifg")
   } else {
-    dim.list$n.f.rand <- dim.list$n.j
+    dim.list@n.f.rand <- dim.list@n.j
   }
+  dim.list@nl.rand <- calc.rr.dim(dim.list@n.j, dim.list@n.f.rand)
   if (!is.null(rr$spatial)) {
-    if (rr$spatial >= dim.list$n.j) {
+    if (rr$spatial >= dim.list@n.j) {
       stop("spatial rank reduction must be smaller than the number of columns in the response")
     }
     rrStruct[2] <- 1
-    dim.list$n.f.sp <- rr$spatial
+    ## TODO: check rr$spatial is an integer
+    dim.list@n.f.sp <- rr$spatial
   } else {
-    dim.list$n.f.sp <- dim.list$n.j
+    dim.list@n.f.sp <- dim.list@n.j
   }
+  
+  dim.list@nl.sp <- calc.rr.dim(dim.list@n.j, dim.list@n.f.sp)
+  
   if (sum(rrStruct) > 0) {
-    if (dim.list$n.j == 1) {
+    if (dim.list@n.j == 1) {
       stop("cannot implement rank reduction on univariate models")
     }
     if (covariance.structure == "EEE" | covariance.structure == "VVV") {
       stop("Need to specify diagonal covariance structure when implementing rank reduction")
     }
   }
+  
+  
 
   # if((rrStruct[1] == 1) & reStruct[2,3] == 0){
   #   stop ("You have specified an random error rank reduction in the expert model and therefore need to specify a normal overdispersion model in the expertformula")
@@ -216,7 +230,7 @@ clustTMB <- function(response = NULL,
     spatial.list = spatial.list,
     projection.list = projection.list
   )
-  dim.list$n.v <- Dat$spde$n_s
+  dim.list@n.v <- Dat$spde$n_s
   initialization.args$Data <- Dat
   initialization.args$dim.list <- dim.list
   initialization.args$family <- family

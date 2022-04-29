@@ -1,7 +1,8 @@
 stopifnot(
   require("testthat"),
   require("clustTMB"),
-  require("mvnfast")
+  require("mvnfast"),
+  require("R7")
 )
 
 context("match mkMap with init parm")
@@ -10,24 +11,37 @@ n.j <- 4
 n.g <- 3
 y <- rmvn(n.i, rep(0, n.j), diag(n.j))
 
-dim.list <- list(
-  n.i = n.i, n.j = n.j, n.t = 1,
-  n.g = n.g, n.f.sp = n.j, n.f.rand = n.j, n.v = NULL
-)
+# dim.list <- list(
+#   n.i = n.i, n.j = n.j, n.t = 1,
+#   n.g = n.g, n.f.sp = n.j, n.f.rand = n.j, n.v = NULL
+# )
 
+dim.list <- clustTMB:::DimList(n.i = as.integer(n.i),
+                               n.j = as.integer(n.j),
+                               n.g = n.g,
+                               n.t = as.integer(1),
+                               n.f.sp = as.integer(n.j),
+                               n.f.rand = as.integer(n.j),
+                               nl.fix = as.integer((n.j^2-n.j)/2))
+dim.list@nl.rand <- as.integer(
+  clustTMB:::calc.rr.dim(dim.list@n.j, dim.list@n.f.rand)
+)
+dim.list@nl.sp <- as.integer(
+  clustTMB:::calc.rr.dim(dim.list@n.j, dim.list@n.f.sp)
+)
 
 test_that("mvn with no random effect, no rank reduction", {
   Dat <- mkDat(
-    response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    response = as.matrix(y), time.vector = rep(1, n.i),
+    expert.dat = as.matrix(rep(1, n.i)),
+    gating.dat = as.matrix(rep(1, n.i)),
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
     reStruct = matrix(0, 2, 3),
     dim.list = dim.list
   )
-  dim.list$n.v <- Dat$spde$n_s
+  dim.list@n.v <- Dat$spde$n_s
   init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(Dat$family, Dat$fixStruct, Dat$rrStruct, Dat$reStruct, dim.list)
   map.names <- names(map.list)
@@ -45,16 +59,16 @@ test_that("mvn with no random effect, no rank reduction", {
 
 test_that("mvn with gating random effects, no rank reduction", {
   Dat <- mkDat(
-    response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    response = as.matrix(y), time.vector = rep(1, dim.list@n.i),
+    expert.dat = as.matrix(rep(1, dim.list@n.i)),
+    gating.dat = as.matrix(rep(1, dim.list@n.i)),
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
     reStruct = matrix(0, 2, 3),
     dim.list = dim.list
   )
-  dim.list$n.v <- Dat$spde$n_s
+  dim.list@n.v <- Dat$spde$n_s
   exp.map.names <- c(
     "thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
     "ln_kappag", "ln_kappad", "ln_taud", "logit_rhog", "logit_rhod",
@@ -83,22 +97,22 @@ test_that("mvn with gating random effects, no rank reduction", {
       expect_equal(sapply(map.list[map.names[m]], dim), sapply(init.parm$parms[map.names[m]], dim))
     }
     expect_equal(sort(map.names), sort(exp.map.names))
-    if (j == 1) expect_equal(sum(as.numeric(map.list$ln_kappag)), dim.list$n.g - 1)
+    if (j == 1) expect_equal(sum(as.numeric(map.list$ln_kappag)), dim.list@n.g - 1)
   }
 })
 
 test_that("mvn with expert random effects, no rank reduction", {
   Dat <- mkDat(
-    response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    response = as.matrix(y), time.vector = rep(1, dim.list@n.i),
+    expert.dat = as.matrix(rep(1, dim.list@n.i)),
+    gating.dat = as.matrix(rep(1, dim.list@n.i)),
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
     reStruct = matrix(0, 2, 3),
     dim.list = dim.list
   )
-  dim.list$n.v <- Dat$spde$n_s
+  dim.list@n.v <- Dat$spde$n_s
   reNum <- c(3, 2, 1)
   parmName <- list("Omega_vfg", c("logit_rhod", "ln_sigmaep", "epsilon_tjg"), c("ln_sigmav", "v_ifg"))
   for (j in 1:3) {
@@ -122,8 +136,8 @@ test_that("mvn with expert random effects, no rank reduction", {
     }
     expect_equal(sort(map.names), sort(exp.map.names))
     if (j == 1) {
-      expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list$n.g * dim.list$n.j)
-      expect_equal(sum(as.numeric(map.list$ln_taud)), dim.list$n.g * dim.list$n.j)
+      expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list@n.g * dim.list@n.j)
+      expect_equal(sum(as.numeric(map.list$ln_taud)), dim.list@n.g * dim.list@n.j)
     }
   }
 })
@@ -131,21 +145,31 @@ test_that("mvn with expert random effects, no rank reduction", {
 test_that("mvn with expert random effects and rank reduction", {
 
   ## random reduction
-  dim.list <- list(
-    n.i = n.i, n.j = n.j, n.t = 1,
-    n.g = n.g, n.f.sp = n.j, n.f.rand = n.j - 1, n.v = NULL
+  dim.list <- clustTMB:::DimList(n.i = as.integer(n.i),
+                                 n.j = as.integer(n.j),
+                                 n.g = n.g,
+                                 n.t = as.integer(1),
+                                 n.f.sp = as.integer(n.j),
+                                 n.f.rand = as.integer(n.j - 1),
+                                 nl.fix = as.integer((n.j^2-n.j)/2))
+  dim.list@nl.rand <- as.integer(
+    clustTMB:::calc.rr.dim(dim.list@n.j, dim.list@n.f.rand)
   )
+  dim.list@nl.sp <- as.integer(
+    clustTMB:::calc.rr.dim(dim.list@n.j, dim.list@n.f.sp)
+  )
+
   Dat <- mkDat(
-    response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    response = as.matrix(y), time.vector = rep(1, dim.list@n.i),
+    expert.dat = as.matrix(rep(1, dim.list@n.i)),
+    gating.dat = as.matrix(rep(1, dim.list@n.i)),
     ll.method = 0,
     fixStruct = "VVI",
     rrStruct = rep(0, 2),
     reStruct = matrix(0, 2, 3),
     dim.list = dim.list
   )
-  dim.list$n.v <- Dat$spde$n_s
+  dim.list@n.v <- Dat$spde$n_s
 
   Dat$reStruct <- matrix(0, 2, 3)
   Dat$reStruct[2, 3] <- 1
@@ -165,29 +189,39 @@ test_that("mvn with expert random effects and rank reduction", {
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 
-  expect_equal(sum(is.na(map.list$ln_sigmav)), dim.list$n.g * dim.list$n.f.rand)
+  expect_equal(sum(is.na(map.list$ln_sigmav)), dim.list@n.g * dim.list@n.f.rand)
 
-  expect_equal(dim(init.parm$parms$v_ifg), c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g))
+  expect_equal(dim(init.parm$parms$v_ifg), c(dim.list@n.i, dim.list@n.f.rand, dim.list@n.g))
 
-  expect_equal(dim(init.parm$parms$ld_rand)[1], c(dim.list$n.j * dim.list$n.f.rand -
-    (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2))
+  expect_equal(dim(init.parm$parms$ld_rand)[1], c(dim.list@n.j * dim.list@n.f.rand -
+    (dim.list@n.f.rand * (dim.list@n.f.rand - 1)) / 2))
 
   ## spatial reduction
-  dim.list <- list(
-    n.i = n.i, n.j = n.j, n.t = 1,
-    n.g = n.g, n.f.sp = n.j - 1, n.f.rand = n.j, n.v = NULL
+  dim.list <- clustTMB:::DimList(n.i = as.integer(n.i),
+                                 n.j = as.integer(n.j),
+                                 n.g = n.g,
+                                 n.t = as.integer(1),
+                                 n.f.sp = as.integer(n.j - 1),
+                                 n.f.rand = as.integer(n.j),
+                                 nl.fix = as.integer((n.j^2-n.j)/2))
+  dim.list@nl.rand <- as.integer(
+    clustTMB:::calc.rr.dim(dim.list@n.j, dim.list@n.f.rand)
   )
+  dim.list@nl.sp <- as.integer(
+    clustTMB:::calc.rr.dim(dim.list@n.j, dim.list@n.f.sp)
+  )
+ 
   Dat <- mkDat(
-    response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    response = as.matrix(y), time.vector = rep(1, dim.list@n.i),
+    expert.dat = as.matrix(rep(1, dim.list@n.i)),
+    gating.dat = as.matrix(rep(1, dim.list@n.i)),
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
     reStruct = matrix(0, 2, 3),
     dim.list = dim.list
   )
-  dim.list$n.v <- Dat$spde$n_s
+  dim.list@n.v <- Dat$spde$n_s
   Dat$reStruct <- matrix(0, 2, 3)
   Dat$reStruct[2, 1] <- 3
   Dat$rrStruct[2] <- 1
@@ -206,13 +240,13 @@ test_that("mvn with expert random effects and rank reduction", {
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 
-  expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list$n.g * dim.list$n.f.sp)
-  expect_equal(sum(is.na(map.list$ln_taud)), dim.list$n.g * dim.list$n.f.sp)
+  expect_equal(sum(as.numeric(map.list$ln_kappad)), dim.list@n.g * dim.list@n.f.sp)
+  expect_equal(sum(is.na(map.list$ln_taud)), dim.list@n.g * dim.list@n.f.sp)
 
-  expect_equal(dim(init.parm$parms$Omega_vfg), c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g))
+  expect_equal(dim(init.parm$parms$Omega_vfg), c(dim.list@n.v, dim.list@n.f.sp, dim.list@n.g))
 
-  expect_equal(dim(init.parm$parms$ld_sp)[1], c(dim.list$n.j * dim.list$n.f.sp -
-    (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2))
+  expect_equal(dim(init.parm$parms$ld_sp)[1], c(dim.list@n.j * dim.list@n.f.sp -
+    (dim.list@n.f.sp * (dim.list@n.f.sp - 1)) / 2))
 })
 
 context("test user specified start/map")

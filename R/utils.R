@@ -55,22 +55,24 @@ mkFac <- function(d, f = NA) {
 #' @param reStruct Random effects structure
 #' @param dim.list List of parameter dimensions
 #' @param map.ops In future, allow users to alter map?
+#' 
+#' @importFrom R7 `@`
 #'
 #' @return List defining how to optionally collect and fix parameters
 #' @keywords internal
 #' @noRd
 mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NULL) {
   # list2env(dim.list, environment(mkMap))
-  n.i <- dim.list$n.i
-  n.j <- dim.list$n.j
-  n.t <- dim.list$n.t
-  n.g <- dim.list$n.g
-  n.f.sp <- dim.list$n.f.sp
-  n.f.rand <- dim.list$n.f.rand
-  n.v <- dim.list$n.v
-  nl.rand <- n.j * n.f.rand - (n.f.rand * (n.f.rand - 1)) / 2
-  nl.sp <- n.j * n.f.sp - (n.f.sp * (n.f.sp - 1)) / 2
-  nl.fix <- ifelse(n.j > 1, (n.j^2 - n.j) / 2, 1)
+  n.i <- dim.list@n.i
+  n.j <- dim.list@n.j
+  n.t <- dim.list@n.t
+  n.g <- dim.list@n.g
+  n.f.sp <- dim.list@n.f.sp
+  n.f.rand <- dim.list@n.f.rand
+  n.v <- dim.list@n.v
+  nl.rand <- dim.list@nl.rand
+  nl.sp <- dim.list@nl.sp
+  nl.fix <- dim.list@nl.fix
 
   # Map out parameters based on model structure
   Map <- list()
@@ -220,6 +222,7 @@ lognormal <- function(link = "identity") {
 #' @param projection.list List of spatial objects used when returning spatial projection results
 #'
 #' @importFrom INLA inla.mesh.create inla.spde.make.A
+#' @importFrom R7 `@`
 #'
 #' @return Data list for input into TMB::MakeADFun
 #' @keywords internal
@@ -237,13 +240,13 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
                     expert.pred.names = NULL,
                     gating.pred.names = NULL
                   )) {
-  n.i <- dim.list$n.i
-  n.j <- dim.list$n.j
-  n.t <- dim.list$n.t
-  n.g <- dim.list$n.g
-  n.f.rand <- dim.list$n.f.rand
-  n.f.sp <- dim.list$n.f.sp
-  n.v <- dim.list$n.v
+  n.i <- dim.list@n.i
+  n.j <- dim.list@n.j
+  n.t <- dim.list@n.t
+  n.g <- dim.list@n.g
+  n.f.rand <- dim.list@n.f.rand
+  n.f.sp <- dim.list@n.f.sp
+  n.v <- dim.list@n.v
   # list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
   loc <- spatial.list$loc
   if (!is.null(loc)) {
@@ -314,7 +317,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   }
 
 
-  if (is.null(offset)) offset <- rep(1, dim.list$n.i)
+  if (is.null(offset)) offset <- rep(1, dim.list@n.i)
 
   Dat <- list(
     Y = as.array(response),
@@ -357,10 +360,10 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' @param expertdata  Data frame containing expert model covariates.
 #' @param gatingdata  Data frame containing gating model covariates.
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
-#' @param dim.list List of model dimensions
+#' @param dim.list Class object containing model dimensions
 #'
 #' @return list vector containing random effects components of the model
-mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
+mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, n.i){
   expert.split <- splitForm(expertformula)
   expert.re.names <- expert.split$reTrmClasses
   gating.split <- splitForm(gatingformula)
@@ -399,16 +402,16 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
     ## ! make sure this enters TMB as numeric - although consider using glmmTMB factor approach
     expert.time <- model.frame(subbars(ar1.form), expertdata)
   } else {
-    expert.time <- rep(1, dim.list$n.i)
+    expert.time <- rep(1, n.i)
   }
  
-  ## TODO: lines 396-418 currently not used
+  ## TODO: lines until ## end TODO currently not used
   if ("ar1" %in% gating.re.names) {
     idx <- which(gating.re.names == "ar1")
     ar1.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
     gating.time <- model.frame(subbars(ar1.form), gatingdata)
   } else {
-    gating.time <- rep(1, dim.list$n.i)
+    gating.time <- rep(1, n.i)
   }
   
   if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
@@ -426,6 +429,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   } else {
     gating.gmrf <- NA
   }
+  ## end TODO
   
   ## TODO: expert/gating .ar1 and .gmrf provide information about interactions between space/time
   ## TODO: Spatio-temporal interactions not implemented yet!!
@@ -584,4 +588,14 @@ skewness <- function(x) {
   x <- x - mean(x)
   y <- sqrt(n) * sum(x^3) / (sum(x^2)^(3 / 2))
   y <- y * ((1 - 1 / n))^(3 / 2)
+}
+
+#' Calculate the length of an input vector used to populate a rank reduced matrix for a factor analysis
+#'
+#' @param nj number of columns in full matrix
+#' @param nf number of factors in reduced matrix
+#'
+#' @return integer dimension
+calc.rr.dim <- function(nj, nf){
+  nj * nf - (nf * (nf - 1)) / 2
 }

@@ -26,10 +26,18 @@ init.parm.mclust <- list(
 )
 # Pi = list(g1 = sum(clss[,1])/nrow(faithful),
 #           g2 = sum(clss[,2])/nrow(faithful)))
-dim.list <- list(
-  n.i = nrow(faithful), n.j = ncol(faithful), n.t = 1,
-  n.g = 2, n.f.sp = ncol(faithful), n.f.rand = ncol(faithful), n.v = NULL
-)
+n.i <- nrow(faithful)
+n.j <-ncol(faithful)
+dim.list <- clustTMB:::DimList(n.i = as.integer(n.i),
+                               n.j = as.integer(n.j),
+                               n.g = 2,
+                               n.t = as.integer(1),
+                               n.f.sp = as.integer(n.j),
+                               n.f.rand = as.integer(n.j),
+                               nl.rand = clustTMB:::calc.rr.dim(n.j,n.j),
+                               nl.sp = clustTMB:::calc.rr.dim(n.j,n.j),
+                               nl.fix = as.integer((n.j^2-n.j)/2))
+
 Dat <- mkDat(
   response = as.matrix(faithful), time.vector = rep(1, nrow(faithful)),
   expert.dat = as.matrix(rep(1, nrow(faithful))),
@@ -40,7 +48,7 @@ Dat <- mkDat(
   reStruct = matrix(0, 2, 3),
   dim.list = dim.list
 )
-dim.list$n.v <- Dat$spde$n_s
+dim.list@n.v <- Dat$spde$n_s
 init.parm.clustTMB <- genInit(Dat,
   family = gaussian(link = "identity"), dim.list,
   control = init.options(hc.options = list(
@@ -74,12 +82,12 @@ test_that("Class", {
   expect_equal(map(clss), init.parm.clustTMB$class)
 })
 test_that("Random Effects dim", {
-  expect_equal(c(dim.list$n.t, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$upsilon_tg))
-  expect_equal(c(dim.list$n.t, dim.list$n.j, dim.list$n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
-  # expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
-  expect_equal(c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), dim(init.parm.clustTMB$parms$v_ifg))
-  expect_equal(c(dim.list$n.v, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$Gamma_vg))
-  expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
+  expect_equal(c(dim.list@n.t, dim.list@n.g - 1), dim(init.parm.clustTMB$parms$upsilon_tg))
+  expect_equal(c(dim.list@n.t, dim.list@n.j, dim.list@n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
+  # expect_equal(c(dim.list@n.i, dim.list@n.g-1), dim(init.parm.clustTMB$parms$u_ig))
+  expect_equal(c(dim.list@n.i, dim.list@n.f.rand, dim.list@n.g), dim(init.parm.clustTMB$parms$v_ifg))
+  expect_equal(c(dim.list@n.v, dim.list@n.g - 1), dim(init.parm.clustTMB$parms$Gamma_vg))
+  expect_equal(c(dim.list@n.v, dim.list@n.f.sp, dim.list@n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
 })
 
 
@@ -98,10 +106,17 @@ init.parm.mclust <- list(
 )
 # Pi = list(g1 = sum(clss[,1])/nrow(faithful),
 #           g2 = sum(clss[,2])/nrow(faithful)))
-dim.list <- list(
-  n.i = nrow(faithful), n.j = 1, n.t = 1,
-  n.g = 2, n.f.sp = 1, n.f.rand = 1, n.v = NULL
-)
+n.j = as.integer(1)
+dim.list <- clustTMB:::DimList(n.i = as.integer(n.i),
+                               n.j = n.j,
+                               n.g = 2,
+                               n.t = as.integer(1),
+                               n.f.sp = 1,
+                               n.f.rand = 1,
+                               nl.fix = 1,
+                               nl.rand = clustTMB:::calc.rr.dim(1,1),
+                               nl.sp = clustTMB:::calc.rr.dim(1,1))
+
 Dat <- mkDat(
   response = as.matrix(faithful$waiting), time.vector = rep(1, nrow(faithful)),
   expert.dat = as.matrix(rep(1, nrow(faithful))),
@@ -112,7 +127,7 @@ Dat <- mkDat(
   reStruct = matrix(0, 2, 3),
   dim.list = dim.list
 )
-dim.list$n.v <- Dat$spde$n_s
+dim.list@n.v <- Dat$spde$n_s
 init.parm.clustTMB <- genInit(Dat,
   family = gaussian(link = "identity"), dim.list,
   control = init.options(init.method = "quantile")
@@ -149,12 +164,12 @@ test_that("Class", {
 
 # test MakeADFun
 test_that("Random Effects dim", {
-  expect_equal(c(dim.list$n.t, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$upsilon_tg))
-  expect_equal(c(dim.list$n.t, dim.list$n.j, dim.list$n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
-  # expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
-  expect_equal(c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), dim(init.parm.clustTMB$parms$v_ifg))
-  expect_equal(c(dim.list$n.v, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$Gamma_vg))
-  expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
+  expect_equal(c(dim.list@n.t, dim.list@n.g - 1), dim(init.parm.clustTMB$parms$upsilon_tg))
+  expect_equal(c(dim.list@n.t, dim.list@n.j, dim.list@n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
+  # expect_equal(c(dim.list@n.i, dim.list@n.g-1), dim(init.parm.clustTMB$parms$u_ig))
+  expect_equal(c(dim.list@n.i, dim.list@n.f.rand, dim.list@n.g), dim(init.parm.clustTMB$parms$v_ifg))
+  expect_equal(c(dim.list@n.v, dim.list@n.g - 1), dim(init.parm.clustTMB$parms$Gamma_vg))
+  expect_equal(c(dim.list@n.v, dim.list@n.f.sp, dim.list@n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
 })
 
 

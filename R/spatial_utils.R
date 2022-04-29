@@ -2,11 +2,10 @@
 
 #' Generate SPDE list needed as imput to FEM-SPDE spatial TMB models
 #'
-#' @param mesh INLA mesh object generated from inla.mesh.create or inla.mesh.2d
+#' @param mesh INLA mesh object generated from [INLA::inla.mesh.create()] or [INLA::inla.mesh.2d()]
 #'
 #' @return spde List used as input into TMB anisotropic model
 #'
-#' @importFrom INLA inla.spde2.matern inla.mesh.create
 #' @importFrom methods as
 #' @importFrom Matrix diag
 #' @keywords internal
@@ -24,7 +23,7 @@ spdeStruct <- function(mesh) {
       "G0_inv"   = as(matrix(0, 2, 2), "dgTMatrix")
     )
   } else {
-    spde <- inla.spde2.matern(mesh)
+    spde <- INLA::inla.spde2.matern(mesh)
     # ---------- Begin code that prepares object for anisotropy.
     Dset <- 1:2
     # Triangle info

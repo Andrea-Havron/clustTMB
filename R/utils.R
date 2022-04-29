@@ -219,8 +219,6 @@ lognormal <- function(link = "identity") {
 #' @param spatial.list List of spatial objects when fitting a spatial model
 #' @param projection.list List of spatial objects used when returning spatial projection results
 #'
-#' @importFrom INLA inla.mesh.create inla.spde.make.A
-#'
 #' @return Data list for input into TMB::MakeADFun
 #' @keywords internal
 #' @noRd
@@ -264,7 +262,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   if (!is.null(loc) & is.null(mesh)) {
     # default mesh - in future add options to include arguments for inla.mesh.2d
     # for now, user can supply mesh if a more complex mesh is needed
-    mesh <- inla.mesh.create(loc@coords)
+    mesh <- INLA::inla.mesh.create(loc@coords)
     warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
             the simple mesh may result in spatial bias. Consider bulding a
             more appropriate mesh using INLA::meshbuilder()")
@@ -282,7 +280,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     A <- as(matrix(0, n.i, 1), "dgCMatrix")
     n.v <- 1
   } else {
-    A <- inla.spde.make.A(mesh, loc)
+    A <- INLA::inla.spde.make.A(mesh, loc)
     n.v <- mesh$n
   }
 
@@ -310,7 +308,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
       }
     }
     doProj <- TRUE
-    A.proj <- inla.spde.make.A(mesh, grid.loc)
+    A.proj <- INLA::inla.spde.make.A(mesh, grid.loc)
   }
 
 

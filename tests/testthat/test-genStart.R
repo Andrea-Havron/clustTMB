@@ -172,8 +172,6 @@ test_that("Random Effects dim", {
   expect_equal(c(dim.list@n.v, dim.list@n.f.sp, dim.list@n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
 })
 
-
-
 context("univariate normal data with covaraites")
 data(CO2data)
 CO2 <- CO2data$CO2

@@ -583,3 +583,10 @@ skewness <- function(x) {
   y <- sqrt(n) * sum(x^3) / (sum(x^2)^(3 / 2))
   y <- y * ((1 - 1 / n))^(3 / 2)
 }
+
+#' Check if INLA installed (i.e., not on CRAN)
+#'
+#' @export
+inla_installed <- function() {
+  requireNamespace("INLA", quietly = TRUE)
+}

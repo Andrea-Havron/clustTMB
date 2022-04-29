@@ -30,8 +30,7 @@ Imports:
     cluster,
     clustMixType,
     mvnfast,
-    MoEClust,
-    nnet
+    MoEClust
 Depends:
     R (>= 4.0.0)
 LinkingTo:

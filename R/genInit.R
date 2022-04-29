@@ -46,28 +46,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (ncol(X.d) > 0) exp.mod <- TRUE
 
   ## reset defaults based on family, dimension, and expert/gating models
-  if (Data$family == 700) {
-    if (control$init.method != "mixed") {
-      if (is.element("init.method", control$defaults)) {
-        control$init.method <- "mixed"
-        control$mix.method <- "Gower kmeans"
-      } else {
-        warning("mixed init.method recommended when Tweedie family specified")
-      }
-    }
-  } else {
-    if (dim.list$n.j == 1 & is.element("init.method", control$defaults)) {
-      control$init.method <- "quantile"
-    }
-    # default when covariate in expert or gating model and not Tweedie
-    if (gate.mod | exp.mod) {
-      # default when data are univariate and not Tweedie and when no covariates in expert/gating
-      if (dim.list$n.j == 1 & is.element("init.method", control$defaults)) {
-        control$init.method <- "hc"
-      }
-      control$hc.options$use <- "VARS"
-    }
-  }
+  control <- reset.defaults(Data$family, control, gate.mod, exp.mod, n.j)
 
   if (gate.mod) {
     y <- cbind(y, X.g)
@@ -130,16 +109,12 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   # }
 
   # Set initial values for kappa and tau if n.r provided
-  if (Data$reStruct[1, 1] > 2) {
-    if (!is.null(dim.list$n.r.g)) {
+  if (Data$reStruct[1, 1] > 2 & !is.null(dim.list$n.r.g)) {
       ParList$ln_kappag <- rep(log(sqrt(8) / (dim.list$n.r.g / 2)), (n.g - 1))
-    }
   }
-  if (Data$reStruct[2, 1] > 2) {
-    if (!is.null(dim.list$n.r.e)) {
+  if (Data$reStruct[2, 1] > 2 & !is.null(dim.list$n.r.e)) {
       ParList$ln_kappad <- matrix(log(sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
       ParList$ln_taud <- matrix(1 / (2 * sqrt(pi) * sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
-    }
   }
 
   # re-intitiate data for initial value estimation
@@ -153,6 +128,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (exp.mod & control$exp.init$mahala) {
     Class <- run.mahala(Class, as.matrix(y), as.matrix(X.d))
   }
+  
   for (g in 1:n.g) {
     for (j in 1:n.j) {
       y.sub <- y[Class[, g] == 1, j]
@@ -343,6 +319,42 @@ genInitMethods <- function(n.g, n.i, n.j,
   
   return(classify)
   
+}
+
+#' Reset defaults based on family, dimension, and expert/gating models
+#'
+#' @param fam distribution family
+#' @param control list of options for setting up initial classification values
+#' @param gate.mod true if covariates in the gating model
+#' @param exp.mod true if covariates in the expert model
+#' @param n.j number of response columns
+#'
+#' @return list of options for setting up initial classification values
+reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
+  if (fam == 700) {
+    if (control$init.method != "mixed") {
+      if (is.element("init.method", control$defaults)) {
+        control$init.method <- "mixed"
+        control$mix.method <- "Gower kmeans"
+      } else {
+        warning("mixed init.method recommended when Tweedie family specified")
+      }
+    }
+  }
+  if (fam != 700) {
+    if (n.j == 1 & is.element("init.method", control$defaults)) {
+      control$init.method <- "quantile"
+    }
+    # default when covariate in expert or gating model and not Tweedie
+    if (gate.mod | exp.mod) {
+      # TODO: check and fix comment/code default when data are univariate and not Tweedie and when no covariates in expert/gating
+      if (n.j == 1 & is.element("init.method", control$defaults)) {
+        control$init.method <- "hc"
+      }
+      control$hc.options$use <- "VARS"
+    }
+  }
+  return(control)
 }
 
 #' mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model

@@ -13,7 +13,7 @@
 #' @importFrom mclust unmap hclass hc hcVVV hcE hcEII hcEEE hcVII hcV
 #' @importFrom cluster daisy pam
 #' @importFrom clustMixType kproto
-#' @importFrom nnet multinom
+#' @importFrom R7 `@`
 #'
 #' @return list
 #' @keywords internal
@@ -30,11 +30,10 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   n.g <- dim.list@n.g
   n.f.rand <- dim.list@n.f.rand
   n.f.sp <- dim.list@n.f.sp
-  n.f <- dim.list@n.f
   n.v <- dim.list@n.v
   nl.fix <- dim.list@nl.fix
   nl.rand <- dim.list@nl.rand
-  nl.sp <- dim.list@nl.sp
+  nl.sp <-  dim.list@nl.sp
 
   # Apply any data transformations
   y <- Data$Y
@@ -47,7 +46,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (ncol(X.g) > 0) gate.mod <- TRUE
   if (ncol(X.d) > 0) exp.mod <- TRUE
 
-  control <- reset.defaults(control)
+  control <- reset.defaults(Data$family, control, gate.mod, exp.mod, n.j)
 
 
   if (gate.mod) {
@@ -257,53 +256,47 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 }
 
 
-#' Generate model dimension list
+
+#' An R7 class to generate the model dimension list
 #'
-#' @param ni Number of observations
-#' @param nj Number of response columns
-#' @param ng Number of clusters
-#' @param nrg Rank reduction in the gating model
-#' @param nre Rank reduction in the expert model
-#'
-#' @return List of model dimensions
-#' @importFrom R7 new_class  class_any class_numeric class_integer
-#' 
-DimList <- function(ni, nj, ng,
-                    nrg, nre){
-  
-  dim.list <- new_class("DimList",
-               properties = list(
-                 n.i = class_integer,
-                 n.j = class_integer,
-                 n.t = class_integer,
-                 n.k.g = class_integer,
-                 n.k.e = class_integer,
-                 n.g = class_numeric,
-                 n.r.g = class_any,
-                 n.r.e = class_any,
-                 n.f.rand = class_integer,
-                 n.f.sp = class_integer,
-                 n.f = class_integer,
-                 n.v = class_integer,
-                 nl.fix = class_integer,
-                 nl.rand = class_integer,
-                 nl.sp = class_integer
-               ),
-               validator = function(self){
-                 if(round(self@n.g) != self@n.g){
-                   "number of clusters, G, must be an integer"
-                 }
-               })
-  
-  dim.list <- DimList(n.i = ni, n.j = nj, n.g = ng,
-                      n.r.g = nrg, n.r.e = nre)
-  dim.list@n.g <- as.integer(dim.list@n.g)
-  
-  dim.list@nl.fix <- ifelse(dim.list@n.j > 1, (dim.list@n.j^2 - dim.list@n.j) / 2, as.integer(1))
-  
-  return(dim.list)
-  
-}
+#' @importFrom R7 new_class class_double class_any prop
+#' @slot n.i Number of observations
+#' @slot n.j Number of response columns
+#' @slot n.t Number of time steps
+#' @slot n.k.g Number of covariates in gating model
+#' @slot n.k.e Number of covariates in expert model
+#' @slot n.g Number of clusters
+#' @slot n.r.g Spatial range in gating model
+#' @slot n.r.e Spatial range in expert model
+#' @slot n.f.rand Number of factors in random rank reduction
+#' @slot n.f.sp Number of factors in spatial rank reduction
+#' @slot n.v Number of vertices in spatial INLA mesh
+#' @slot nl.fix Number of loadings in covariance matrix
+#' @slot nl.rand Number of factor loading in random rank reduction
+#' @slot nl.sp Number of factor loading in spatial rank reduction
+DimList <- new_class("DimList",
+                     properties = list(
+                       n.i = class_integer,
+                       n.j = class_integer,
+                       n.t = class_integer,
+                       n.k.g = class_integer,
+                       n.k.e = class_integer,
+                       n.g = class_numeric,
+                       n.r.g = class_any,
+                       n.r.e = class_any,
+                       n.f.rand = class_numeric,
+                       n.f.sp = class_numeric,
+                       n.v = class_numeric,
+                       nl.fix = class_numeric,
+                       nl.rand = class_numeric,
+                       nl.sp = class_numeric
+                     ),
+                     validator = function(self){
+                       if(round(prop(self, "n.g")) != prop(self,"n.g")){
+                         "number of clusters, G, must be an integer"
+                       }
+                     }
+)
 
 
 #genInit helper functions
@@ -314,7 +307,7 @@ DimList <- function(ni, nj, ng,
 #' @param n.i Number of observations
 #' @param n.j Number of columns
 #' @param control Classification settings from init.options()
-#' @param y 
+#' @param y Observations
 #'
 #' @return classification vector
 genInitMethods <- function(n.g, n.i, n.j,
@@ -377,8 +370,15 @@ genInitMethods <- function(n.g, n.i, n.j,
   
 }
 
-## reset defaults based on family, dimension, and expert/gating models
-reset.defaults <- function(fam, control, gate.mod, exp.mod){
+#' Reset defaults based on family, dimension, and expert/gating models
+#'
+#' @param fam distribution family
+#' @param control list of options for setting up initial classification values
+#' @param gate.mod true if covariates in the gating model
+#' @param exp.mod true if covariates in the expert model
+#'
+#' @return list of options for setting up initial classification values
+reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
   if (fam == 700) {
     if (control$init.method != "mixed") {
       if (is.element("init.method", control$defaults)) {
@@ -388,14 +388,15 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod){
         warning("mixed init.method recommended when Tweedie family specified")
       }
     }
-  } else {
-    if (dim.list@n.j == 1 & is.element("init.method", control$defaults)) {
+  }
+  if (fam != 700) {
+    if (n.j == 1 & is.element("init.method", control$defaults)) {
       control$init.method <- "quantile"
     }
     # default when covariate in expert or gating model and not Tweedie
     if (gate.mod | exp.mod) {
       # TODO: check and fix comment/code default when data are univariate and not Tweedie and when no covariates in expert/gating
-      if (dim.list@n.j == 1 & is.element("init.method", control$defaults)) {
+      if (n.j == 1 & is.element("init.method", control$defaults)) {
         control$init.method <- "hc"
       }
       control$hc.options$use <- "VARS"
@@ -705,7 +706,7 @@ init.options.s4 <- function(init.method = "hc",
 #' @param exp.init Turn on mahala initialization when expert network
 #' @param mix.method Initialization methods when data are mixed. Default method when data are Tweedie distributed.
 #' @param user.class Vector of classification vector set by user and required when init.method = 'user'
-#' @importFrom R7 new_class new_generic R7_dispatch method class_any class_character class_integer
+#' @importFrom R7 new_class new_generic R7_dispatch method class_any class_character class_integer class_numeric
 #'
 #' @return list of initialization specifications
 #' @export

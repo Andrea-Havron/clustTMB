@@ -10,7 +10,7 @@ mkRandom(
   expertdata,
   gatingdata,
   spatial.list,
-  dim.list
+  n.i
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ mkRandom(
 
 \item{spatial.list}{List of data objects needed when fitting a spatial GMRF model}
 
-\item{dim.list}{List of model dimensions}
+\item{dim.list}{Class object containing model dimensions}
 }
 \value{
 list vector containing random effects components of the model

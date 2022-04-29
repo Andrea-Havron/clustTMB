@@ -2,7 +2,7 @@
 % Please edit documentation in R/genInit.R
 \name{init.options.s4}
 \alias{init.options.s4}
-\title{Initialization options}
+\title{Initialization options with S4 classes}
 \usage{
 init.options.s4(
   init.method = "hc",
@@ -27,7 +27,7 @@ init.options.s4(
 list of initialization specifications
 }
 \description{
-Initialization options
+Initialization options with S4 classes
 }
 \examples{
 init.options()

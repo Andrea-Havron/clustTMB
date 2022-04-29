@@ -352,14 +352,14 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 #' mkRandom: set up random effects component of the model
 #'
-#' @param expertformula 
-#' @param gatingformula 
-#' @param expertdata 
-#' @param gatingdata 
-#' @param spatial.list 
-#' @param dim.list 
+#' @param expertformula Formula defining expert model.
+#' @param gatingformula Formula defining gating model.
+#' @param expertdata  Data frame containing expert model covariates.
+#' @param gatingdata  Data frame containing gating model covariates.
+#' @param spatial.list List of data objects needed when fitting a spatial GMRF model
+#' @param dim.list Class object containing model dimensions
 #'
-#' @return
+#' @return list vector containing random effects components of the model
 mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
   expert.split <- splitForm(expertformula)
   expert.re.names <- expert.split$reTrmClasses

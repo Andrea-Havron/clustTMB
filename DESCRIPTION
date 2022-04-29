@@ -21,10 +21,10 @@ Imports:
     methods,
     TMB (>= 1.8.1),
     Matrix,
-    INLA,
+    INLA (>= 21.2.23),
     stats,
     mclust,
-    lme4, 
+    lme4,
     tweedie,
     glmmTMB,
     cluster,
@@ -56,5 +56,5 @@ Suggests:
     wesanderson,
     covr
 VignetteBuilder: knitr
-Additional_repositories:
+Remotes:  
     https://inla.r-inla-download.org/R/stable

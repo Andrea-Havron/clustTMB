@@ -60,9 +60,8 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   classify <- genInitMethods(n.g, n.i, n.j,
                              control, y)
   Class <- unmap(classify)
-  pi.init <- apply(Class, 2, function(x) sum(x) / n.i)
+  pi.init <- apply(Class, 2, sum) / n.i
   
-
   # setup ParList
   ParList <- list(
     betag = matrix(0, n.k.g, (n.g - 1)),

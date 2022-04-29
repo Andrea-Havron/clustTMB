@@ -31,7 +31,7 @@ Imports:
     clustMixType,
     mvnfast,
     MoEClust,
-    nnet
+    R7
 Depends:
     R (>= 4.0.0)
 LinkingTo:

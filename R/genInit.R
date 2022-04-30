@@ -284,6 +284,15 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
 }
 
 
+#' Set initial values for mu, var, and power
+#'
+#' @param Class. Inital classificaiton
+#' @param ysub Subset of observations based on column and cluster
+#' @param expmod True if covariates in the expert model
+#' @param Xd Expert covariates
+#' @param family. Distribution family and link function
+#'
+#' @return List of initial values for mu, var, and power
 set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
   
   out <- list(mu_init = 0.01, var_init = 0.01, power_init = 1.05, residuals = NA)
@@ -308,6 +317,12 @@ set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
   return(out)
 }
 
+#' Set initial values for betad, theta, and thetaf
+#'
+#' @param Data. Initial Data list
+#' @param inits Initial mu, var, and power
+#'
+#' @return List of initial values for betad, theta, and thetaf
 set.BetaTheta <- function(Data., inits){
   
   out <- list(betad = inits$mu_init, 
@@ -330,6 +345,14 @@ set.BetaTheta <- function(Data., inits){
   
 }
 
+#' Set initial values for loadings parameters
+#'
+#' @param Data. Initial data list
+#' @param cormat. Correlation matrix for observation subset
+#' @param corvec. Vector of off-diaganal correlation parameters for observation subset
+#' @param dimlist. List of parameter dimensions
+#'
+#' @return List of initial loadings parameters
 set.Loadings <- function(Data., cormat., corvec., dimlist.){
   
   out <- list(logit_corr_fix = rep(0, dimlist.$nl.fix),
@@ -375,6 +398,13 @@ set.Loadings <- function(Data., cormat., corvec., dimlist.){
   
 }
 
+#' Apply correction if NA in correlation matrix of observation subset
+#'
+#' @param cormat. Correlation matrix of observation subset
+#' @param ymat. Observation subset based on cluster
+#' @param nj. Number of response columns in observation matrix
+#'
+#' @return Corrected correlation matrix without NA values
 cormat.correction <- function(cormat., ymat., nj.){
   if (sum(is.na(cormat.)) > 0) {
     idx.na <- which(is.na(cormat.), arr.ind = TRUE)

@@ -30,6 +30,11 @@ dim.list <- list(
   n.i = nrow(faithful), n.j = ncol(faithful), n.t = 1,
   n.g = 2, n.f.sp = ncol(faithful), n.f.rand = ncol(faithful), n.v = NULL
 )
+dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
+dim.list$n.f.rand <- dim.list$n.j
+dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+dim.list$n.f.sp <- dim.list$n.j
+dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 Dat <- mkDat(
   response = as.matrix(faithful), time.vector = rep(1, nrow(faithful)),
   expert.dat = as.matrix(rep(1, nrow(faithful))),
@@ -102,6 +107,10 @@ dim.list <- list(
   n.i = nrow(faithful), n.j = 1, n.t = 1,
   n.g = 2, n.f.sp = 1, n.f.rand = 1, n.v = NULL
 )
+
+dim.list$nl.fix <- 1
+dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 Dat <- mkDat(
   response = as.matrix(faithful$waiting), time.vector = rep(1, nrow(faithful)),
   expert.dat = as.matrix(rep(1, nrow(faithful))),

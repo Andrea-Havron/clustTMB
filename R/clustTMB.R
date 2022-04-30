@@ -68,6 +68,7 @@ clustTMB <- function(response = NULL,
     n.g = G, n.f.sp = NULL, n.f.rand = NULL, n.r.g = spatial.list$init.range$gating.range,
     n.r.e = spatial.list$init.range$expert.range, n.v = NULL
   )
+  dim.list$nl.fix <- ifelse(dim.list$n.j > 1, (dim.list$n.j^2 - dim.list$n.j) / 2, 1)
    
   # exception-handling
   if (is.null(covariance.structure)) {
@@ -176,6 +177,7 @@ clustTMB <- function(response = NULL,
   } else {
     dim.list$n.f.rand <- dim.list$n.j
   }
+  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
   if (!is.null(rr$spatial)) {
     if (rr$spatial >= dim.list$n.j) {
       stop("spatial rank reduction must be smaller than the number of columns in the response")
@@ -185,6 +187,7 @@ clustTMB <- function(response = NULL,
   } else {
     dim.list$n.f.sp <- dim.list$n.j
   }
+  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
   if (sum(rrStruct) > 0) {
     if (dim.list$n.j == 1) {
       stop("cannot implement rank reduction on univariate models")

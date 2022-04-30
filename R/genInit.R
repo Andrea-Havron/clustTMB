@@ -30,9 +30,9 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   n.f.sp <- dim.list$n.f.sp
   n.f <- dim.list$n.f
   n.v <- dim.list$n.v
-  nl.fix <- ifelse(n.j > 1, (n.j^2 - n.j) / 2, 1)
-  nl.rand <- n.j * n.f.rand - (n.f.rand * (n.f.rand - 1)) / 2
-  nl.sp <- n.j * n.f.sp - (n.f.sp * (n.f.sp - 1)) / 2
+  nl.fix <- dim.list$nl.fix
+  nl.rand <- dim.list$nl.rand
+  nl.sp <- dim.list$nl.sp
 
   # Apply any data transformations
   y <- Data$Y
@@ -42,18 +42,18 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   X.g <- subset(Data$Xg, select = colnames(Data$Xg) != ("(Intercept)"))
   X.d <- subset(Data$Xd, select = colnames(Data$Xd) != ("(Intercept)"))
   gate.mod <- exp.mod <- FALSE
-  if (ncol(X.g) > 0) gate.mod <- TRUE
-  if (ncol(X.d) > 0) exp.mod <- TRUE
+  if (ncol(X.g) > 0){
+    gate.mod <- TRUE
+    y <- cbind(y, X.g)
+  } 
+  if (ncol(X.d) > 0){
+    exp.mod <- TRUE
+    y <- cbind(y, X.d)
+  }
 
   ## reset defaults based on family, dimension, and expert/gating models
   control <- reset.defaults(Data$family, control, gate.mod, exp.mod, n.j)
 
-  if (gate.mod) {
-    y <- cbind(y, X.g)
-  }
-  if (exp.mod) {
-    y <- cbind(y, X.d)
-  }
   y <- y[, !duplicated(t(y))]
 
   # Apply classification method
@@ -128,122 +128,48 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (exp.mod & control$exp.init$mahala) {
     Class <- run.mahala(Class, as.matrix(y), as.matrix(X.d))
   }
-  
+  if(exp.mod & any(apply(Class, 2, sum))){
+    stop("initalization method results in an empty or unit cluster which is not suitable when intializing the expert model")
+  }
+
+  #Set initial values in ParList
   for (g in 1:n.g) {
     for (j in 1:n.j) {
+      #Subset data by cluster and column
       y.sub <- y[Class[, g] == 1, j]
-      if (exp.mod) {
-        class.sum <- apply(Class, 2, sum)
-        if (any(class.sum <= 1)) stop("initalization method results in an empty or unit cluster which is not suitable when intializing the expert model")
-        x.sub <- X.d[Class[, g] == 1, ]
-        mod <- glm(y.sub ~ x.sub, family = family)
-        coeff <- as.vector(mod$coefficients)
-        coeff[is.na(coeff)] <- 0
-        mu.init <- coeff
-        res.mat[Class[, g] == 1, j] <- mod$residuals
-        var.init <- var(mod$residuals)
-      } else {
-        if (sum(y.sub) == 0) {
-          mu.init <- 0.01
-          var.init <- 0.01
-          power.est <- 1.05
-        } else {
-          mu.init <- mean(y.sub)
-          var.init <- var(y.sub)
-          power.est <- skewness(y.sub) * mu.init / sqrt(var.init) # Clark and Thayer, 2004
-        }
+      Stats <- set.MuVarPow(Class[, g], y.sub, exp.mod, X.d, family)
+      mu.init <- Stats$mu_init
+      var.init <- Stats$var_init
+      power.init <- Stats$power_init
+      if(exp.mod){
+        res.mat[Class[, g] == 1, j] <- Stats$residuals
       }
-
-      if (Data$family == 700) { # Tweedie
-        ParList$betad[, j, g] <- log(mu.init) ## ! ideally this will be based on link function not family
-        if (power.est >= 2) power.est <- 1.95
-        if (power.est <= 1) power.est <- 1.05
-        ParList$thetaf[j, g] <- log((1 - power.est) / (power.est - 2))
-        ## ! adjust varaince when random effects -  ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 #exp(1) accounts for var=1 attributed to spatial
-        ParList$theta[j, g] <- log(var.init / mu.init^power.est)
-      } else {
-        ParList$betad[, j, g] <- mu.init
-        ParList$theta[j, g] <- log(var.init)
-      }
-      if (Data$family == 300) {
-        ParList$theta[j, g] <- log(mu.init^2 / var.init)
-      }
+      
+      Inits <- set.BetaTheta(Data, Stats)
+      ParList$betad[, j, g] <- Inits$betad
+      ParList$theta[j, g] <- Inits$theta
+      ParList$thetaf[j, g] <- Inits$thetaf
     }
-
+    
     y.mat <- y[Class[, g] == 1, ]
+    res <- res.mat[Class[, g] == 1, ]
+
     if (Data$fixStruct != 10) {
+      cor.mat <- cor(y.mat)
       if (exp.mod) {
-        res <- res.mat[Class[, g] == 1, ]
         cor.mat <- cor(res)
-      } else {
-        cor.mat <- cor(y.mat)
       }
       # Apply correction if NA in cor.mat
-      if (sum(is.na(cor.mat)) > 0) {
-        idx.na <- which(is.na(cor.mat), arr.ind = TRUE)
-        tmp.pa <- matrix(0, nrow(y.mat), n.j)
-        for (j in 1:n.j) {
-          tmp.pa[y.mat[, j] > 0, j] <- 1
-        }
-
-        for (n in 1:nrow(idx.na)) {
-          # Set up confusion matrix between 2 columns with NA correlation
-          tmp.confusion <- cbind(
-            c(
-              nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 & tmp.pa[, idx.na[n, 2]] == 1, ]),
-              nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 & tmp.pa[, idx.na[n, 2]] == 1, ])
-            ),
-            c(
-              nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 & tmp.pa[, idx.na[n, 2]] == 0, ]),
-              nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 & tmp.pa[, idx.na[n, 2]] == 0, ])
-            )
-          )
-          # tmp.ctab[tmp.ctab==0] <- 1
-          # Calculate Matthews correlation coefficient
-          denom <- sum(tmp.confusion[1, ]) * sum(tmp.confusion[2, ]) * sum(tmp.confusion[, 1]) * sum(tmp.confusion[, 2])
-          # if 0 occurs in any of the sums, the denominator can arbitrarily be set to 1
-          if (denom == 0) denom <- 1
-          cor.mat[idx.na[n, 2], idx.na[n, 1]] <-
-            (tmp.confusion[1, 1] * tmp.confusion[2, 2] - tmp.confusion[1, 2] * tmp.confusion[2, 1]) /
-              sqrt(denom)
-        }
-      } # end correction
+      cor.mat <- cormat.correction(cor.mat, y.mat, n.j)
+   
       corvec <- cor.mat[lower.tri(cor.mat)]
-      # L.mat <- t(chol(cor.mat))
-      if (Data$fixStruct == 30) {
-        #   off.diag <- c()
-        #   cnt <- 1
-        #   Norm <- 1/diag(L.mat)
-        #   L.mat[upper.tri(L.mat)] <- 0
-        #   for(i in 2:nrow(L.mat)){
-        #     for(j in 1:(i-1)){
-        #       off.diag[cnt] <- L.mat[i,j]*Norm[i]
-        #       cnt <- cnt+1
-        #     }
-        #   }
-        ParList$logit_corr_fix[, g] <- log((corvec + 1) / (1 - corvec)) # off.diag
-      }
-
-      if (sum(Data$rrStruct) > 0) {
-        L.mat <- t(chol(cor.mat))
-        keep <- lower.tri(L.mat, diag = TRUE)
-        if (Data$rrStruct[1] == 1) {
-          keep.rand <- keep
-          keep.rand[, (n.f.rand + 1):n.j] <- FALSE
-          ParList$ld_rand[, g] <- L.mat[keep.rand]
-        }
-        if (Data$rrStruct[2] == 1) {
-          keep.sp <- keep
-          keep.sp[, (n.f.sp + 1):n.j] <- FALSE
-          ParList$ld_sp[, g] <- L.mat[keep.sp]
-        }
-        if (sum(Data$rrStruct == 2)) {
-          # equal probability correlation results from spatial or random rank reduction
-          ParList$ld_rand[, g] <- ParList$ld_rand[, g] / 2
-          ParList$ld_sp[, g] <- ParList$ld_sp[, g] / 2
-        }
-      }
+      
+      Loadings <- set.Loadings(Data, cor.mat, corvec, dim.list)
+      ParList$logit_corr_fix[, g] <- Loadings$logit_corr_fix
+      ParList$ld_rand[, g] <- Loadings$ld_rand
+      ParList$ld_sp[, g] <- Loadings$ld_sp
     }
+    
   } # end g loop
 
   gen.init <- list(parms = ParList, class = classify)
@@ -355,6 +281,132 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
     }
   }
   return(control)
+}
+
+
+set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
+  
+  out <- list(mu_init = 0.01, var_init = 0.01, power_init = 1.05, residuals = NA)
+  
+  if (expmod) {
+    xsub <- Xd[Class. == 1, ]
+    mod <- glm(ysub ~ xsub, family = family.)
+    coeff <- as.vector(mod$coefficients)
+    coeff[is.na(coeff)] <- 0
+    out$mu_init <- coeff
+    out$residuals <- mod$residuals
+    out$var_init <- var(mod$residuals)
+  } 
+  if (!expmod){
+    if (sum(ysub) != 0) {
+      out$mu_init <- mean(ysub)
+      out$var_init <- var(ysub)
+      out$power_init <- skewness(ysub) * 
+        out$mu_init / sqrt(out$var_init) # Clark and Thayer, 2004
+    }
+  }
+  return(out)
+}
+
+set.BetaTheta <- function(Data., inits){
+  
+  out <- list(betad = inits$mu_init, 
+              theta = log(inits$var_init),
+              thetaf = inits$power_init)
+  
+  if (Data.$family == 700) { # Tweedie
+    out$betad <- log(inits$mu_init) ## ! ideally this will be based on link function not family
+    if (inits$power_init >= 2) inits$power_init <- 1.95
+    if (inits$power_init <= 1) inits$power_init <- 1.05
+    out$thetaf <- log((1 - inits$power_init) / (inits$power_init - 2))
+    ## ! adjust varaince when random effects -  ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 #exp(1) accounts for var=1 attributed to spatial
+    out$theta <- log(inits$var_init / inits$mu_init^out$power_inits)
+  }
+  if (Data.$family == 300) {
+    out$theta <- log(inits$mu_init^2 / inits$var_init)
+  }
+  
+  return(out)
+  
+}
+
+set.Loadings <- function(Data., cormat., corvec., dimlist.){
+  
+  out <- list(logit_corr_fix = rep(0, dimlist.$nl.fix),
+              ld_rand = rep(0, dimlist.$nl.rand),
+              ld_sp = rep(0, dimlist.$nl.sp))
+  
+  # L.mat <- t(chol(cormat))
+  if (Data.$fixStruct == 30) {
+    #   off.diag <- c()
+    #   cnt <- 1
+    #   Norm <- 1/diag(L.mat)
+    #   L.mat[upper.tri(L.mat)] <- 0
+    #   for(i in 2:nrow(L.mat)){
+    #     for(j in 1:(i-1)){
+    #       off.diag[cnt] <- L.mat[i,j]*Norm[i]
+    #       cnt <- cnt+1
+    #     }
+    #   }
+    out$logit_corr_fix <- log((corvec. + 1) / (1 - corvec.)) # off.diag
+  }
+  
+  if (sum(Data.$rrStruct) > 0) {
+    L.mat <- t(chol(cormat.))
+    keep <- lower.tri(L.mat, diag = TRUE)
+    if (Data.$rrStruct[1] == 1) {
+      keep.rand <- keep
+      keep.rand[, (dimlist.$n.f.rand + 1):dimlist.$n.j] <- FALSE
+      out$ld_rand <- L.mat[keep.rand]
+    }
+    if (Data.$rrStruct[2] == 1) {
+      keep.sp <- keep
+      keep.sp[, (dimlist.$n.f.sp + 1):dimlist.$n.j] <- FALSE
+      out$ld_sp <- L.mat[keep.sp]
+    }
+    if (sum(Data.$rrStruct == 2)) {
+      # equal probability correlation results from spatial or random rank reduction
+      out$ld_rand <- out$ld_rand / 2
+      out$ld_sp <- out$ld_sp / 2
+    }
+  }
+  
+  return(out)
+  
+}
+
+cormat.correction <- function(cormat., ymat., nj.){
+  if (sum(is.na(cormat.)) > 0) {
+    idx.na <- which(is.na(cormat.), arr.ind = TRUE)
+    tmp.pa <- matrix(0, nrow(ymat.), nj.)
+    for (j in 1:nj.) {
+      tmp.pa[ymat.[, j] > 0, j] <- 1
+    }
+    
+    for (n in 1:nrow(idx.na)) {
+      # Set up confusion matrix between 2 columns with NA correlation
+      tmp.confusion <- cbind(
+        c(
+          nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 & tmp.pa[, idx.na[n, 2]] == 1, ]),
+          nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 & tmp.pa[, idx.na[n, 2]] == 1, ])
+        ),
+        c(
+          nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 & tmp.pa[, idx.na[n, 2]] == 0, ]),
+          nrow(tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 & tmp.pa[, idx.na[n, 2]] == 0, ])
+        )
+      )
+      # tmp.ctab[tmp.ctab==0] <- 1
+      # Calculate Matthews correlation coefficient
+      denom <- sum(tmp.confusion[1, ]) * sum(tmp.confusion[2, ]) * sum(tmp.confusion[, 1]) * sum(tmp.confusion[, 2])
+      # if 0 occurs in any of the sums, the denominator can arbitrarily be set to 1
+      if (denom == 0) denom <- 1
+      cormat.[idx.na[n, 2], idx.na[n, 1]] <-
+        (tmp.confusion[1, 1] * tmp.confusion[2, 2] - tmp.confusion[1, 2] * tmp.confusion[2, 1]) /
+        sqrt(denom)
+    }
+  }
+  
+  return(cormat.)
 }
 
 #' mc.qclass: quantile function from mclust. Defaults used to initiate 'E' or 'V' models when no covariates in expert/gating model

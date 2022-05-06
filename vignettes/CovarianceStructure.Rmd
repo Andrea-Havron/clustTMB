@@ -41,7 +41,6 @@ Prior to fitting a spatial cluster model with clustTMB, users need to set up the
 ```{r spatial example, include = FALSE}
 library(clustTMB)
 library(sp)
-library(INLA)
 data("meuse")
 ```
 
@@ -56,8 +55,8 @@ meshbuilder() #launches INLA mesh shiny app
 In this example, the following mesh specifications were used:
 ```{r meuse mesh}
 Loc <- meuse[,1:2]
-Bnd <- inla.nonconvex.hull(as.matrix(Loc), convex=200)
-meuse.mesh <- inla.mesh.2d(as.matrix(Loc),
+Bnd <- INLA::inla.nonconvex.hull(as.matrix(Loc), convex=200)
+meuse.mesh <- INLA::inla.mesh.2d(as.matrix(Loc),
                            max.edge = c(300,1000),
                            boundary = Bnd)
 ```

@@ -1,7 +1,7 @@
 stopifnot(
   require("testthat"),
   require("clustTMB"),
-  require(mclust)
+  require("mclust")
 )
 
 # Methods based on clustTMB::init.options()

@@ -262,10 +262,13 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   if (!is.null(loc) & is.null(mesh)) {
     # default mesh - in future add options to include arguments for inla.mesh.2d
     # for now, user can supply mesh if a more complex mesh is needed
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to build a spatial mesh.")
+    }
     mesh <- INLA::inla.mesh.create(loc@coords)
     warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
             the simple mesh may result in spatial bias. Consider bulding a
-            more appropriate mesh using INLA::meshbuilder()")
+            more appropriate mesh using [INLA::meshbuilder()]")
   }
   if (is.null(loc) & !is.null(mesh)) {
     if (is.null(mesh$idx$loc)) {
@@ -280,6 +283,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     A <- as(matrix(0, n.i, 1), "dgCMatrix")
     n.v <- 1
   } else {
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to build a spatial mesh.")
+    }
     A <- INLA::inla.spde.make.A(mesh, loc)
     n.v <- mesh$n
   }
@@ -308,6 +314,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
       }
     }
     doProj <- TRUE
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to build a projection grid.")
+    }
     A.proj <- INLA::inla.spde.make.A(mesh, grid.loc)
   }
 
@@ -332,18 +341,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   Dat$family <- .valid_family[family[[1]]]
   Dat$link <- .valid_link[family[[2]]]
   Dat$loglike <- ll.method
-  if (fixStruct == "E" | fixStruct == "V") {
-    Dat$fixStruct <- 10
-  }
-  if (fixStruct == "EII" | fixStruct == "VII" | fixStruct == "EEI" | fixStruct == "VVI") {
-    Dat$fixStruct <- 20
-  }
-  if (fixStruct == "VVV" | fixStruct == "EEE") {
-    Dat$fixStruct <- 30
-  }
-  Dat$rrStruct <- rrStruct
-  Dat$reStruct <- reStruct
-
+  Dat$fixStruct <- fixStruct.lookup(fixStruct)
 
   return(Dat)
 }
@@ -589,4 +587,22 @@ skewness <- function(x) {
 #' @export
 inla_installed <- function() {
   requireNamespace("INLA", quietly = TRUE)
+}
+
+
+#' fixStruct look-up table
+#'
+#' @param fixStruct user input character vector
+#'
+#' @return numeric value associated with character vector
+fixStruct.lookup <- function(fixStruct){
+  df <- data.frame(fixStruct =
+                     c("E", "V", "EII",
+                       "VII", "EEI", "VVI",
+                       "VVV", "EEE"),
+                   value = 
+                     c(10, 10, 20, 20,
+                       20, 20, 30, 30))
+  out <- df[df$fixStruct == fixStruct,]$value
+  return(out)
 }

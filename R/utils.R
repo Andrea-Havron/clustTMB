@@ -583,6 +583,7 @@ skewness <- function(x) {
   x <- x - mean(x)
   y <- sqrt(n) * sum(x^3) / (sum(x^2)^(3 / 2))
   y <- y * ((1 - 1 / n))^(3 / 2)
+  return(y)
 }
 
 #' Check if INLA installed (i.e., not on CRAN)

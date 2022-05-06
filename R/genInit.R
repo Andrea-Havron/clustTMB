@@ -335,7 +335,7 @@ set.BetaTheta <- function(Data., inits){
     if (inits$power_init <= 1) inits$power_init <- 1.05
     out$thetaf <- log((1 - inits$power_init) / (inits$power_init - 2))
     ## ! adjust varaince when random effects -  ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 #exp(1) accounts for var=1 attributed to spatial
-    out$theta <- log(inits$var_init / inits$mu_init^out$power_inits)
+    out$theta <- log(inits$var_init / inits$mu_init^inits$power_init)
   }
   if (Data.$family == 300) {
     out$theta <- log(inits$mu_init^2 / inits$var_init)

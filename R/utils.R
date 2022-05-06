@@ -342,6 +342,9 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   Dat$link <- .valid_link[family[[2]]]
   Dat$loglike <- ll.method
   Dat$fixStruct <- fixStruct.lookup(fixStruct)
+  
+  Dat$rrStruct <- rrStruct
+  Dat$reStruct <- reStruct
 
   return(Dat)
 }

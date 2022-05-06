@@ -14,6 +14,9 @@ dim.list <- list(
   n.i = n.i, n.j = n.j, n.t = 1,
   n.g = n.g, n.f.sp = n.j, n.f.rand = n.j, n.v = NULL
 )
+dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
+dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 
 
 test_that("mvn with no random effect, no rank reduction", {
@@ -135,6 +138,12 @@ test_that("mvn with expert random effects and rank reduction", {
     n.i = n.i, n.j = n.j, n.t = 1,
     n.g = n.g, n.f.sp = n.j, n.f.rand = n.j - 1, n.v = NULL
   )
+  
+  dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
+  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
+  
+  
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
     expert.dat = as.matrix(rep(1, dim.list$n.i)),
@@ -177,6 +186,11 @@ test_that("mvn with expert random effects and rank reduction", {
     n.i = n.i, n.j = n.j, n.t = 1,
     n.g = n.g, n.f.sp = n.j - 1, n.f.rand = n.j, n.v = NULL
   )
+  
+  dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
+  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
+  
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
     expert.dat = as.matrix(rep(1, dim.list$n.i)),

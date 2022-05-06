@@ -23,6 +23,9 @@ spdeStruct <- function(mesh) {
       "G0_inv"   = as(matrix(0, 2, 2), "dgTMatrix")
     )
   } else {
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to use this function.")
+    }
     spde <- INLA::inla.spde2.matern(mesh)
     # ---------- Begin code that prepares object for anisotropy.
     Dset <- 1:2

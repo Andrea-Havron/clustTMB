@@ -128,7 +128,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (exp.mod & control$exp.init$mahala) {
     Class <- run.mahala(Class, as.matrix(y), as.matrix(X.d))
   }
-  if(exp.mod & any(apply(Class, 2, sum))){
+  if(exp.mod & any(apply(Class, 2, sum) == 0)){
     stop("initalization method results in an empty or unit cluster which is not suitable when intializing the expert model")
   }
 

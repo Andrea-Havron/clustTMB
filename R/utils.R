@@ -358,6 +358,8 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
 #' @param dim.list Class object containing model dimensions
 #'
+#' @importFrom lme4 subbars 
+#'
 #' @return list vector containing random effects components of the model
 mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
   expert.split <- splitForm(expertformula)
@@ -401,30 +403,35 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
     expert.time <- rep(1, dim.list$n.i)
   }
  
-  ## TODO: lines 396-418 currently not used
-  if ("ar1" %in% gating.re.names) {
-    idx <- which(gating.re.names == "ar1")
-    ar1.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
-    gating.time <- model.frame(subbars(ar1.form), gatingdata)
-  } else {
-    gating.time <- rep(1, dim.list$n.i)
-  }
-  
-  if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
-    idx <- which((expert.re.names == "gmrf") | (expert.re.names == "gmrfSpeedup"))
-    gmrf.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
-    expert.gmrf <- model.frame(subbars(gmrf.form), expertdata)
-  } else {
-    expert.gmrf <- NA
-  }
-  
-  if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
-    idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
-    gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
-    gating.gmrf <- model.frame(subbars(gmrf.form), gatingdata)
-  } else {
-    gating.gmrf <- NA
-  }
+  ## TODO: section below unused
+  # if ("ar1" %in% gating.re.names) {
+  #   idx <- which(gating.re.names == "ar1")
+  #   ar1.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
+  #   gating.time <- model.frame(subbars(ar1.form), gatingdata)
+  # } else {
+  #   gating.time <- rep(1, dim.list$n.i)
+  # }
+  # 
+  # if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
+  #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
+  #   expertdata$loc <- as.numeric(factor())
+  #   idx <- which((expert.re.names == "gmrf") | (expert.re.names == "gmrfSpeedup"))
+  #   gmrf.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
+  #   expert.gmrf <- model.frame(subbars(gmrf.form), expertdata)
+  # } else {
+  #   expert.gmrf <- NA
+  # }
+  # 
+  # if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
+  #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
+  #   gatingdata$loc <- as.numeric(factor(loc.id))
+  #   idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
+  #   gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
+  #   gating.gmrf <- model.frame(subbars(gmrf.form), gatingdata)
+  # } else {
+  #   gating.gmrf <- NA
+  # }
+  ### end of unused section
   
   ## TODO: expert/gating .ar1 and .gmrf provide information about interactions between space/time
   ## TODO: Spatio-temporal interactions not implemented yet!!

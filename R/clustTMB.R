@@ -23,8 +23,7 @@
 #' @param projection.list List of data objects needed for projection
 #' @param control List controlling whether models are run and whether standard errors are calculated.
 #' @importFrom stats model.matrix model.frame as.formula setNames terms update vcov
-#' @importFrom lme4 subbars nobars findbars mkReTrms
-#' @importFrom glmmTMB splitForm
+#' @importFrom lme4 nobars
 #' @importFrom utils data
 #' @importFrom Matrix t
 #' @useDynLib clustTMB

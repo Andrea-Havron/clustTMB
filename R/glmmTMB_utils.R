@@ -110,7 +110,6 @@ findReTrmClasses <- function() {
 ##' @param debug (logical) debug?
 ##' @param specials list of special terms
 ##' @param default.special character: special to use for parenthesized terms - i.e. random effects terms with unspecified structure
-##' @param expand_doublevert_method method for handling \code{||} operator: split into separate terms or replace by \code{diag}? Inherited from \emph{previous call where it was specified}.
 ##' 1. atom (not a call or an expression): NULL
 ##' 2. special, i.e. foo(...) where "foo" is in specials: return term
 ##' 3. parenthesized term: \emph{if} the head of the head is | (i.e.

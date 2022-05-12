@@ -118,28 +118,24 @@ findReTrmClasses <- function() {
 ##'    special type; we won't allow pathological cases like
 ##'    ((xx|gg))
 ##'    
-##' @importFrom glmmTMB expandAllGrpVar expandDoubleVert 
+##' @importFrom glmmTMB expandAllGrpVar
 ##' @importFrom utils head
 ##' @examples
 ##' splitForm(quote(us(x,n=2)))
-##' findbars_x(~ 1 + (x + y || g), expand_doublevert_method = "diag_special")
-##' findbars_x(~ 1 + (x + y || g), expand_doublevert_method = "split")
 ##' findbars_x(~ 1 + (1 | f) + (1 | g))
 ##' findbars_x(~ 1 + (1 | f) + (1 | g))
-##' findbars_x(~ 1 + (1|h) + (x + y || g), expand_doublevert_method = "split")
 ##' findbars_x(~ 1 + (1|Subject))
 ##' findbars_x(~ (1||Subject))
 ##' findbars_x(~ (1|Subject))
-##' findbars_x(~ (1|Subject), default.special = NULL)
 ##' findbars_x(~ 1 + x) 
 ##' @export
 findbars_x <- function(term,
                        debug=FALSE,
                        specials=character(0),
-                       default.special="norm",
-                       expand_doublevert_method = c("diag_special", "split")) {
+                       default.special="norm"){#,
+                       #expand_doublevert_method = c("diag_special", "split")) {
   
-  expand_doublevert_method <- match.arg(expand_doublevert_method)
+  #expand_doublevert_method <- match.arg(expand_doublevert_method)
   
   ds <- if (is.null(default.special)) {
     NULL
@@ -165,18 +161,19 @@ findbars_x <- function(term,
       if (is.null(ds)) return(term)
       return(makeOp(term, ds))
     }
-    if (head(term) == as.name("||")) {
-      if (expand_doublevert_method == "diag_special") {
-        return(makeOp(makeOp(term[[2]], term[[3]],
-                             op = quote(`|`)),
-                      as.name("diag")))
-      }
-      if (expand_doublevert_method == "split") {
-        ## need to return *multiple* elements
-        return(lapply(expandDoubleVert(term), fbx))
-      } 
-      stop("unknown doublevert method ", expand_doublevert_method)
-    }
+    ## TODO: functionality not available in clustTMB yet
+    # if (head(term) == as.name("||")) {
+    #   if (expand_doublevert_method == "diag_special") {
+    #     return(makeOp(makeOp(term[[2]], term[[3]],
+    #                          op = quote(`|`)),
+    #                   as.name("diag")))
+    #   }
+    #   if (expand_doublevert_method == "split") {
+    #     ## need to return *multiple* elements
+    #     return(lapply(expandDoubleVert(term), fbx))
+    #   } 
+    #   stop("unknown doublevert method ", expand_doublevert_method)
+    # }
     if (head(term) == as.name("(")) {  ## found (...)
       if (debug) cat("paren term:",deparse(term),"\n")
       return(fbx(term[[2]]))

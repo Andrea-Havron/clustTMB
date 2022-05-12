@@ -8,8 +8,7 @@ findbars_x(
   term,
   debug = FALSE,
   specials = character(0),
-  default.special = "norm",
-  expand_doublevert_method = c("diag_special", "split")
+  default.special = "norm"
 )
 }
 \arguments{
@@ -36,14 +35,10 @@ find and process random effects terms
 }
 \examples{
 splitForm(quote(us(x,n=2)))
-findbars_x(~ 1 + (x + y || g), expand_doublevert_method = "diag_special")
-findbars_x(~ 1 + (x + y || g), expand_doublevert_method = "split")
 findbars_x(~ 1 + (1 | f) + (1 | g))
 findbars_x(~ 1 + (1 | f) + (1 | g))
-findbars_x(~ 1 + (1|h) + (x + y || g), expand_doublevert_method = "split")
 findbars_x(~ 1 + (1|Subject))
 findbars_x(~ (1||Subject))
 findbars_x(~ (1|Subject))
-findbars_x(~ (1|Subject), default.special = NULL)
 findbars_x(~ 1 + x) 
 }

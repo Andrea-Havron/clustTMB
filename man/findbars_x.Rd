@@ -18,9 +18,7 @@ findbars_x(
 
 \item{specials}{list of special terms}
 
-\item{default.special}{character: special to use for parenthesized terms - i.e. random effects terms with unspecified structure}
-
-\item{expand_doublevert_method}{method for handling \code{||} operator: split into separate terms or replace by \code{diag}? Inherited from \emph{previous call where it was specified}.
+\item{default.special}{character: special to use for parenthesized terms - i.e. random effects terms with unspecified structure
 \enumerate{
 \item atom (not a call or an expression): NULL
 \item special, i.e. foo(...) where "foo" is in specials: return term

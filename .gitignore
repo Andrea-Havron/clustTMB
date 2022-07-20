@@ -6,3 +6,4 @@
 *.so
 inst/doc
 /.vscode
+.Renviron

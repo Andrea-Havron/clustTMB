@@ -12,3 +12,8 @@ tweedie(link = "log")
 \description{
 Tweedie family and link specification
 }
+\examples{
+fam <- tweedie()
+fam$family
+fam$link
+}

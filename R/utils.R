@@ -182,6 +182,10 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
 #' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
+#' @examples 
+#' fam <- tweedie()
+#' fam$family
+#' fam$link
 tweedie <- function(link = "log") {
   r <- list(family = "tweedie")
   f <- c(r, list(link = link), make.link(link))
@@ -194,6 +198,10 @@ tweedie <- function(link = "log") {
 #' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
+#' @examples 
+#' fam <- lognormal()
+#' fam$family
+#' fam$link
 lognormal <- function(link = "identity") {
   r <- list(family = "lognormal")
   f <- c(r, list(link = link), make.link(link))
@@ -361,6 +369,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' @importFrom lme4 subbars 
 #'
 #' @return list vector containing random effects components of the model
+#' @noRd
 mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
   expert.split <- splitForm(expertformula)
   expert.re.names <- expert.split$reTrmClasses
@@ -489,6 +498,7 @@ fixStruct.names <- function() {
 }
 
 #' Names of parameters with initial values that can be modified
+#' @noRd
 start.names <- function() {
   return(c(
     "thetaf", "ln_kappa_g", "ln_kappa_d", "ln_tau_d", "logit_rhog",
@@ -596,6 +606,8 @@ skewness <- function(x) {
 #' Check if INLA installed (i.e., not on CRAN)
 #'
 #' @export
+#' @examples 
+#' inla_installed()
 inla_installed <- function() {
   requireNamespace("INLA", quietly = TRUE)
 }
@@ -606,6 +618,8 @@ inla_installed <- function() {
 #' @param fixStruct user input character vector
 #'
 #' @return numeric value associated with character vector
+#' @examples 
+#' fixStruct.lookup("E")
 fixStruct.lookup <- function(fixStruct){
   df <- data.frame(fixStruct =
                      c("E", "V", "EII",

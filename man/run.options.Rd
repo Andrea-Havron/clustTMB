@@ -19,3 +19,6 @@ list
 \description{
 Run Options
 }
+\examples{
+run.options()
+}

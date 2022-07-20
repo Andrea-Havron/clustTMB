@@ -187,6 +187,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 #' @param y Observations
 #'
 #' @return classification vector
+#' @noRd
 genInitMethods <- function(n.g, n.i, n.j,
                            control, y){
   # Apply classification method
@@ -256,6 +257,7 @@ genInitMethods <- function(n.g, n.i, n.j,
 #' @param n.j number of response columns
 #'
 #' @return list of options for setting up initial classification values
+#' @noRd
 reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
   if (fam == 700) {
     if (control$init.method != "mixed") {
@@ -293,6 +295,7 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
 #' @param family. Distribution family and link function
 #'
 #' @return List of initial values for mu, var, and power
+#' @noRd
 set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
   
   out <- list(mu_init = 0.01, var_init = 0.01, power_init = 1.05, residuals = NA)
@@ -323,6 +326,7 @@ set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
 #' @param inits Initial mu, var, and power
 #'
 #' @return List of initial values for betad, theta, and thetaf
+#' @noRd
 set.BetaTheta <- function(Data., inits){
   
   out <- list(betad = inits$mu_init, 
@@ -353,6 +357,7 @@ set.BetaTheta <- function(Data., inits){
 #' @param dimlist. List of parameter dimensions
 #'
 #' @return List of initial loadings parameters
+#' @noRd
 set.Loadings <- function(Data., cormat., corvec., dimlist.){
   
   out <- list(logit_corr_fix = rep(0, dimlist.$nl.fix),
@@ -405,6 +410,7 @@ set.Loadings <- function(Data., cormat., corvec., dimlist.){
 #' @param nj. Number of response columns in observation matrix
 #'
 #' @return Corrected correlation matrix without NA values
+#' @noRd
 cormat.correction <- function(cormat., ymat., nj.){
   if (sum(is.na(cormat.)) > 0) {
     idx.na <- which(is.na(cormat.), arr.ind = TRUE)
@@ -448,6 +454,7 @@ cormat.correction <- function(cormat., ymat., nj.){
 #' @return classification vector
 #'
 #' @keywords internal
+#' @noRd
 mc.qclass <- function(x, k) {
   x <- as.vector(x)
   eps <- sd(x) * sqrt(.Machine$double.eps)
@@ -591,6 +598,7 @@ init.options <- function(init.method = "hc",
 #' @param methods list of hc.option methods
 #'
 #' @return named list of hc.option methods
+#' @noRd
 name.hc.options <- function(methods){
   modelName <- c( "VVV", "EII", "EEE",  "VII", "V", "E")
   use <- c("SVD", "VARS", "STD", "SPH",  "PCS", "PCR", "RND")
@@ -623,7 +631,7 @@ name.hc.options <- function(methods){
 #'
 #' @return updated classification matrix
 #' @keywords internal
-#'
+#' @noRd
 run.mahala <- function(z., y., x., family, max.it = 1000) {
   # modified from MoEClust
   init.exp <- TRUE

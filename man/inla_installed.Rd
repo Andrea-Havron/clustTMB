@@ -9,3 +9,6 @@ inla_installed()
 \description{
 Check if INLA installed (i.e., not on CRAN)
 }
+\examples{
+inla_installed()
+}

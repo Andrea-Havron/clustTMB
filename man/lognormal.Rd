@@ -12,3 +12,8 @@ lognormal(link = "identity")
 \description{
 Lognormal family and link specification
 }
+\examples{
+fam <- lognormal()
+fam$family
+fam$link
+}

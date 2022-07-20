@@ -15,3 +15,6 @@ numeric value associated with character vector
 \description{
 fixStruct look-up table
 }
+\examples{
+fixStruct.lookup("E")
+}

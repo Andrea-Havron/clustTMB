@@ -296,6 +296,8 @@ clustTMB <- function(response = NULL,
 #'
 #' @return list
 #' @export
+#' @examples 
+#' run.options()
 run.options <- function(check.input = NULL, run.model = NULL,
                         do.sdreport = NULL) {
   if (missing(check.input)) check.input <- FALSE

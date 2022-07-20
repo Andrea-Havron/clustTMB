@@ -14,6 +14,7 @@ makeOp <- function(x, y, op = NULL) {
 }
 
 ##' list of specials -- taken from enum.R
+##' @noRd
 findReTrmClasses <- function() {
   names(.valid_reStruct) # modified from covstruct
 }

@@ -414,7 +414,7 @@ cormat.correction <- function(cormat., ymat., nj.) {
       tmp.pa[ymat.[, j] > 0, j] <- 1
     }
 
-    for (n in 1:nrow(idx.na)) {
+    for (n in seq_along(idx.na[,1])) {
       # Set up confusion matrix between 2 columns with NA correlation
       tmp.confusion <- cbind(
         c(
@@ -616,7 +616,7 @@ name.hc.options <- function(methods) {
   # match up unnamed list to correct names
   nms <- names(methods)
   if (is.null(nms) & length(methods) > 0) {
-    for (i in 1:length(methods)) {
+    for (i in seq_along(methods)) {
       if (methods[[i]] %in% modelName) {
         names(methods)[i] <- "modelName"
       }
@@ -652,7 +652,7 @@ run.mahala <- function(z., y., x., family, max.it = 1000) {
   # df <- data.frame(y., x.)
 
   while (!stop.crit) {
-    for (g in 1:ncol(z.)) {
+    for (g in seq_along(z.[1,])) {
       sub <- which(z.[, g] == 1)
       mod <- tryCatch(lm(y. ~ x., subset = sub))
       if (inherits(mod, "try-error")) {
@@ -670,7 +670,7 @@ run.mahala <- function(z., y., x., family, max.it = 1000) {
       break
     } else {
       new.z <- rep(0, nrow(z.))
-      for (i in 1:nrow(z.)) {
+      for (i in seq_along(z.[,1])) {
         new.z[i] <- which(M[i, ] == min(M[i, ]))
       }
       if (identical(map(z.), new.z) | cnt == max.it) {

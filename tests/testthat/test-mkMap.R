@@ -48,7 +48,7 @@ test_that("mvn with no random effect, no rank reduction", {
     "ln_sigmaup", "ln_sigmaep", "ln_sigmav", "upsilon_tg",
     "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"
   ) # rm ln_sigmau, u_ig
-  for (m in 1:length(map.names)) {
+  for (m in seq_along(map.names)) {
     mapparm <- unname(unlist(map.list[map.names[m]]))
     initparm <- unname(unlist(init.parm$parms[map.names[m]]))
     expect_equal(vapply(mapparm, length, rep(0,1)), 
@@ -97,11 +97,11 @@ test_that("mvn with gating random effects, no rank reduction", {
       "ln_sigmaup", "ln_sigmaep", "ln_sigmav", "upsilon_tg",
       "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"
     ) # rm ln_sigmau, u_ig
-    for (i in 1:length(parmName[[j]])) {
+    for (i in seq_along(parmName[[j]])) {
       exp.map.names <- exp.map.names[exp.map.names != parmName[[j]][i]]
     }
 
-    for (m in 1:length(map.names)) {
+    for (m in seq_along(map.names)) {
       mapparm <- unname(unlist(map.list[map.names[m]]))
       initparm <- unname(unlist(init.parm$parms[map.names[m]]))
       expect_equal(vapply(mapparm, length, rep(0,1)), 
@@ -148,11 +148,11 @@ test_that("mvn with expert random effects, no rank reduction", {
       "ln_sigmaup", "ln_sigmaep", "ln_sigmav", "upsilon_tg",
       "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"
     ) # rm ln_sigmau, u_ig
-    for (i in 1:length(parmName[[j]])) {
+    for (i in seq_along(parmName[[j]])) {
       exp.map.names <- exp.map.names[exp.map.names != parmName[[j]][i]]
     }
 
-    for (m in 1:length(map.names)) {
+    for (m in seq_along(map.names)) {
       mapparm <- unname(unlist(map.list[map.names[m]]))
       initparm <- unname(unlist(init.parm$parms[map.names[m]]))
       expect_equal(vapply(mapparm, length, rep(0,1)), 
@@ -214,7 +214,7 @@ test_that("mvn with expert random effects and rank reduction", {
     "epsilon_tjg", "Gamma_vg", "Omega_vfg"
   ) # rm ln_sigmau, u_ig
 
-  for (m in 1:length(map.names)) {
+  for (m in seq_along(map.names)) {
     mapparm <- unname(unlist(map.list[map.names[m]]))
     initparm <- unname(unlist(init.parm$parms[map.names[m]]))
     expect_equal(vapply(mapparm, length, rep(0,1)), 
@@ -274,7 +274,7 @@ test_that("mvn with expert random effects and rank reduction", {
     "epsilon_tjg", "v_ifg", "Gamma_vg"
   ) # rm ln_sigmau, u_ig
 
-  for (m in 1:length(map.names)) {
+  for (m in seq_along(map.names)) {
     mapparm <- unname(unlist(map.list[map.names[m]]))
     initparm <- unname(unlist(init.parm$parms[map.names[m]]))
     expect_equal(vapply(mapparm, length, rep(0,1)), 

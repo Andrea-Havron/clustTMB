@@ -389,14 +389,14 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
 
   specials <- c("ar1", "gmrf", "gmrfSpeedup")
   if (length(expert.re.names) > 0) {
-    for (i in 1:length(expert.re.names)) {
+    for (i in seq_along(expert.re.names)) {
       if (!(expert.re.names[i] %in% specials)) {
         stop("Currently clustTMB only works with spatio-temporal random effects")
       }
     }
   }
   if (length(gating.re.names) > 0) {
-    for (i in 1:length(gating.re.names)) {
+    for (i in seq_along(gating.re.names)) {
       if (!(gating.re.names[i] %in% specials)) {
         stop("Currently clustTMB only works with spatio-temporal random effects")
       }

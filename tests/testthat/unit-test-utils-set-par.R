@@ -9,13 +9,14 @@ context("test set parameters, no covariates")
 data("faithful")
 ng <- 2
 y <- faithful
+nj <- ncol(faithful)
 test_that("test expmod = FALSE", {
   mod <- Mclust(faithful, G = 2)
   classify <- mod$classification
   Class <- unmap(classify)
 
   for (g in 1:ng) {
-    for (j in 1:ncol(y)) {
+    for (j in 1:nj) {
       # Subset data by cluster and column
       y.sub <- y[Class[, g] == 1, j]
       Pars <- set.MuVarPow(
@@ -64,6 +65,7 @@ test_that("test set.MuVarPow, expmod = TRUE", {
   data(ais)
   y <- ais[, 3:7]
   ng <- 3
+  nj <- ncol(y)
 
   mod <- MoE_clust(y,
     G = ng, gating = ~1, expert = ~sex,
@@ -73,7 +75,7 @@ test_that("test set.MuVarPow, expmod = TRUE", {
   classify <- mod$classification
   Class <- unmap(classify)
   for (g in 1:ng) {
-    for (j in 1:ncol(y)) {
+    for (j in 1:nj) {
       # Subset data by cluster and column
       y.sub <- y[Class[, g] == 1, j]
       x.sub <- as.matrix(ais$sex)[Class[, g] == 1, ]

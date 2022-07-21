@@ -38,5 +38,5 @@ findbars_x(~ 1 + (1 | f) + (1 | g))
 findbars_x(~ 1 + (1|Subject))
 findbars_x(~ (1||Subject))
 findbars_x(~ (1|Subject))
-findbars_x(~ 1 + x) 
+findbars_x(~ 1 + x)
 }

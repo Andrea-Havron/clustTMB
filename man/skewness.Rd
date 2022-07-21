@@ -16,5 +16,5 @@ skewness value of x
 Calculates skewness
 }
 \examples{
-skewness(rgamma(100,1,1))
+skewness(rgamma(100, 1, 1))
 }

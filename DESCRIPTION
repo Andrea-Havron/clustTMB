@@ -24,11 +24,9 @@ Imports:
     stats,
     mclust,
     lme4,
-    tweedie,
     glmmTMB,
     cluster,
     clustMixType,
-    mvnfast,
     MoEClust
 Depends:
     R (>= 4.0.0)
@@ -53,7 +51,9 @@ Suggests:
     giscoR,
     sf,
     wesanderson,
-    covr
+    covr,
+    mvnfast,
+    tweedie
 VignetteBuilder: knitr
 Additional_repositories: 
     https://inla.r-inla-download.org/R/stable

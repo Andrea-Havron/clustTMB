@@ -623,8 +623,7 @@ inla_installed <- function() {
 #' @param fixStruct user input character vector
 #'
 #' @return numeric value associated with character vector
-#' @examples
-#' fixStruct.lookup("E")
+#' @noRd
 fixStruct.lookup <- function(fixStruct) {
   df <- data.frame(
     fixStruct =

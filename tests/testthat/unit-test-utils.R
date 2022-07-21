@@ -13,12 +13,12 @@ mkFac <- function(d, f = NA) {
 
 context("test mkFac")
 test_that("test mkFac", {
-  d <- c(3,3)
-  map.vec <- rep(factor(NA), d[1]*d[2])
+  d <- c(3, 3)
+  map.vec <- rep(factor(NA), d[1] * d[2])
   map.dim <- map.vec
   dim(map.dim) <- d
   expect_equal(map.dim, mkFac(d, map.vec))
-  
+
   d <- 3
   map.vec <- rep(factor(NA), d)
   expect_equal(map.vec, mkFac(d, map.vec))

@@ -114,15 +114,15 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   }
   if (Data$reStruct[2, 1] > 2 & !is.null(dim.list$n.r.e)) {
     ParList$ln_kappad <- matrix(
-      log(sqrt(8) / (dim.list$n.r.e / 2)), 
-      n.j, 
+      log(sqrt(8) / (dim.list$n.r.e / 2)),
+      n.j,
       n.g
-      )
+    )
     ParList$ln_taud <- matrix(
-      1 / (2 * sqrt(pi) * sqrt(8) / (dim.list$n.r.e / 2)), 
-      n.j, 
+      1 / (2 * sqrt(pi) * sqrt(8) / (dim.list$n.r.e / 2)),
+      n.j,
       n.g
-      )
+    )
   }
 
   # re-intitiate data for initial value estimation
@@ -137,7 +137,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
     Class <- run.mahala(Class, as.matrix(y), as.matrix(X.d))
   }
   if (exp.mod & any(apply(Class, 2, sum) == 0)) {
-    stop("initalization method results in an empty or unit cluster 
+    stop("initalization method results in an empty or unit cluster
          which is not suitable when intializing the expert model")
   }
 
@@ -239,15 +239,17 @@ genInitMethods <- function(n.g, n.i, n.j,
         classify <- cutree(hclust(diss), n.g)
       }
     } else {
-      classify <- kproto(y, n.g, iter.max = 1000, 
-                         nstart = 100, verbose = FALSE)$cluster
+      classify <- kproto(y, n.g,
+        iter.max = 1000,
+        nstart = 100, verbose = FALSE
+      )$cluster
     }
   }
 
   if (control$init.method == "user") {
     classify <- control$user.class
     if (length(unique(classify)) != n.g) {
-      stop("Number of unique classes does not equal 
+      stop("Number of unique classes does not equal
            number of clusters specified in model")
     }
   }
@@ -282,7 +284,7 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j) {
     }
     # default when covariate in expert or gating model and not Tweedie
     if (gate.mod | exp.mod) {
-      # TODO: check and fix comment/code default when data 
+      # TODO: check and fix comment/code default when data
       # are univariate and not Tweedie and when no covariates in expert/gating
       if (n.j == 1 & is.element("init.method", control$defaults)) {
         control$init.method <- "hc"
@@ -306,11 +308,11 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j) {
 #' @noRd
 set.MuVarPow <- function(Class., ysub, expmod, Xd, family.) {
   out <- list(
-    mu_init = 0.01, 
-    var_init = 0.01, 
-    power_init = 1.05, 
+    mu_init = 0.01,
+    var_init = 0.01,
+    power_init = 1.05,
     residuals = NA
-    )
+  )
 
   if (expmod) {
     xsub <- Xd[Class. == 1, ]
@@ -348,12 +350,12 @@ set.BetaTheta <- function(Data., inits) {
 
   if (Data.$family == 700) { # Tweedie
     ## ! ideally this will be based on link function not family
-    out$betad <- log(inits$mu_init) 
+    out$betad <- log(inits$mu_init)
     if (inits$power_init >= 2) inits$power_init <- 1.95
     if (inits$power_init <= 1) inits$power_init <- 1.05
     out$thetaf <- log((1 - inits$power_init) / (inits$power_init - 2))
-    ## ! adjust varaince when random effects -  
-    ## ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10 
+    ## ! adjust varaince when random effects -
+    ## ParList$theta[j,g] <- log(var/mu^power.est/exp(1)) / 10
     ## exp(1) accounts for var=1 attributed to spatial
     out$theta <- log(inits$var_init / inits$mu_init^inits$power_init)
   }
@@ -409,7 +411,7 @@ set.Loadings <- function(Data., cormat., corvec., dimlist.) {
       out$ld_sp <- L.mat[keep.sp]
     }
     if (sum(Data.$rrStruct == 2)) {
-      # equal probability correlation results from 
+      # equal probability correlation results from
       # spatial or random rank reduction
       out$ld_rand <- out$ld_rand / 2
       out$ld_sp <- out$ld_sp / 2
@@ -435,40 +437,40 @@ cormat.correction <- function(cormat., ymat., nj.) {
       tmp.pa[ymat.[, j] > 0, j] <- 1
     }
 
-    for (n in seq_along(idx.na[,1])) {
+    for (n in seq_along(idx.na[, 1])) {
       # Set up confusion matrix between 2 columns with NA correlation
       tmp.confusion <- cbind(
         c(
           nrow(
-            tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 & 
-                     tmp.pa[, idx.na[n, 2]] == 1, ]
-            ),
+            tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 &
+              tmp.pa[, idx.na[n, 2]] == 1, ]
+          ),
           nrow(
-            tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 & 
-                     tmp.pa[, idx.na[n, 2]] == 1, ]
-            )
+            tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 &
+              tmp.pa[, idx.na[n, 2]] == 1, ]
+          )
         ),
         c(
           nrow(
-            tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 & 
-                     tmp.pa[, idx.na[n, 2]] == 0, ]
-            ),
+            tmp.pa[tmp.pa[, idx.na[n, 1]] == 1 &
+              tmp.pa[, idx.na[n, 2]] == 0, ]
+          ),
           nrow(
-            tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 & 
-                     tmp.pa[, idx.na[n, 2]] == 0, ]
-            )
+            tmp.pa[tmp.pa[, idx.na[n, 1]] == 0 &
+              tmp.pa[, idx.na[n, 2]] == 0, ]
+          )
         )
       )
       # tmp.ctab[tmp.ctab==0] <- 1
       # Calculate Matthews correlation coefficient
-      denom <- sum(tmp.confusion[1, ]) * sum(tmp.confusion[2, ]) * 
+      denom <- sum(tmp.confusion[1, ]) * sum(tmp.confusion[2, ]) *
         sum(tmp.confusion[, 1]) * sum(tmp.confusion[, 2])
-      # if 0 occurs in any of the sums, 
+      # if 0 occurs in any of the sums,
       # the denominator can arbitrarily be set to 1
       if (denom == 0) denom <- 1
       cormat.[idx.na[n, 2], idx.na[n, 1]] <-
-        (tmp.confusion[1, 1] * tmp.confusion[2, 2] - 
-           tmp.confusion[1, 2] * tmp.confusion[2, 1]) /
+        (tmp.confusion[1, 1] * tmp.confusion[2, 2] -
+          tmp.confusion[1, 2] * tmp.confusion[2, 1]) /
           sqrt(denom)
     }
   }
@@ -689,7 +691,7 @@ run.mahala <- function(z., y., x., family, max.it = 1000) {
   # df <- data.frame(y., x.)
 
   while (!stop.crit) {
-    for (g in seq_along(z.[1,])) {
+    for (g in seq_along(z.[1, ])) {
       sub <- which(z.[, g] == 1)
       mod <- tryCatch(lm(y. ~ x., subset = sub))
       if (inherits(mod, "try-error")) {
@@ -699,7 +701,7 @@ run.mahala <- function(z., y., x., family, max.it = 1000) {
         pred[[g]] <- cbind(rep(1, nrow(z.)), x.) %*% mod$coefficients
         res <- y. - pred[[g]]
         ## ! write my own function
-        mahala[[g]] <- MoE_mahala(mod, res, squared = TRUE, identity = TRUE) 
+        mahala[[g]] <- MoE_mahala(mod, res, squared = TRUE, identity = TRUE)
         M[, g] <- mahala[[g]]
       }
     }
@@ -708,7 +710,7 @@ run.mahala <- function(z., y., x., family, max.it = 1000) {
       break
     } else {
       new.z <- rep(0, nrow(z.))
-      for (i in seq_along(z.[,1])) {
+      for (i in seq_along(z.[, 1])) {
         new.z[i] <- which(M[i, ] == min(M[i, ]))
       }
       if (identical(map(z.), new.z) | cnt == max.it) {

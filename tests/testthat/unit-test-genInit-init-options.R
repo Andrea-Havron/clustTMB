@@ -161,7 +161,7 @@ test_that("test correct input", {
     as.numeric(factor(input.class)),
     init.options(user.class = input.class)$user.class
   )
-  # depends on implementation: 
+  # depends on implementation:
   # expect_message(init.options(user.class = input.class)$user.class)
 })
 test_that("test incorrect input", {

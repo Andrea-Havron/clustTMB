@@ -15,9 +15,9 @@ dim.list <- list(
   n.g = n.g, n.f.sp = n.j, n.f.rand = n.j, n.v = NULL
 )
 dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
-dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - 
+dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand -
   (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
-dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - 
+dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp -
   (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 
 
@@ -35,12 +35,12 @@ test_that("mvn with no random effect, no rank reduction", {
   dim.list$n.v <- Dat$spde$n_s
   init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(
-    Dat$family, 
-    Dat$fixStruct, 
-    Dat$rrStruct, 
-    Dat$reStruct, 
+    Dat$family,
+    Dat$fixStruct,
+    Dat$rrStruct,
+    Dat$reStruct,
     dim.list
-    )
+  )
   map.names <- names(map.list)
   exp.map.names <- c(
     "thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
@@ -51,8 +51,10 @@ test_that("mvn with no random effect, no rank reduction", {
   for (m in seq_along(map.names)) {
     mapparm <- unname(unlist(map.list[map.names[m]]))
     initparm <- unname(unlist(init.parm$parms[map.names[m]]))
-    expect_equal(vapply(mapparm, length, rep(0,1)), 
-                 vapply(initparm, length, rep(0,1)))
+    expect_equal(
+      vapply(mapparm, length, rep(0, 1)),
+      vapply(initparm, length, rep(0, 1))
+    )
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 })
@@ -76,20 +78,22 @@ test_that("mvn with gating random effects, no rank reduction", {
     "epsilon_tjg", "v_ifg", "Gamma_vg", "Omega_vfg"
   ) # rm ln_sigmau, u_ig
   reNum <- c(3, 2, 1)
-  parmName <- list("Gamma_vg", 
-                   c("logit_rhog", "ln_sigmaup", "upsilon_tg"), 
-                   c("ln_sigmau", "u_ig"))
+  parmName <- list(
+    "Gamma_vg",
+    c("logit_rhog", "ln_sigmaup", "upsilon_tg"),
+    c("ln_sigmau", "u_ig")
+  )
   for (j in 1:3) {
     Dat$reStruct <- matrix(0, 2, 3)
     Dat$reStruct[1, j] <- reNum[j]
     init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
     map.list <- mkMap(
-      Dat$family, 
-      Dat$fixStruct, 
-      Dat$rrStruct, 
-      Dat$reStruct, 
+      Dat$family,
+      Dat$fixStruct,
+      Dat$rrStruct,
+      Dat$reStruct,
       dim.list
-      )
+    )
     map.names <- names(map.list)
     exp.map.names <- c(
       "thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
@@ -104,13 +108,15 @@ test_that("mvn with gating random effects, no rank reduction", {
     for (m in seq_along(map.names)) {
       mapparm <- unname(unlist(map.list[map.names[m]]))
       initparm <- unname(unlist(init.parm$parms[map.names[m]]))
-      expect_equal(vapply(mapparm, length, rep(0,1)), 
-                   vapply(initparm, length, rep(0,1)))
+      expect_equal(
+        vapply(mapparm, length, rep(0, 1)),
+        vapply(initparm, length, rep(0, 1))
+      )
     }
     expect_equal(sort(map.names), sort(exp.map.names))
     if (j == 1) {
       expect_equal(sum(as.numeric(map.list$ln_kappag)), dim.list$n.g - 1)
-    } 
+    }
   }
 })
 
@@ -127,20 +133,22 @@ test_that("mvn with expert random effects, no rank reduction", {
   )
   dim.list$n.v <- Dat$spde$n_s
   reNum <- c(3, 2, 1)
-  parmName <- list("Omega_vfg", 
-                   c("logit_rhod", "ln_sigmaep", "epsilon_tjg"), 
-                   c("ln_sigmav", "v_ifg"))
+  parmName <- list(
+    "Omega_vfg",
+    c("logit_rhod", "ln_sigmaep", "epsilon_tjg"),
+    c("ln_sigmav", "v_ifg")
+  )
   for (j in 1:3) {
     Dat$reStruct <- matrix(0, 2, 3)
     Dat$reStruct[2, j] <- reNum[j]
     init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
     map.list <- mkMap(
-      Dat$family, 
-      Dat$fixStruct, 
-      Dat$rrStruct, 
-      Dat$reStruct, 
+      Dat$family,
+      Dat$fixStruct,
+      Dat$rrStruct,
+      Dat$reStruct,
       dim.list
-      )
+    )
     map.names <- names(map.list)
     exp.map.names <- c(
       "thetaf", "ld_rand", "ld_sp", "Hg_input", "Hd_input",
@@ -155,15 +163,21 @@ test_that("mvn with expert random effects, no rank reduction", {
     for (m in seq_along(map.names)) {
       mapparm <- unname(unlist(map.list[map.names[m]]))
       initparm <- unname(unlist(init.parm$parms[map.names[m]]))
-      expect_equal(vapply(mapparm, length, rep(0,1)), 
-                   vapply(initparm, length, rep(0,1)))
+      expect_equal(
+        vapply(mapparm, length, rep(0, 1)),
+        vapply(initparm, length, rep(0, 1))
+      )
     }
     expect_equal(sort(map.names), sort(exp.map.names))
     if (j == 1) {
-      expect_equal(sum(as.numeric(map.list$ln_kappad)), 
-                   dim.list$n.g * dim.list$n.j)
-      expect_equal(sum(as.numeric(map.list$ln_taud)), 
-                   dim.list$n.g * dim.list$n.j)
+      expect_equal(
+        sum(as.numeric(map.list$ln_kappad)),
+        dim.list$n.g * dim.list$n.j
+      )
+      expect_equal(
+        sum(as.numeric(map.list$ln_taud)),
+        dim.list$n.g * dim.list$n.j
+      )
     }
   }
 })
@@ -177,9 +191,9 @@ test_that("mvn with expert random effects and rank reduction", {
   )
 
   dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
-  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - 
+  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand -
     (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
-  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - 
+  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp -
     (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 
 
@@ -200,12 +214,12 @@ test_that("mvn with expert random effects and rank reduction", {
   Dat$rrStruct[1] <- 1
   init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(
-    Dat$family, 
-    Dat$fixStruct, 
-    Dat$rrStruct, 
-    Dat$reStruct, 
+    Dat$family,
+    Dat$fixStruct,
+    Dat$rrStruct,
+    Dat$reStruct,
     dim.list
-    )
+  )
   map.names <- names(map.list)
   exp.map.names <- c(
     "thetaf", "ld_sp", "Hg_input", "Hd_input", "logit_corr_fix",
@@ -217,20 +231,28 @@ test_that("mvn with expert random effects and rank reduction", {
   for (m in seq_along(map.names)) {
     mapparm <- unname(unlist(map.list[map.names[m]]))
     initparm <- unname(unlist(init.parm$parms[map.names[m]]))
-    expect_equal(vapply(mapparm, length, rep(0,1)), 
-                 vapply(initparm, length, rep(0,1)))
+    expect_equal(
+      vapply(mapparm, length, rep(0, 1)),
+      vapply(initparm, length, rep(0, 1))
+    )
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 
-  expect_equal(sum(is.na(map.list$ln_sigmav)), 
-               dim.list$n.g * dim.list$n.f.rand)
+  expect_equal(
+    sum(is.na(map.list$ln_sigmav)),
+    dim.list$n.g * dim.list$n.f.rand
+  )
 
-  expect_equal(dim(init.parm$parms$v_ifg), 
-               c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g))
+  expect_equal(
+    dim(init.parm$parms$v_ifg),
+    c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g)
+  )
 
-  expect_equal(dim(init.parm$parms$ld_rand)[1], 
-               c(dim.list$n.j * dim.list$n.f.rand -
-    (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2))
+  expect_equal(
+    dim(init.parm$parms$ld_rand)[1],
+    c(dim.list$n.j * dim.list$n.f.rand -
+      (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2)
+  )
 
   ## spatial reduction
   dim.list <- list(
@@ -239,9 +261,9 @@ test_that("mvn with expert random effects and rank reduction", {
   )
 
   dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
-  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - 
+  dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand -
     (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
-  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - 
+  dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp -
     (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 
   Dat <- mkDat(
@@ -260,12 +282,12 @@ test_that("mvn with expert random effects and rank reduction", {
   Dat$rrStruct[2] <- 1
   init.parm <- genInit(Dat, family = gaussian(link = "identity"), dim.list)
   map.list <- mkMap(
-    Dat$family, 
-    Dat$fixStruct, 
-    Dat$rrStruct, 
-    Dat$reStruct, 
+    Dat$family,
+    Dat$fixStruct,
+    Dat$rrStruct,
+    Dat$reStruct,
     dim.list
-    )
+  )
   map.names <- names(map.list)
   exp.map.names <- c(
     "thetaf", "ld_rand", "Hg_input", "Hd_input",
@@ -277,30 +299,44 @@ test_that("mvn with expert random effects and rank reduction", {
   for (m in seq_along(map.names)) {
     mapparm <- unname(unlist(map.list[map.names[m]]))
     initparm <- unname(unlist(init.parm$parms[map.names[m]]))
-    expect_equal(vapply(mapparm, length, rep(0,1)), 
-                 vapply(initparm, length, rep(0,1)))
+    expect_equal(
+      vapply(mapparm, length, rep(0, 1)),
+      vapply(initparm, length, rep(0, 1))
+    )
   }
   expect_equal(sort(map.names), sort(exp.map.names))
 
-  expect_equal(sum(as.numeric(map.list$ln_kappad)), 
-               dim.list$n.g * dim.list$n.f.sp)
-  expect_equal(sum(is.na(map.list$ln_taud)), 
-               dim.list$n.g * dim.list$n.f.sp)
+  expect_equal(
+    sum(as.numeric(map.list$ln_kappad)),
+    dim.list$n.g * dim.list$n.f.sp
+  )
+  expect_equal(
+    sum(is.na(map.list$ln_taud)),
+    dim.list$n.g * dim.list$n.f.sp
+  )
 
-  expect_equal(dim(init.parm$parms$Omega_vfg), 
-               c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g))
+  expect_equal(
+    dim(init.parm$parms$Omega_vfg),
+    c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g)
+  )
 
-  expect_equal(dim(init.parm$parms$ld_sp)[1], 
-               c(dim.list$n.j * dim.list$n.f.sp -
-    (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2))
+  expect_equal(
+    dim(init.parm$parms$ld_sp)[1],
+    c(dim.list$n.j * dim.list$n.f.sp -
+      (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2)
+  )
 })
 
 context("test user specified start/map")
 test_that("map tests", {
-  expect_error(clustTMB(y, covariance.structure = "VVV", 
-                        G = n.g, Map = list(Sigma = runif(10, 0, 1))))
-  expect_error(clustTMB(y, covariance.structure = "VVV", 
-                        G = n.g, Map = list(thetaf = runif(10, 0, 1))))
+  expect_error(clustTMB(y,
+    covariance.structure = "VVV",
+    G = n.g, Map = list(Sigma = runif(10, 0, 1))
+  ))
+  expect_error(clustTMB(y,
+    covariance.structure = "VVV",
+    G = n.g, Map = list(thetaf = runif(10, 0, 1))
+  ))
   map.thetaf <- factor(matrix(1.6, n.j, n.g))
   expect_error(clustTMB(log(y - min(y) + 1),
     family = tweedie(link = "log"),
@@ -344,13 +380,15 @@ test_that("map tests", {
   expect_equal(init.thetaf, attributes(mod$obj$env$parameters$thetaf)$shape)
 })
 test_that("start tests", {
-  expect_error(clustTMB(y, covariance.structure = "VVV", 
-                        G = n.g, Start = list(theta = matrix(1.6, n.j, n.g))))
+  expect_error(clustTMB(y,
+    covariance.structure = "VVV",
+    G = n.g, Start = list(theta = matrix(1.6, n.j, n.g))
+  ))
   # FIXME: expect_condition(
   #   try(
   #     clustTMB(
-  #       y, 
-  #       covariance.structure = 'VVV', 
+  #       y,
+  #       covariance.structure = 'VVV',
   #       G = n.g,start = list(u_ig = matrix(rnorm(n.i*(n.g-1)),n.i,n.g-1))
   #       )
   #     )
@@ -374,8 +412,9 @@ test_that("start tests", {
 context("tweedie tests")
 test_that("tweedie covariance structure", {
   expect_error(
-    clustTMB(log(y - min(y) + 1), 
-             family = tweedie(link = "log"), 
-             covariance.structure = "VVV")
+    clustTMB(log(y - min(y) + 1),
+      family = tweedie(link = "log"),
+      covariance.structure = "VVV"
     )
+  )
 })

@@ -257,8 +257,10 @@ splitForm <- function(formula,
   formSplits <- expandAllGrpVar(fbxx)
 
   if (length(formSplits) > 0) {
-    formSplitID <- vapply(lapply(formSplits, "[[", 1), 
-                          as.character, rep(" ", 1))
+    formSplitID <- vapply(
+      lapply(formSplits, "[[", 1),
+      as.character, rep(" ", 1)
+    )
     # warn about terms without a
     # setReTrm method
 
@@ -287,13 +289,15 @@ splitForm <- function(formula,
       lapply(formSplitStan, "[[", 2),
       lapply(formSplitSpec, "[[", 2)
     )
-    reTrmFormulas <- unlist(reTrmFormulas) 
+    reTrmFormulas <- unlist(reTrmFormulas)
     reTrmClasses <- c(
-      # Fix me:: added for rr structure when it has n = 2, 
+      # Fix me:: added for rr structure when it has n = 2,
       # gives a list of list... quick fix
       rep(defaultTerm, length(formSplitStan)),
-      vapply(lapply(formSplitSpec, "[[", 1),
-             as.character, rep(" ", 1))
+      vapply(
+        lapply(formSplitSpec, "[[", 1),
+        as.character, rep(" ", 1)
+      )
     )
   } else {
     reTrmFormulas <- reTrmAddArgs <- reTrmClasses <- NULL

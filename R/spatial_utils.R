@@ -40,7 +40,8 @@ spdeStruct <- function(mesh) {
     # Calculate Areas
     TmpFn <- function(Vec1, Vec2) abs(det(rbind(Vec1, Vec2)))
     Tri_Area <- rep(NA, nrow(E0))
-    for (t in seq_along(Tri_Area)) Tri_Area[t] <- TmpFn(E0[t, ], E1[t, ]) / 2 # T = area of each triangle
+    # T = area of each triangle
+    for (t in seq_along(Tri_Area)) Tri_Area[t] <- TmpFn(E0[t, ], E1[t, ]) / 2 
     # ---------- End code that prepare objects for anisotropy.
     spde.list <- list(
       "n_s"      = spde$n.spde,

@@ -287,8 +287,10 @@ splitForm <- function(formula,
       lapply(formSplitStan, "[[", 2),
       lapply(formSplitSpec, "[[", 2)
     )
-    reTrmFormulas <- unlist(reTrmFormulas) # Fix me:: added for rr structure when it has n = 2, gives a list of list... quick fix
+    reTrmFormulas <- unlist(reTrmFormulas) 
     reTrmClasses <- c(
+      # Fix me:: added for rr structure when it has n = 2, 
+      # gives a list of list... quick fix
       rep(defaultTerm, length(formSplitStan)),
       vapply(lapply(formSplitSpec, "[[", 1),
              as.character, rep(" ", 1))

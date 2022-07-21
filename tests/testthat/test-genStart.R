@@ -32,9 +32,11 @@ dim.list <- list(
 )
 dim.list$nl.fix <- (dim.list$n.j^2 - dim.list$n.j) / 2
 dim.list$n.f.rand <- dim.list$n.j
-dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - 
+  (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
 dim.list$n.f.sp <- dim.list$n.j
-dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
+dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - 
+  (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 Dat <- mkDat(
   response = as.matrix(faithful), time.vector = rep(1, nrow(faithful)),
   expert.dat = as.matrix(rep(1, nrow(faithful))),
@@ -55,12 +57,24 @@ init.parm.clustTMB <- genInit(Dat,
 
 context("equal mvn init parameters")
 test_that("mu", {
-  expect_equal(as.vector(init.parm.mclust$mu$g1), init.parm.clustTMB$parms$betad[1, , 1])
-  expect_equal(as.vector(init.parm.mclust$mu$g2), init.parm.clustTMB$parms$betad[1, , 2])
+  expect_equal(
+    as.vector(init.parm.mclust$mu$g1), 
+    init.parm.clustTMB$parms$betad[1, , 1]
+    )
+  expect_equal(
+    as.vector(init.parm.mclust$mu$g2), 
+    init.parm.clustTMB$parms$betad[1, , 2]
+    )
 })
 test_that("Sigma", {
-  expect_equal(as.vector(init.parm.mclust$Sigma$g1), exp(init.parm.clustTMB$parms$theta[, 1]))
-  expect_equal(as.vector(init.parm.mclust$Sigma$g2), exp(init.parm.clustTMB$parms$theta[, 2]))
+  expect_equal(
+    as.vector(init.parm.mclust$Sigma$g1), 
+    exp(init.parm.clustTMB$parms$theta[, 1])
+    )
+  expect_equal(
+    as.vector(init.parm.mclust$Sigma$g2), 
+    exp(init.parm.clustTMB$parms$theta[, 2])
+    )
 })
 # test_that("Corr", { Not same now input is based on cholesky decomp
 #   expect_equal(as.vector(unlist(init.parm.mclust$Corr)),
@@ -79,12 +93,30 @@ test_that("Class", {
   expect_equal(map(clss), init.parm.clustTMB$class)
 })
 test_that("Random Effects dim", {
-  expect_equal(c(dim.list$n.t, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$upsilon_tg))
-  expect_equal(c(dim.list$n.t, dim.list$n.j, dim.list$n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
-  # expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
-  expect_equal(c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), dim(init.parm.clustTMB$parms$v_ifg))
-  expect_equal(c(dim.list$n.v, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$Gamma_vg))
-  expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
+  expect_equal(
+    c(dim.list$n.t, dim.list$n.g - 1), 
+    dim(init.parm.clustTMB$parms$upsilon_tg)
+    )
+  expect_equal(
+    c(dim.list$n.t, dim.list$n.j, dim.list$n.g), 
+    dim(init.parm.clustTMB$parms$epsilon_tjg)
+    )
+  # expect_equal(
+  # c(dim.list$n.i, dim.list$n.g-1), 
+  # dim(init.parm.clustTMB$parms$u_ig)
+  # )
+  expect_equal(
+    c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), 
+    dim(init.parm.clustTMB$parms$v_ifg)
+    )
+  expect_equal(
+    c(dim.list$n.v, dim.list$n.g - 1), 
+    dim(init.parm.clustTMB$parms$Gamma_vg)
+    )
+  expect_equal(
+    c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), 
+    dim(init.parm.clustTMB$parms$Omega_vfg)
+    )
 })
 
 
@@ -109,8 +141,10 @@ dim.list <- list(
 )
 
 dim.list$nl.fix <- 1
-dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
-dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
+dim.list$nl.rand <- dim.list$n.j * dim.list$n.f.rand - 
+  (dim.list$n.f.rand * (dim.list$n.f.rand - 1)) / 2
+dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp - 
+  (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 Dat <- mkDat(
   response = as.matrix(faithful$waiting), time.vector = rep(1, nrow(faithful)),
   expert.dat = as.matrix(rep(1, nrow(faithful))),
@@ -129,12 +163,24 @@ init.parm.clustTMB <- genInit(Dat,
 
 context("equal uniNormal init parameters")
 test_that("mu", {
-  expect_equal(as.vector(init.parm.mclust$mu$g1), init.parm.clustTMB$parms$betad[1, , 1])
-  expect_equal(as.vector(init.parm.mclust$mu$g2), init.parm.clustTMB$parms$betad[1, , 2])
+  expect_equal(
+    as.vector(init.parm.mclust$mu$g1), 
+    init.parm.clustTMB$parms$betad[1, , 1]
+    )
+  expect_equal(
+    as.vector(init.parm.mclust$mu$g2), 
+    init.parm.clustTMB$parms$betad[1, , 2]
+    )
 })
 test_that("Sigma", {
-  expect_equal(as.vector(init.parm.mclust$Sigma$g1), exp(init.parm.clustTMB$parms$theta[, 1]))
-  expect_equal(as.vector(init.parm.mclust$Sigma$g2), exp(init.parm.clustTMB$parms$theta[, 2]))
+  expect_equal(
+    as.vector(init.parm.mclust$Sigma$g1), 
+    exp(init.parm.clustTMB$parms$theta[, 1])
+    )
+  expect_equal(
+    as.vector(init.parm.mclust$Sigma$g2), 
+    exp(init.parm.clustTMB$parms$theta[, 2])
+    )
 })
 test_that("Corr", {
   expect_equal(
@@ -158,12 +204,30 @@ test_that("Class", {
 
 # test MakeADFun
 test_that("Random Effects dim", {
-  expect_equal(c(dim.list$n.t, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$upsilon_tg))
-  expect_equal(c(dim.list$n.t, dim.list$n.j, dim.list$n.g), dim(init.parm.clustTMB$parms$epsilon_tjg))
-  # expect_equal(c(dim.list$n.i, dim.list$n.g-1), dim(init.parm.clustTMB$parms$u_ig))
-  expect_equal(c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), dim(init.parm.clustTMB$parms$v_ifg))
-  expect_equal(c(dim.list$n.v, dim.list$n.g - 1), dim(init.parm.clustTMB$parms$Gamma_vg))
-  expect_equal(c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), dim(init.parm.clustTMB$parms$Omega_vfg))
+  expect_equal(
+    c(dim.list$n.t, dim.list$n.g - 1), 
+    dim(init.parm.clustTMB$parms$upsilon_tg)
+    )
+  expect_equal(
+    c(dim.list$n.t, dim.list$n.j, dim.list$n.g), 
+    dim(init.parm.clustTMB$parms$epsilon_tjg)
+    )
+  # expect_equal(
+  # c(dim.list$n.i, dim.list$n.g-1), 
+  # dim(init.parm.clustTMB$parms$u_ig)
+  # )
+  expect_equal(
+    c(dim.list$n.i, dim.list$n.f.rand, dim.list$n.g), 
+    dim(init.parm.clustTMB$parms$v_ifg)
+    )
+  expect_equal(
+    c(dim.list$n.v, dim.list$n.g - 1), 
+    dim(init.parm.clustTMB$parms$Gamma_vg)
+    )
+  expect_equal(
+    c(dim.list$n.v, dim.list$n.f.sp, dim.list$n.g), 
+    dim(init.parm.clustTMB$parms$Omega_vfg)
+    )
 })
 
 
@@ -325,16 +389,30 @@ test_that("class", {
 
 
 # test_that("mu", {
-#   expect_equal(as.vector(init.parm.mclust$mu$g1), init.parm.clustTMB$parms$betad[1,,1])
-#   expect_equal(as.vector(init.parm.mclust$mu$g2), init.parm.clustTMB$parms$betad[1,,2])
+#   expect_equal(
+# as.vector(init.parm.mclust$mu$g1), 
+# init.parm.clustTMB$parms$betad[1,,1]
+# )
+#   expect_equal(
+# as.vector(init.parm.mclust$mu$g2), 
+# init.parm.clustTMB$parms$betad[1,,2]
+# )
 # })
 # test_that("Sigma", {
-#   expect_equal(as.vector(init.parm.mclust$Sigma$g1), exp(init.parm.clustTMB$parms$theta[,1]))
-#   expect_equal(as.vector(init.parm.mclust$Sigma$g2), exp(init.parm.clustTMB$parms$theta[,2]))
+#   expect_equal(
+# as.vector(init.parm.mclust$Sigma$g1), 
+# exp(init.parm.clustTMB$parms$theta[,1])
+# )
+#   expect_equal(
+# as.vector(init.parm.mclust$Sigma$g2), 
+# exp(init.parm.clustTMB$parms$theta[,2])
+# )
 # })
 # test_that("Corr", {
-#   expect_equal(as.vector(unlist(init.parm.mclust$Corr)),
-#                as.vector(1/(1+exp(-init.parm.clustTMB$parms$logit_corr_fix))*2-1))
+#   expect_equal(
+# as.vector(unlist(init.parm.mclust$Corr)),
+# as.vector(1/(1+exp(-init.parm.clustTMB$parms$logit_corr_fix))*2-1)
+# )
 # })
 # test_that("Pi", {
 #   expect_equal(as.vector(unlist(init.parm.mclust$Pi)),

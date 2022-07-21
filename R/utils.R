@@ -484,7 +484,11 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
     # }
   }
 
-  out <- list(reStruct = reStruct, random.names = random.names, expert.time = expert.time)
+  out <- list(
+    reStruct = reStruct, 
+    random.names = random.names, 
+    expert.time = expert.time
+    )
   return(out)
 }
 
@@ -523,7 +527,8 @@ parm.lookup <- function() {
       "ln_sigmav", "upsilon_tg", "epsilon_tjg", "v_ifg",
       "Gamma_vg", "Omega_vfg"
     ), # removed ln_sigmau, u_ig
-    type = c(rep("Fixed", 18), rep("Random", 5)), # Fixed 19 -> 18; Random 6 -> 5
+    # Fixed 19 -> 18; Random 6 -> 5
+    type = c(rep("Fixed", 18), rep("Random", 5)), 
     str = c(
       "Matrix", "Array", "Array", rep("Matrix", 6), "Array",
       "Vector", "Matrix", "Matrix", "Vector", "Matrix", "Vector",
@@ -532,7 +537,7 @@ parm.lookup <- function() {
     ),
     dim = c(
       "Kg,G-1", "Kd,J,G", "M,J,G", "J,G", "J,G", "(J^2-J)/2", "Fr,G", "Fs,G",
-      "2,G-1", "2,J,G", "G-1", "J,G", "J,G", "G-1", "J,G", "G-1", "J,G", #' G-1',
+      "2,G-1", "2,J,G", "G-1", "J,G", "J,G", "G-1", "J,G", "G-1", "J,G", #' G-1'
       # 'J,G', 'T,G-1', 'T,J,G',  'N,G-1', 'N,J/Fr,G', 'N,G-1', 'V,J/Fs,G'
       "Fr,G", "T,G-1", "T,J,G", "N,J/Fr,G", "N,G-1", "V,J/Fs,G"
     ),

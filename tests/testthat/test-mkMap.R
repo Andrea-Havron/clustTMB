@@ -346,8 +346,15 @@ test_that("map tests", {
 test_that("start tests", {
   expect_error(clustTMB(y, covariance.structure = "VVV", 
                         G = n.g, Start = list(theta = matrix(1.6, n.j, n.g))))
-  ## Fix Me! expect_condition(try(clustTMB(y, covariance.structure = 'VVV', G = n.g,
-  #                         start = list(u_ig = matrix(rnorm(n.i*(n.g-1)),n.i,n.g-1)))))
+  # FIXME: expect_condition(
+  #   try(
+  #     clustTMB(
+  #       y, 
+  #       covariance.structure = 'VVV', 
+  #       G = n.g,start = list(u_ig = matrix(rnorm(n.i*(n.g-1)),n.i,n.g-1))
+  #       )
+  #     )
+  #   )
   expect_error(clustTMB(log(y - min(y) + 1),
     family = tweedie(link = "log"), G = n.g,
     Start = list(thetaf = rep(1.6, 3)),

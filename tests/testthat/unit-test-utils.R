@@ -5,11 +5,13 @@ stopifnot(
 
 context("test fit.tmb")
 TMB::runExample("simple")
-args <- list(data=list(x=x, B=B, A=A),
-             parameters=list(u=u*0, beta=beta*0, logsdu=1, logsd0=1),
-             random="u",
-             DLL="simple",
-             silent=TRUE)
+args <- list(
+  data = list(x = x, B = B, A = A),
+  parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
+  random = "u",
+  DLL = "simple",
+  silent = TRUE
+)
 
 obj.exp <- do.call(TMB::MakeADFun, args)
 test_that("test fit.tmb, run.model = FALSE", {
@@ -23,8 +25,10 @@ test_that("test fit.tmb, run.model = FALSE", {
 })
 
 test_that("test fit.tmb, run.model = TRUE, sdreport = FALSE", {
-  opt.obs <- fit.tmb(args, control = list(run.model = TRUE, 
-                                          do.sdreport = FALSE))
+  opt.obs <- fit.tmb(args, control = list(
+    run.model = TRUE,
+    do.sdreport = FALSE
+  ))
   expect_equal(obj$par, opt.obs$obj$par)
   expect_equal(obj$fn(), opt.obs$obj$fn())
   expect_equal(obj$gr(), opt.obs$obj$gr())
@@ -37,8 +41,10 @@ test_that("test fit.tmb, run.model = TRUE, sdreport = FALSE", {
 test_that("test fit.tmb, run_model = TRUE, sdreport = TRUE", {
   rep.exp <- obj$report()
   sdr <- sdreport(obj)
-  opt.obs <- fit.tmb(args, control = list(run.model = TRUE, 
-                                          do.sdreport = TRUE))
+  opt.obs <- fit.tmb(args, control = list(
+    run.model = TRUE,
+    do.sdreport = TRUE
+  ))
   expect_equal(obj$par, opt.obs$obj$par)
   expect_equal(obj$fn(), opt.obs$obj$fn())
   expect_equal(obj$gr(), opt.obs$obj$gr())
@@ -46,7 +52,6 @@ test_that("test fit.tmb, run_model = TRUE, sdreport = TRUE", {
   expect_equal(rep.exp, opt.obs$report)
   expect_equal(sdr, opt.obs$sdr)
   expect_equal(c("obj", "opt", "report", "sdr"), names(opt.obs))
-  
 })
 
 context("test fixStruct.lookup")
@@ -66,9 +71,10 @@ context("test skewness")
 test_that("test skewness", {
   set.seed(123)
   alpha.seq <- c(0.1, 1, 2, 5)
-  for(a in seq_along(alpha.seq)){
-    expect_equal(2 / sqrt(alpha.seq[a]), 
-                 mean(replicate(1000, skewness(rgamma(10000,alpha.seq[a],1)))), 
-                 tolerance = 0.01)
+  for (a in seq_along(alpha.seq)) {
+    expect_equal(2 / sqrt(alpha.seq[a]),
+      mean(replicate(1000, skewness(rgamma(10000, alpha.seq[a], 1)))),
+      tolerance = 0.01
+    )
   }
 })

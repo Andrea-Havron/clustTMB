@@ -42,11 +42,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   X.g <- subset(Data$Xg, select = colnames(Data$Xg) != ("(Intercept)"))
   X.d <- subset(Data$Xd, select = colnames(Data$Xd) != ("(Intercept)"))
   gate.mod <- exp.mod <- FALSE
-  if (ncol(X.g) > 0){
+  if (ncol(X.g) > 0) {
     gate.mod <- TRUE
     y <- cbind(y, X.g)
-  } 
-  if (ncol(X.d) > 0){
+  }
+  if (ncol(X.d) > 0) {
     exp.mod <- TRUE
     y <- cbind(y, X.d)
   }
@@ -60,7 +60,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   classify <- genInitMethods(n.g, n.i, n.j, control, y)
   Class <- unmap(classify)
   pi.init <- apply(Class, 2, sum) / n.i
-  
+
   # setup ParList
   ParList <- list(
     betag = matrix(0, n.k.g, (n.g - 1)),
@@ -110,11 +110,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 
   # Set initial values for kappa and tau if n.r provided
   if (Data$reStruct[1, 1] > 2 & !is.null(dim.list$n.r.g)) {
-      ParList$ln_kappag <- rep(log(sqrt(8) / (dim.list$n.r.g / 2)), (n.g - 1))
+    ParList$ln_kappag <- rep(log(sqrt(8) / (dim.list$n.r.g / 2)), (n.g - 1))
   }
   if (Data$reStruct[2, 1] > 2 & !is.null(dim.list$n.r.e)) {
-      ParList$ln_kappad <- matrix(log(sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
-      ParList$ln_taud <- matrix(1 / (2 * sqrt(pi) * sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
+    ParList$ln_kappad <- matrix(log(sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
+    ParList$ln_taud <- matrix(1 / (2 * sqrt(pi) * sqrt(8) / (dim.list$n.r.e / 2)), n.j, n.g)
   }
 
   # re-intitiate data for initial value estimation
@@ -128,29 +128,29 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   if (exp.mod & control$exp.init$mahala) {
     Class <- run.mahala(Class, as.matrix(y), as.matrix(X.d))
   }
-  if(exp.mod & any(apply(Class, 2, sum) == 0)){
+  if (exp.mod & any(apply(Class, 2, sum) == 0)) {
     stop("initalization method results in an empty or unit cluster which is not suitable when intializing the expert model")
   }
 
-  #Set initial values in ParList
+  # Set initial values in ParList
   for (g in 1:n.g) {
     for (j in 1:n.j) {
-      #Subset data by cluster and column
+      # Subset data by cluster and column
       y.sub <- y[Class[, g] == 1, j]
       Stats <- set.MuVarPow(Class[, g], y.sub, exp.mod, X.d, family)
       mu.init <- Stats$mu_init
       var.init <- Stats$var_init
       power.init <- Stats$power_init
-      if(exp.mod){
+      if (exp.mod) {
         res.mat[Class[, g] == 1, j] <- Stats$residuals
       }
-      
+
       Inits <- set.BetaTheta(Data, Stats)
       ParList$betad[, j, g] <- Inits$betad
       ParList$theta[j, g] <- Inits$theta
       ParList$thetaf[j, g] <- Inits$thetaf
     }
-    
+
     y.mat <- y[Class[, g] == 1, ]
     res <- res.mat[Class[, g] == 1, ]
 
@@ -161,22 +161,21 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
       }
       # Apply correction if NA in cor.mat
       cor.mat <- cormat.correction(cor.mat, y.mat, n.j)
-   
+
       corvec <- cor.mat[lower.tri(cor.mat)]
-      
+
       Loadings <- set.Loadings(Data, cor.mat, corvec, dim.list)
       ParList$logit_corr_fix[, g] <- Loadings$logit_corr_fix
       ParList$ld_rand[, g] <- Loadings$ld_rand
       ParList$ld_sp[, g] <- Loadings$ld_sp
     }
-    
   } # end g loop
 
   gen.init <- list(parms = ParList, class = classify)
   return(gen.init)
 }
 
-#genInit helper functions
+# genInit helper functions
 
 #' Apply classification method dependent on init.method
 #'
@@ -189,30 +188,29 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 #' @return classification vector
 #' @noRd
 genInitMethods <- function(n.g, n.i, n.j,
-                           control, y){
+                           control, y) {
   # Apply classification method
   if (control$init.method == "random") {
     classify <- sample(1:n.g, n.i, replace = TRUE)
   }
-  
+
   if (control$init.method == "quantile") {
     classify <- mc.qclass(y, as.numeric(n.g))
   }
-  
+
   if (control$init.method == "hc") {
     classify <- as.vector(hclass(
       hc(y,
-         modelName = control$hc.options$modelName,
-         use = control$hc.options$use
+        modelName = control$hc.options$modelName,
+        use = control$hc.options$use
       ), n.g
     ))
-    
   }
-  
+
   if (control$init.method == "kmeans") {
     classify <- cluster::pam(y, k = n.g)$clustering
   }
-  
+
   if (control$init.method == "mixed") {
     tmp.pa <- matrix(NA, n.i, n.j)
     y1 <- as.data.frame(matrix(NA, n.i, n.j))
@@ -221,8 +219,8 @@ genInitMethods <- function(n.g, n.i, n.j,
       y1[, j] <- as.factor(tmp.pa[, j])
     }
     y <- data.frame(cbind(y1, y))
-    
-    
+
+
     if (control$mix.method != "kproto") {
       diss <- cluster::daisy(y, metric = "gower")
       if (control$mix.method == "Gower kmeans") {
@@ -235,17 +233,15 @@ genInitMethods <- function(n.g, n.i, n.j,
       classify <- kproto(y, n.g, iter.max = 1000, nstart = 100, verbose = FALSE)$cluster
     }
   }
-  
+
   if (control$init.method == "user") {
     classify <- control$user.class
     if (length(unique(classify)) != n.g) {
       stop("Number of unique classes does not equal number of clusters specified in model")
     }
-    
   }
-  
+
   return(classify)
-  
 }
 
 #' Reset defaults based on family, dimension, and expert/gating models
@@ -258,7 +254,7 @@ genInitMethods <- function(n.g, n.i, n.j,
 #'
 #' @return list of options for setting up initial classification values
 #' @noRd
-reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
+reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j) {
   if (fam == 700) {
     if (control$init.method != "mixed") {
       if (is.element("init.method", control$defaults)) {
@@ -296,10 +292,9 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j){
 #'
 #' @return List of initial values for mu, var, and power
 #' @noRd
-set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
-  
+set.MuVarPow <- function(Class., ysub, expmod, Xd, family.) {
   out <- list(mu_init = 0.01, var_init = 0.01, power_init = 1.05, residuals = NA)
-  
+
   if (expmod) {
     xsub <- Xd[Class. == 1, ]
     mod <- glm(ysub ~ xsub, family = family.)
@@ -308,12 +303,12 @@ set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
     out$mu_init <- coeff
     out$residuals <- mod$residuals
     out$var_init <- var(mod$residuals)
-  } 
-  if (!expmod){
+  }
+  if (!expmod) {
     if (sum(ysub) != 0) {
       out$mu_init <- mean(ysub)
       out$var_init <- var(ysub)
-      out$power_init <- skewness(ysub) * 
+      out$power_init <- skewness(ysub) *
         out$mu_init / sqrt(out$var_init) # Clark and Thayer, 2004
     }
   }
@@ -327,12 +322,13 @@ set.MuVarPow <- function(Class., ysub, expmod, Xd, family.){
 #'
 #' @return List of initial values for betad, theta, and thetaf
 #' @noRd
-set.BetaTheta <- function(Data., inits){
-  
-  out <- list(betad = inits$mu_init, 
-              theta = log(inits$var_init),
-              thetaf = inits$power_init)
-  
+set.BetaTheta <- function(Data., inits) {
+  out <- list(
+    betad = inits$mu_init,
+    theta = log(inits$var_init),
+    thetaf = inits$power_init
+  )
+
   if (Data.$family == 700) { # Tweedie
     out$betad <- log(inits$mu_init) ## ! ideally this will be based on link function not family
     if (inits$power_init >= 2) inits$power_init <- 1.95
@@ -344,9 +340,8 @@ set.BetaTheta <- function(Data., inits){
   if (Data.$family == 300) {
     out$theta <- log(inits$mu_init^2 / inits$var_init)
   }
-  
+
   return(out)
-  
 }
 
 #' Set initial values for loadings parameters
@@ -358,12 +353,13 @@ set.BetaTheta <- function(Data., inits){
 #'
 #' @return List of initial loadings parameters
 #' @noRd
-set.Loadings <- function(Data., cormat., corvec., dimlist.){
-  
-  out <- list(logit_corr_fix = rep(0, dimlist.$nl.fix),
-              ld_rand = rep(0, dimlist.$nl.rand),
-              ld_sp = rep(0, dimlist.$nl.sp))
-  
+set.Loadings <- function(Data., cormat., corvec., dimlist.) {
+  out <- list(
+    logit_corr_fix = rep(0, dimlist.$nl.fix),
+    ld_rand = rep(0, dimlist.$nl.rand),
+    ld_sp = rep(0, dimlist.$nl.sp)
+  )
+
   # L.mat <- t(chol(cormat))
   if (Data.$fixStruct == 30) {
     #   off.diag <- c()
@@ -378,7 +374,7 @@ set.Loadings <- function(Data., cormat., corvec., dimlist.){
     #   }
     out$logit_corr_fix <- log((corvec. + 1) / (1 - corvec.)) # off.diag
   }
-  
+
   if (sum(Data.$rrStruct) > 0) {
     L.mat <- t(chol(cormat.))
     keep <- lower.tri(L.mat, diag = TRUE)
@@ -398,9 +394,8 @@ set.Loadings <- function(Data., cormat., corvec., dimlist.){
       out$ld_sp <- out$ld_sp / 2
     }
   }
-  
+
   return(out)
-  
 }
 
 #' Apply correction if NA in correlation matrix of observation subset
@@ -411,14 +406,14 @@ set.Loadings <- function(Data., cormat., corvec., dimlist.){
 #'
 #' @return Corrected correlation matrix without NA values
 #' @noRd
-cormat.correction <- function(cormat., ymat., nj.){
+cormat.correction <- function(cormat., ymat., nj.) {
   if (sum(is.na(cormat.)) > 0) {
     idx.na <- which(is.na(cormat.), arr.ind = TRUE)
     tmp.pa <- matrix(0, nrow(ymat.), nj.)
     for (j in 1:nj.) {
       tmp.pa[ymat.[, j] > 0, j] <- 1
     }
-    
+
     for (n in 1:nrow(idx.na)) {
       # Set up confusion matrix between 2 columns with NA correlation
       tmp.confusion <- cbind(
@@ -438,10 +433,10 @@ cormat.correction <- function(cormat., ymat., nj.){
       if (denom == 0) denom <- 1
       cormat.[idx.na[n, 2], idx.na[n, 1]] <-
         (tmp.confusion[1, 1] * tmp.confusion[2, 2] - tmp.confusion[1, 2] * tmp.confusion[2, 1]) /
-        sqrt(denom)
+          sqrt(denom)
     }
   }
-  
+
   return(cormat.)
 }
 
@@ -497,89 +492,104 @@ mc.qclass <- function(x, k) {
 init.options <- function(init.method = "hc",
                          hc.options = list(
                            modelName = "VVV",
-                           use = "SVD"),
+                           use = "SVD"
+                         ),
                          exp.init = list(mahala = TRUE),
                          mix.method = "Gower kmeans",
                          user.class = integer()) {
-  
-  #track defaults
+
+  # track defaults
   defaults <- character()
   if (missing(init.method)) defaults <- c(defaults, "init.method")
   if (missing(hc.options)) defaults <- c(defaults, "hcName", "hcUse")
   if (missing(mix.method)) defaults <- c(defaults, "mix.method")
-  
-  #match up unnamed list to correct names
+
+  # match up unnamed list to correct names
   hc.options <- name.hc.options(hc.options)
-  #assign hc.option defaults if one missing
-  if ( !("modelName" %in% names(hc.options)) ){
+  # assign hc.option defaults if one missing
+  if (!("modelName" %in% names(hc.options))) {
     defaults <- c(defaults, "hcName")
   }
-  if ( !("use" %in% names(hc.options)) ){
+  if (!("use" %in% names(hc.options))) {
     defaults <- c(defaults, "hcUse")
   }
-  
-  #convert user.class to integer
+
+  # convert user.class to integer
   user.class <- as.integer(as.factor(user.class))
-  
-  #Set up S3 classes
-  
-  new_init <- function(method,names){
+
+  # Set up S3 classes
+
+  new_init <- function(method, names) {
     stopifnot(is.character(method))
     stopifnot(is.character(names))
     method <- match.arg(method, names)
-    
+
     structure(method,
-              class = "Init")
+      class = "Init"
+    )
   }
-  
-  hc_init <- function(methods = list()){
-    
+
+  hc_init <- function(methods = list()) {
     stopifnot(is.list(methods))
     stopifnot(length(methods) <= 2)
-    
+
     methods <- list(
-      modelName = match.arg(methods$modelName,  
-                            c( "VVV", "EII", "EEE", 
-                               "VII", "V", "E")),
-      use = match.arg(methods$use, 
-                      c("SVD", "VARS", "STD", "SPH",
-                        "PCS", "PCR", "RND"))
+      modelName = match.arg(
+        methods$modelName,
+        c(
+          "VVV", "EII", "EEE",
+          "VII", "V", "E"
+        )
+      ),
+      use = match.arg(
+        methods$use,
+        c(
+          "SVD", "VARS", "STD", "SPH",
+          "PCS", "PCR", "RND"
+        )
+      )
     )
-    
+
     structure(methods,
-              class = "HcInit")
-    
+      class = "HcInit"
+    )
   }
-  
+
   validate_user_class <- function(user,
-                                  method){
-    if( length(user)==0 & method == "user" ){
+                                  method) {
+    if (length(user) == 0 & method == "user") {
       stop("user.class must be a vector of classification characters or integers when 'init.method = user'")
     }
     stopifnot(is.integer(user))
   }
-  
-  user_class <- function(user, method = character()){
-    
+
+  user_class <- function(user, method = character()) {
     validate_user_class(user, method)
-    
+
     structure(user,
-              class = "user")
+      class = "user"
+    )
   }
-  
-  #Create S3 objects
-  new_init_method <- new_init(method = init.method, 
-                              names = c("hc", "quantile", "random", "mclust", 
-                                        "kmeans", "mixed", "user"))
-  
-  new_mix_method <- new_init(method = mix.method,
-                             names = c("Gower kmeans", "Gower hclust", "kproto"))
-  
-  new_hc_init = hc_init(methods = hc.options)
-  
+
+  # Create S3 objects
+  new_init_method <- new_init(
+    method = init.method,
+    names = c(
+      "hc", "quantile", "random", "mclust",
+      "kmeans", "mixed", "user"
+    )
+  )
+
+  new_mix_method <- new_init(
+    method = mix.method,
+    names = c("Gower kmeans", "Gower hclust", "kproto")
+  )
+
+  new_hc_init <- hc_init(methods = hc.options)
+
   new_user_class <- user_class(user = user.class, method = init.method)
-  
-  
+
+
   out <- list(
     init.method = new_init_method[1],
     hc.options = new_hc_init[1:2],
@@ -589,7 +599,7 @@ init.options <- function(init.method = "hc",
     defaults = defaults
   )
   class(out) <- "InitOptions"
-  
+
   return(out)
 }
 
@@ -599,18 +609,18 @@ init.options <- function(init.method = "hc",
 #'
 #' @return named list of hc.option methods
 #' @noRd
-name.hc.options <- function(methods){
-  modelName <- c( "VVV", "EII", "EEE",  "VII", "V", "E")
-  use <- c("SVD", "VARS", "STD", "SPH",  "PCS", "PCR", "RND")
-  
-  #match up unnamed list to correct names
+name.hc.options <- function(methods) {
+  modelName <- c("VVV", "EII", "EEE", "VII", "V", "E")
+  use <- c("SVD", "VARS", "STD", "SPH", "PCS", "PCR", "RND")
+
+  # match up unnamed list to correct names
   nms <- names(methods)
-  if(is.null(nms) & length(methods) > 0){
-    for(i in 1:length(methods)){
-      if(methods[[i]] %in% modelName){
+  if (is.null(nms) & length(methods) > 0) {
+    for (i in 1:length(methods)) {
+      if (methods[[i]] %in% modelName) {
         names(methods)[i] <- "modelName"
       }
-      if(methods[[i]] %in% use){
+      if (methods[[i]] %in% use) {
         names(methods)[i] <- "use"
       }
     }

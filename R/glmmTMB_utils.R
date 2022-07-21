@@ -20,14 +20,14 @@ findReTrmClasses <- function() {
 }
 
 # toLang <- function(x) parse(text=x)[[1]]
-# 
+#
 # ## expandGrpVar(quote(x*y))
 # ## expandGrpVar(quote(x/y))
 # expandGrpVar <- function (f) {
 #   form <- as.formula(makeOp(f, quote(`~`)))
 #   mm <- terms(form)
 #   tl <- attr(mm, "term.labels")
-#   switch_order <- function(x) paste(rev(unlist(strsplit(x, 
+#   switch_order <- function(x) paste(rev(unlist(strsplit(x,
 #                                                         ":"))), collapse = ":")
 #   if (inForm(f, quote(`/`))) {
 #     tl <- unname(vapply(tl, switch_order, character(1)))
@@ -36,7 +36,7 @@ findReTrmClasses <- function() {
 #   res <- lapply(tl, toLang)
 #   return(res)
 # }
-# 
+#
 # ##' expand interactions/combinations of grouping variables
 # ##'
 # ##' Modeled after lme4:::expandSlash, by Doug Bates
@@ -85,7 +85,7 @@ findReTrmClasses <- function() {
 #     } ## loop over bb
 #   }
 # }
-# 
+#
 # ##' test whether a formula contains a particular element?
 # ##' @rdname formfuns
 # ##' @examples
@@ -117,7 +117,7 @@ findReTrmClasses <- function() {
 ##'    it is of the form (xx|gg), then convert it to the default
 ##'    special type; we won't allow pathological cases like
 ##'    ((xx|gg))
-##'    
+##'
 ##' @importFrom glmmTMB expandAllGrpVar
 ##' @importFrom utils head
 ##' @examples
@@ -127,38 +127,42 @@ findReTrmClasses <- function() {
 ##' findbars_x(~ 1 + (1|Subject))
 ##' findbars_x(~ (1||Subject))
 ##' findbars_x(~ (1|Subject))
-##' findbars_x(~ 1 + x) 
+##' findbars_x(~ 1 + x)
 ##' @export
 findbars_x <- function(term,
-                       debug=FALSE,
-                       specials=character(0),
-                       default.special="norm"){#,
-                       #expand_doublevert_method = c("diag_special", "split")) {
-  
-  #expand_doublevert_method <- match.arg(expand_doublevert_method)
-  
+                       debug = FALSE,
+                       specials = character(0),
+                       default.special = "norm") { # ,
+  # expand_doublevert_method = c("diag_special", "split")) {
+
+  # expand_doublevert_method <- match.arg(expand_doublevert_method)
+
   ds <- if (is.null(default.special)) {
     NULL
   } else {
-    eval(substitute(as.name(foo),list(foo=default.special)))
+    eval(substitute(as.name(foo), list(foo = default.special)))
   }
-  
+
   ## base function
   ## defining internally in this way makes debugging slightly
   ## harder, but (1) allows easy propagation of the top-level
   ## arguments down the recursive chain; (2) allows the top-level
   ## expandAllGrpVar() operation (which also handles cases where
   ## a naked term rather than a list is returned)
-  
+
   fbx <- function(term) {
-    if (is.name(term) || !is.language(term)) return(NULL)
-    if (list(term[[1]]) %in% lapply(specials,as.name)) {
-      if (debug) cat("special: ",deparse(term),"\n")
+    if (is.name(term) || !is.language(term)) {
+      return(NULL)
+    }
+    if (list(term[[1]]) %in% lapply(specials, as.name)) {
+      if (debug) cat("special: ", deparse(term), "\n")
       return(term)
     }
-    if (head(term) == as.name('|')) {  ## found x | g
-      if (debug) cat("bar term:",deparse(term),"\n")
-      if (is.null(ds)) return(term)
+    if (head(term) == as.name("|")) { ## found x | g
+      if (debug) cat("bar term:", deparse(term), "\n")
+      if (is.null(ds)) {
+        return(term)
+      }
       return(makeOp(term, ds))
     }
     ## TODO: functionality not available in clustTMB yet
@@ -171,27 +175,30 @@ findbars_x <- function(term,
     #   if (expand_doublevert_method == "split") {
     #     ## need to return *multiple* elements
     #     return(lapply(expandDoubleVert(term), fbx))
-    #   } 
+    #   }
     #   stop("unknown doublevert method ", expand_doublevert_method)
     # }
-    if (head(term) == as.name("(")) {  ## found (...)
-      if (debug) cat("paren term:",deparse(term),"\n")
+    if (head(term) == as.name("(")) { ## found (...)
+      if (debug) cat("paren term:", deparse(term), "\n")
       return(fbx(term[[2]]))
     }
     stopifnot(is.call(term))
     if (length(term) == 2) {
       ## unary operator, decompose argument
-      if (debug) cat("unary operator:",deparse(term[[2]]),"\n")
+      if (debug) cat("unary operator:", deparse(term[[2]]), "\n")
       return(fbx(term[[2]]))
     }
     ## binary operator, decompose both arguments
-    if (debug) cat("binary operator:",deparse(term[[2]]),",",
-                   deparse(term[[3]]),"\n")
+    if (debug) {
+      cat(
+        "binary operator:", deparse(term[[2]]), ",",
+        deparse(term[[3]]), "\n"
+      )
+    }
     c(fbx(term[[2]]), fbx(term[[3]]))
   }
-  
+
   expandAllGrpVar(fbx(term))
-  
 }
 
 ##' Parse a formula into fixed formula and random effect terms,
@@ -221,39 +228,40 @@ findbars_x <- function(term,
 ##' splitForm(~x+y+(f|g)+cs(1|g)+cs(a|b,stuff))  ## complex special
 ##' splitForm(~(((x+y))))               ## lots of parentheses
 ##' splitForm(~1+rr(f|g,n=2))
-##' 
+##'
 ##' @importFrom glmmTMB expandAllGrpVar noSpecials
 ##'
 ##' @author Steve Walker
 ##' @importFrom lme4 nobars
 ##' @export
 splitForm <- function(formula,
-                      defaultTerm="norm",
-                      allowFixedOnly=TRUE,
-                      allowNoSpecials=TRUE,
-                      debug=FALSE) {
-  
+                      defaultTerm = "norm",
+                      allowFixedOnly = TRUE,
+                      allowNoSpecials = TRUE,
+                      debug = FALSE) {
+
   ## logic:
-  
+
   ## string for error message *if* specials not allowed
   ## (probably package-specific)
   noSpecialsAlt <- "lmer or glmer"
-  
+
   specials <- findReTrmClasses()
-  
+
   ## formula <- expandDoubleVerts(formula)
   ## split formula into separate
   ## random effects terms
   ## (including special terms)
-  
+
   fbxx <- findbars_x(formula, debug, specials)
   formSplits <- expandAllGrpVar(fbxx)
-  
-  if (length(formSplits)>0) {
-    formSplitID <- sapply(lapply(formSplits, "[[", 1), as.character)
+
+  if (length(formSplits) > 0) {
+    formSplitID <- vapply(lapply(formSplits, "[[", 1), 
+                          as.character, rep(" ", 1))
     # warn about terms without a
     # setReTrm method
-    
+
     parenTerm <- formSplitID == "("
     # capture additional arguments
     reTrmAddArgs <- lapply(formSplits, "[", -2)[!parenTerm]
@@ -264,27 +272,36 @@ splitForm <- function(formula,
     formSplitStan <- formSplits[parenTerm]
     # structured RE terms
     formSplitSpec <- formSplits[!parenTerm]
-    
+
     if (!allowNoSpecials) {
-      if(length(formSplitSpec) == 0) stop(
-        "no special covariance structures. ",
-        "please use ",noSpecialsAlt,
-        " or use findReTrmClasses() for available structures.")
+      if (length(formSplitSpec) == 0) {
+        stop(
+          "no special covariance structures. ",
+          "please use ", noSpecialsAlt,
+          " or use findReTrmClasses() for available structures."
+        )
+      }
     }
-    
-    reTrmFormulas <- c(lapply(formSplitStan, "[[", 2),
-                       lapply(formSplitSpec, "[[", 2))
+
+    reTrmFormulas <- c(
+      lapply(formSplitStan, "[[", 2),
+      lapply(formSplitSpec, "[[", 2)
+    )
     reTrmFormulas <- unlist(reTrmFormulas) # Fix me:: added for rr structure when it has n = 2, gives a list of list... quick fix
-    reTrmClasses <- c(rep(defaultTerm, length(formSplitStan)),
-                      sapply(lapply(formSplitSpec, "[[", 1), as.character))
+    reTrmClasses <- c(
+      rep(defaultTerm, length(formSplitStan)),
+      vapply(lapply(formSplitSpec, "[[", 1),
+             as.character, rep(" ", 1))
+    )
   } else {
     reTrmFormulas <- reTrmAddArgs <- reTrmClasses <- NULL
   }
   fixedFormula <- noSpecials(nobars(formula))
-  
-  list(fixedFormula  = fixedFormula,
-       reTrmFormulas = reTrmFormulas,
-       reTrmAddArgs  = reTrmAddArgs,
-       reTrmClasses  = reTrmClasses)
-}
 
+  list(
+    fixedFormula = fixedFormula,
+    reTrmFormulas = reTrmFormulas,
+    reTrmAddArgs = reTrmAddArgs,
+    reTrmClasses = reTrmClasses
+  )
+}

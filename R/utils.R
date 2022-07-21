@@ -182,7 +182,7 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
 #' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
-#' @examples 
+#' @examples
 #' fam <- tweedie()
 #' fam$family
 #' fam$link
@@ -198,7 +198,7 @@ tweedie <- function(link = "log") {
 #' @param link link function association with family
 #' @importFrom stats make.link
 #' @export
-#' @examples 
+#' @examples
 #' fam <- lognormal()
 #' fam$family
 #' fam$link
@@ -350,7 +350,7 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   Dat$link <- .valid_link[family[[2]]]
   Dat$loglike <- ll.method
   Dat$fixStruct <- fixStruct.lookup(fixStruct)
-  
+
   Dat$rrStruct <- rrStruct
   Dat$reStruct <- reStruct
 
@@ -366,27 +366,27 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
 #' @param dim.list Class object containing model dimensions
 #'
-#' @importFrom lme4 subbars 
+#' @importFrom lme4 subbars
 #'
 #' @return list vector containing random effects components of the model
 #' @noRd
-mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list){
+mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list) {
   expert.split <- splitForm(expertformula)
   expert.re.names <- expert.split$reTrmClasses
   gating.split <- splitForm(gatingformula)
   gating.re.names <- gating.split$reTrmClasses
-  
+
   if (("gmrf" %in% expert.re.names | "gmrfSpeedup" %in% expert.re.names) &
-      (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
+    (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
     stop("You have specified a spatal model and need to provide location or
           mesh data in the spatial.list argument")
   }
   if (("gmrf" %in% gating.re.names | "gmrfSpeedup" %in% gating.re.names) &
-      (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
+    (is.null(spatial.list$loc) & is.null(spatial.list$mesh))) {
     stop("You have specified a spatal model and need to provide location or
           mesh data in the spatial.list argument")
   }
-  
+
   specials <- c("ar1", "gmrf", "gmrfSpeedup")
   if (length(expert.re.names) > 0) {
     for (i in 1:length(expert.re.names)) {
@@ -402,7 +402,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
       }
     }
   }
-  
+
   if ("ar1" %in% expert.re.names) {
     idx <- which(expert.re.names == "ar1")
     ar1.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
@@ -411,7 +411,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   } else {
     expert.time <- rep(1, dim.list$n.i)
   }
- 
+
   ## TODO: section below unused
   # if ("ar1" %in% gating.re.names) {
   #   idx <- which(gating.re.names == "ar1")
@@ -420,7 +420,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   # } else {
   #   gating.time <- rep(1, dim.list$n.i)
   # }
-  # 
+  #
   # if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
   #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
   #   expertdata$loc <- as.numeric(factor())
@@ -430,7 +430,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   # } else {
   #   expert.gmrf <- NA
   # }
-  # 
+  #
   # if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
   #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
   #   gatingdata$loc <- as.numeric(factor(loc.id))
@@ -441,12 +441,12 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   #   gating.gmrf <- NA
   # }
   ### end of unused section
-  
+
   ## TODO: expert/gating .ar1 and .gmrf provide information about interactions between space/time
   ## TODO: Spatio-temporal interactions not implemented yet!!
   reStruct <- matrix(0, 2, 3)
   random.names <- c()
-  
+
   for (i in seq_along(gating.re.names)) {
     if (gating.re.names[i] == "gmrf") {
       reStruct[1, 1] <- 3
@@ -594,7 +594,7 @@ parm.lookup <- function() {
 #' @return skewness value of x
 #' @export
 #' @examples
-#' skewness(rgamma(100,1,1))
+#' skewness(rgamma(100, 1, 1))
 skewness <- function(x) {
   n <- length(x)
   x <- x - mean(x)
@@ -606,7 +606,7 @@ skewness <- function(x) {
 #' Check if INLA installed (i.e., not on CRAN)
 #'
 #' @export
-#' @examples 
+#' @examples
 #' inla_installed()
 inla_installed <- function() {
   requireNamespace("INLA", quietly = TRUE)
@@ -618,16 +618,22 @@ inla_installed <- function() {
 #' @param fixStruct user input character vector
 #'
 #' @return numeric value associated with character vector
-#' @examples 
+#' @examples
 #' fixStruct.lookup("E")
-fixStruct.lookup <- function(fixStruct){
-  df <- data.frame(fixStruct =
-                     c("E", "V", "EII",
-                       "VII", "EEI", "VVI",
-                       "VVV", "EEE"),
-                   value = 
-                     c(10, 10, 20, 20,
-                       20, 20, 30, 30))
-  out <- df[df$fixStruct == fixStruct,]$value
+fixStruct.lookup <- function(fixStruct) {
+  df <- data.frame(
+    fixStruct =
+      c(
+        "E", "V", "EII",
+        "VII", "EEI", "VVI",
+        "VVV", "EEE"
+      ),
+    value =
+      c(
+        10, 10, 20, 20,
+        20, 20, 30, 30
+      )
+  )
+  out <- df[df$fixStruct == fixStruct, ]$value
   return(out)
 }

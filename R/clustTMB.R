@@ -57,10 +57,10 @@ clustTMB <- function(response = NULL,
                        gating.pred.names = NULL
                      ),
                      control = run.options()) {
-  
+
   # set str of response to matrix
   response <- as.matrix(response)
-  
+
   # initialize dim.list to keep track of data/parameter dimensions
   dim.list <- list(
     n.i = nrow(response), n.j = ncol(response), n.t = NULL,
@@ -68,7 +68,7 @@ clustTMB <- function(response = NULL,
     n.r.e = spatial.list$init.range$expert.range, n.v = NULL
   )
   dim.list$nl.fix <- ifelse(dim.list$n.j > 1, (dim.list$n.j^2 - dim.list$n.j) / 2, 1)
-   
+
   # exception-handling
   if (is.null(covariance.structure)) {
     if (dim.list$n.j == 1) {
@@ -138,22 +138,22 @@ clustTMB <- function(response = NULL,
   reStruct <- reOut$reStruct
   random.names <- reOut$random.names
   expert.time <- reOut$expert.time
-  
+
   # update dim.list
   ## TODO: develop time component of .cpp to distinguish between gating/expert.
   dim.list$n.t <- length(unique(expert.time))
-  
+
   # remove intercept from gatingformula when random effects specified
   if (sum(reStruct[1, ] > 0) & attributes(terms(gatingformula))$intercept == 1) {
     gatingformula <- update(gatingformula, ~ . - 1)
     warning("intercept removed from gatingformula when random effects specified")
   }
-  
+
   # set up input expert/gating covariate data
   expert.fix.dat <- model.matrix(nobars(expertformula), expertdata)
   gating.fix.dat <- model.matrix(nobars(gatingformula), gatingdata)
-  
-  # 
+
+  #
   if ((length(dimnames(expert.fix.dat)[[2]]) == 1) &
     dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
     expert.fix.dat <- matrix(1, dim.list$n.i, 1, dimnames = list(NULL, "(Intercept)"))
@@ -296,7 +296,7 @@ clustTMB <- function(response = NULL,
 #'
 #' @return list
 #' @export
-#' @examples 
+#' @examples
 #' run.options()
 run.options <- function(check.input = NULL, run.model = NULL,
                         do.sdreport = NULL) {

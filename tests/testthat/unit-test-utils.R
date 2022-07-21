@@ -3,55 +3,25 @@ stopifnot(
   require("clustTMB")
 )
 
-context("test fit.tmb")
-TMB::runExample("simple")
-args <- list(
-  data = list(x = x, B = B, A = A),
-  parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
-  random = "u",
-  DLL = "simple",
-  silent = TRUE
-)
+mkFac <- function(d, f = NA) {
+  ans <- factor(f)
+  if (length(d) > 1) {
+    dim(ans) <- d
+  }
+  return(ans)
+}
 
-obj.exp <- do.call(TMB::MakeADFun, args)
-test_that("test fit.tmb, run.model = FALSE", {
-  obj.obs <- fit.tmb(args, control = list(run.model = FALSE))
-  expect_equal(obj.exp$par, obj.obs$obj$par)
-  expect_equal(obj.exp$fn(), obj.obs$obj$fn())
-  expect_equal(obj.exp$gr(), obj.obs$obj$gr())
-  rep.exp <- obj.exp$report()
-  expect_equal(rep.exp, obj.obs$init.report)
-  expect_equal(c("obj", "inits", "init.report"), names(obj.obs))
-})
-
-test_that("test fit.tmb, run.model = TRUE, sdreport = FALSE", {
-  opt.obs <- fit.tmb(args, control = list(
-    run.model = TRUE,
-    do.sdreport = FALSE
-  ))
-  expect_equal(obj$par, opt.obs$obj$par)
-  expect_equal(obj$fn(), opt.obs$obj$fn())
-  expect_equal(obj$gr(), opt.obs$obj$gr())
-  expect_equal(opt, opt.obs$opt)
-  rep.exp <- obj$report()
-  expect_equal(rep.exp, opt.obs$report)
-  expect_equal(c("obj", "opt", "report"), names(opt.obs))
-})
-
-test_that("test fit.tmb, run_model = TRUE, sdreport = TRUE", {
-  rep.exp <- obj$report()
-  sdr <- sdreport(obj)
-  opt.obs <- fit.tmb(args, control = list(
-    run.model = TRUE,
-    do.sdreport = TRUE
-  ))
-  expect_equal(obj$par, opt.obs$obj$par)
-  expect_equal(obj$fn(), opt.obs$obj$fn())
-  expect_equal(obj$gr(), opt.obs$obj$gr())
-  expect_equal(opt, opt.obs$opt)
-  expect_equal(rep.exp, opt.obs$report)
-  expect_equal(sdr, opt.obs$sdr)
-  expect_equal(c("obj", "opt", "report", "sdr"), names(opt.obs))
+context("test mkFac")
+test_that("test mkFac", {
+  d <- c(3,3)
+  map.vec <- rep(factor(NA), d[1]*d[2])
+  map.dim <- map.vec
+  dim(map.dim) <- d
+  expect_equal(map.dim, mkFac(d, map.vec))
+  
+  d <- 3
+  map.vec <- rep(factor(NA), d)
+  expect_equal(map.vec, mkFac(d, map.vec))
 })
 
 context("test fixStruct.lookup")

@@ -40,13 +40,14 @@ $$\omega_{i} \sim GMRF(Q[\kappa, \tau])$$
 Prior to fitting a spatial cluster model with clustTMB, users need to set up the constrained Delaunay Triangulation network using INLA. For guidance on setting up an appropriate mesh, see [Triangulation details and examples](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh) and [Tools for mesh assessment](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) from 
 ```{r spatial example, include = FALSE}
 library(clustTMB)
-library(sp)
+#refactor from sp to sf when meuse dataset available through sf
+library(sp) #currently require sp to load meuse dataset
 data("meuse")
 ```
 
 ```{r run INLA meshbuilder, eval = FALSE}
 library(clustTMB)
-library(sp)
+library(sp) 
 library(INLA)
 data("meuse")
 meshbuilder() #launches INLA mesh shiny app
@@ -71,12 +72,12 @@ ggplot() + gg(meuse.mesh) +
 
 Coordinates are converted to a spatial point dataframe and read into the clustTMB model, along with the mesh, using the spatial.list argument. The gating formula is specified using the gmrf() command:
 ```{r set up model}
-  sp::coordinates(Loc) <- ~ x*y
- mod <- clustTMB(response = meuse[,3:6], 
-                     family = lognormal(link = 'identity'),
-                     gatingformula =  ~ gmrf(0 + 1|loc),
-                     G=4, covariance.structure = 'VVV', 
-                     spatial.list = list(loc = Loc, mesh = meuse.mesh)
+sp::coordinates(Loc) <- ~ x*y
+mod <- clustTMB(response = meuse[,3:6], 
+                 family = lognormal(link = 'identity'),
+                 gatingformula =  ~ gmrf(0 + 1|loc),
+                 G=4, covariance.structure = 'VVV', 
+                 spatial.list = list(loc = Loc, mesh = meuse.mesh)
 )
 ```
 

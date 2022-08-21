@@ -3,14 +3,6 @@ stopifnot(
   require("clustTMB")
 )
 
-mkFac <- function(d, f = NA) {
-  ans <- factor(f)
-  if (length(d) > 1) {
-    dim(ans) <- d
-  }
-  return(ans)
-}
-
 context("test mkFac")
 test_that("test mkFac", {
   d <- c(3,3)
@@ -22,6 +14,18 @@ test_that("test mkFac", {
   d <- 3
   map.vec <- rep(factor(NA), d)
   expect_equal(map.vec, mkFac(d, map.vec))
+})
+
+context("test families")
+test_that("tweedie",{
+  f <- tweedie()
+  expect_equal("tweedie", f$family)
+  expect_equal("log", f$link)
+})
+test_that("lognormal",{
+  f <- lognormal()
+  expect_equal("lognormal", f$family)
+  expect_equal("identity", f$link)
 })
 
 context("test fixStruct.lookup")

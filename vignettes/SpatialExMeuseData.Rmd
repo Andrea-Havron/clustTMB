@@ -1,0 +1,244 @@
+---
+title: "Meuse Data Example"
+output: bookdown::html_document2
+vignette: >
+  %\VignetteIndexEntry{Meuse Data Example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+```
+
+This vignette provides examples of setting up non-spatial and spatial finite mixture models (FMMs) using clustTMB.
+
+# Fitting clustTMB models
+
+## Data Overview
+
+The meuse data set from the sp library (Pebesma and Bivand, 2005) consists of 155 observations, 4 response variables, location data, and 8 covariates. The response involves four heavy metals measured to monitor pollution levels in the top soil of the Meuse river floodplain, Netherlands (Fig. \@ref(fig:sample), Rikken and van Rijn, 1993). The heavy metal data exhibit lognormality (Fig. \@ref(fig:pairs-expl)), allowing for a comparison between the Gaussian and lognormal distributions in addition to an FMM with and without spatial structure influencing the cluster probability.
+
+```{r, echo = FALSE, results='hide', message=FALSE, warning=FALSE}
+library(GGally)
+#refactor from sp to sf when meuse dataset available through sf
+library(ggspatial)
+library(spData)
+library(sf)
+library(cowplot)
+library(giscoR)
+library(wesanderson)
+library(magrittr)
+library(kableExtra)
+library(knitr)
+library(ggplot2)
+library(inlabru)
+library(INLA)
+```
+
+```{r}
+#load data
+library(sp)
+data("meuse")
+data("meuse.riv")
+data("meuse.grid")
+```
+
+
+```{r, sample, fig.height = 4, fig.width = 6, fig.cap = "Sample locations of heavy metal concentration levels (ppm) of four metals in the topsoil of the Meuse river floodplain, Netherlands.",  echo = FALSE}
+#map study area
+#read in and project spatial data
+m.river <- as.data.frame(meuse.riv[meuse.riv[,2]>329000 & meuse.riv[,2]<334200,])
+colnames(m.river) <- c('x','y')
+m.river <- sf::st_as_sf(m.river, 
+                       coords = c("x","y"),
+                       crs = 28992)  %>%
+  dplyr::summarise(geometry = sf::st_combine(geometry)) %>%
+  sf::st_cast("POLYGON")
+
+m.grid <- sf::st_as_sf(meuse.grid, 
+                       coords = c("x","y"),
+                       crs = 28992)
+m.data <- sf::st_as_sf(meuse, 
+                       coords = c("x","y"),
+                       crs = 28992)
+
+mRiv <- sf::st_transform(m.river, crs = 4326)
+mGrid <- sf::st_transform(m.grid, crs = 4326)
+mDat <- sf::st_transform(m.data, crs = 4326)
+
+#create map breaks and labels
+xbreaks <- seq(5.72,5.76,.01)
+xlabels <- unlist(sapply(xbreaks, function(x)  paste(x, "°E")))
+ybreaks <- seq(50.95, 51.00,.01)
+ylabels <- unlist(sapply(ybreaks, function(x) paste(x, "°N")))
+# create reference map
+Europe <- giscoR::gisco_get_countries(region = "Europe")
+r.bb <- sf::st_bbox(mRiv)
+r.bb[1] <- r.bb[1] - 0.5
+r.bb[2] <- r.bb[2] - 0.3
+r.bb[3] <- r.bb[3] + 0.5
+r.bb[4] <- r.bb[4] + 0.3
+rbox <- sf::st_as_sfc(r.bb)
+ggm1 <- ggplot2::ggplot() +  
+  ggplot2::geom_sf(data = Europe, fill = "cornsilk") +
+  ggplot2::geom_sf(data = rbox, fill = NA, color = "red", size=1.2) +
+  coord_sf(
+    xlim = c(-5, 20),
+    ylim = c(46.5, 56.5)) + theme_void() + 
+  theme(
+    panel.background = element_rect(fill = "#c9f4fe"),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 1.5
+    ))
+
+#create site map
+ggm2 <- ggplot2::ggplot() +
+  ggplot2::geom_sf(data = mDat) +
+  theme_classic() + 
+  geom_sf(data = mRiv, fill = 'lightblue') +
+  ggspatial::annotation_north_arrow(which_north = "grid", height = unit(1, "cm"), width = unit(1, "cm"),   
+                         pad_y = unit(4, "cm"))
+cowplot::ggdraw() + cowplot::draw_plot(ggm2) + cowplot::draw_plot(ggm1, x = .18, y = 0.7, width = 0.35, height = 0.23)
+```
+
+```{r, pairs-expl, fig.height = 4, fig.width = 6,  fig.cap = "Pairs plots of the concentration levels (ppm) of four heavy metals measured in the topsoil of the Meuse river floodplain, Netherlands.", echo = FALSE}
+
+#Visualize heavy metal data
+ggpairs(meuse[,3:6])
+```
+
+## Simple FMM
+The simple Gaussian FMM can be fit using the following code:
+```{r, warning = FALSE}
+library(clustTMB)
+mod.gauss <- clustTMB( response = meuse[,3:6], G = 3, covariance.structure = "VVV" )
+```
+
+Specifying a lognormal distribution is implemented using the *family* and *link* specification:
+```{r}
+mod.ln <- clustTMB( response = meuse[,3:6],
+                    family = lognormal(link = "identity"),
+                    G = 3, covariance.structure = "VVV" )
+```
+
+## Spatial FMM
+The inclusion of spatial random effects in the expectation of the cluster probability in clustTMB depends on the SPDE-FEM approximation to a spatial Gaussian Markov Random Field (GMRF) introduced by the package, [R-INLA](https://www.r-inla.org/). See [Spatial GMRF] and [Gating Network] for details on these clustTMB formulations.
+
+### Setting up the spatial mesh
+The spatial model in clustTMB first requires the definition of the spatial mesh using INLA. This mesh defines the discretization of the continuous space using a constrained Delaunay triangulation. For details on building the spatial mesh, see [Krainski et al., 2021, Sec 2.6](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh). See [instructions](https://www.r-inla.org/download-install) for downloading and installing R-INLA. The R-INLA package includes a user friendly [shiny app](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) to aid in spatial mesh setting choices:
+```{r, eval = FALSE}
+#install R-INLA
+install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+library(INLA)
+meshbuilder() #launches INLA mesh shiny app
+```
+
+As an example, the spatial mesh for the meuse data is built using the R-INLA functions, inla.convex.hull() to set up the boundary and inla.mesh.2d() to generate the spatial mesh:
+```{r}
+library(INLA)
+Loc <- meuse[,1:2]
+Bnd <- inla.nonconvex.hull(as.matrix(Loc), convex=200)
+meuse.mesh <- inla.mesh.2d(as.matrix(Loc),
+                           max.edge = c(300,1000),
+                           boundary = Bnd)
+```
+The inlabru R package can be used to visualize the mesh:
+
+```{r fig1, fig.height = 3, fig.width = 4, warning = FALSE}
+ggplot() + inlabru::gg(meuse.mesh) +  
+  geom_point(mapping = aes(x=Loc[,1],y=Loc[,2], size=0.5), size = 0.5) +
+  theme_classic()
+```
+
+### Fitting a spatial model with clustTMB
+Coordinates are converted to a spatial point data frame and read into the clustTMB model, along with the mesh, using the spatial.list argument. Spatial projections can be generated by defining a spatial data frame of prediction coordinates. These can be passed into the model via the projection.list argument of clustTMB. The gating formula is specified using the gmrf() command:
+
+```{r, warning = FALSE}
+#convert coordinates to a spatial point data frame
+sp::coordinates(Loc) <- ~ x*y
+
+#define spatial prediction coordinates
+data("meuse.grid")
+sp::coordinates(meuse.grid) <- ~x*y
+mod.ln.sp <- clustTMB(response = meuse[,3:6],
+                      family = lognormal(link = "identity"),
+                      gatingformula =  ~ gmrf(0 + 1|loc),
+                      G=4, covariance.structure = "VVV",
+                      spatial.list = list(loc = Loc, mesh = meuse.mesh),
+                      projection.list = list(grid.df = meuse.grid))
+```
+
+Results can be viewed via model output:
+```{r}
+#Estimated fixed parameters
+summary(mod.ln.sp$sdr, "fixed")
+#Minimum negative log likelihood
+mod.ln.sp$opt$objective
+```
+
+# Comparison Case Study
+
+A cluster analysis was run on the meuse dataset using the Gaussian and lognormal family with and without spatial random effects in the gating network for clusters ranging from 2 to 10. BIC scores favored the lognormal spatial model with 4 clusters (Table \@ref(tab:BIC)). This model resulted in fewer clusters compared to the spatial Gaussian model. 
+
+```{r BIC, echo = FALSE}
+df <- data.frame(
+  family = c(rep("lognormal", 2), rep("Gaussian", 2)),
+  space = c(1,0,1,0),
+  clusters = c(4,4,6,3),
+  BIC = c(4805, 4861, 4861, 4910)
+)
+kable_styling(
+  kable(df, booktabs = TRUE, 
+      caption = "Optimum cluster size and BIC scores for lognormal and Gaussian models with (1) and without (0) spatial random effects in the gating network.") ,
+  full_width = TRUE)
+```
+
+Results from the optimal model suggested a spatial pattern where the highest ppm observations for all four metals were clustered together (Cluster 0) in a narrow strip along the bank of the Meuse River within the northwest corner of the floodplain (Fig. \@ref(fig:pairs), Fig. \@ref(fig:pred)). A separate cluster (Cluster 3) was characterized by low ppm values for all metals and was spatially distributed in the central region of the floodplain. The other two clusters were characterized by moderately low (Cluster 2) and moderately high (Cluster 1) ppm values for all metals. Spatial predictions of clustered heavy metals in the Meuse River floodplain (Fig. \@ref(fig:pred)) can aid in risk assessment and environmental mitigation measures after flood events.
+
+```{r, pairs, fig.height = 4, fig.width = 6, fig.cap = "Pairs plots of the concentration levels (ppm) of four heavy metals measured in the topsoil of the Meuse river floodplain, Netherlands. Colors represent the four clusters estimated in the spatial lognormal FMM.", echo = FALSE}
+#Visualize heavy metal data
+Cluster = factor(mod.ln.sp$report$classification)
+ggpairs(meuse[,3:6], aes(color = Cluster, alpha = 90.5)) + 
+  scale_color_manual(values = wes_palette('Moonrise2',4))+ 
+  scale_fill_manual(values = wes_palette('Moonrise2',4))
+```
+
+```{r, pred, fig.height = 4, fig.width = 6, fig.cap = "Predicted cluster distribution of heavy metal concentration levels (ppm) of four metals in the topsoil of the Meuse river floodplain, Netherlands. Colors represent the four clusters estimated in the spatial lognormal FMM.", echo = FALSE, warning = FALSE}
+
+Cluster = factor(mod.ln.sp$report$Class_pred)
+
+#create site map
+ggm2 <- ggplot2::ggplot(mGrid) +
+  ggplot2::stat_sf_coordinates(aes(color = Cluster), geom = "point") +
+  theme_classic() + 
+  scale_color_manual(values = wes_palette('Moonrise2',4)) +
+  geom_sf(data = mRiv, fill = 'lightblue') +
+  ggspatial::annotation_north_arrow(which_north = "grid", height = unit(1, "cm"), width = unit(1, "cm"),
+                         pad_y = unit(4, "cm"))
+cowplot::ggdraw() + cowplot::draw_plot(ggm2) + cowplot::draw_plot(ggm1, x = .18, y = 0.7, width = 0.35, height = 0.23)
+```
+
+# clustTMB Formulations
+## Spatial GMRF 
+
+clustTMB fits spatial random effects using a Gaussian Markov Random Field (GMRF). The precision matrix, $Q$, of the GMRF is the inverse of a Matern covariance function and takes two parameters: 1) $\kappa$, which is the spatial decay parameter and a scaled function of the spatial range, $\phi = \sqrt{8}/\kappa$, the distance at which two locations are considered independent; and 2) $\tau$, which is a function of $\kappa$ and the marginal spatial variance $\sigma^{2}$:
+
+$$\tau = \frac{1}{2\sqrt{\pi}\kappa\sigma}.$$
+The precision matrix is approximated following the SPDE-FEM approach, where a constrained Delaunay triangulation network is used to discretize the spatial extent in order to determine a GMRF for a set of irregularly spaced locations, $i$. For details on the SPDE-FEM approach, see [Krainski et al., 2021, Sec. 2.2](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:spde) 
+
+$$\omega_{i} \sim GMRF(Q[\kappa, \tau])$$
+
+## Gating Network
+
+When random effects, $\mathbb{u}$, are specified in the gating network, the probability of cluster membership $\pi_{i,g}$ for observation $i$ is fit using multinomial regression: 
+
+$$
+\begin{align}
+ \mathbb{\eta}_{,g} &= X\mathbb{\beta}_{,g} + \mathbb{u}_{,g} \\
+ \mathbb{\pi}_{,g} &= \frac{ exp(\mathbb{\eta}_{,g})}{\sum^{G}_{g=1}exp(\mathbb{\eta}_{,g})} 
+ \end{align}
+$$

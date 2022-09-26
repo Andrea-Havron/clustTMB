@@ -251,52 +251,17 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   n.f.sp <- dim.list$n.f.sp
   n.v <- dim.list$n.v
   # list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
-  loc <- spatial.list$loc
-  if (!is.null(loc)) {
-    loc <- loc@coords
-  }
-  mesh <- spatial.list$mesh
+ 
   # list2env(spatial.list, environment(mkDat))
   grid.df <- projection.list$grid.df
   expert.pred.names <- projection.list$expert.pred.names
   gating.pred.names <- projection.list$gating.pred.names
   # list2env(projection.list)
-  if ((is.null(mesh) & is.null(loc)) & !is.null(grid.df)) {
-    warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
-  }
-  if ((!is.null(mesh) | !is.null(loc)) & is.null(grid.df)) {
-    warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
-  }
-  if (!is.null(loc) & is.null(mesh)) {
-    # default mesh - in future add options to include arguments for inla.mesh.2d
-    # for now, user can supply mesh if a more complex mesh is needed
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop("INLA must be installed to build a spatial mesh.")
-    }
-    mesh <- INLA::inla.mesh.create(loc@coords)
-    warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
-            the simple mesh may result in spatial bias. Consider bulding a
-            more appropriate mesh using [INLA::meshbuilder()]")
-  }
-  if (is.null(loc) & !is.null(mesh)) {
-    if (is.null(mesh$idx$loc)) {
-      # if user-supplied mesh built without observation locations, the user must also provide observation lovations
-      stop("Need to provide locations for observations in spatial.list$loc")
-    } else {
-      # if user-supplied mesh built using observation locations, these can be obtained from the mesh if not provided
-      loc <- mesh$loc[mesh$idx$loc, 1:2]
-    }
-  }
-  if (is.null(mesh)) {
-    A <- as(matrix(0, n.i, 1), "dgCMatrix")
-    n.v <- 1
-  } else {
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop("INLA must be installed to build a spatial mesh.")
-    }
-    A <- INLA::inla.spde.make.A(mesh, loc)
-    n.v <- mesh$n
-  }
+
+  spDat <- setup.spatialDat(n.i, spatial.list, projection.list)
+  A <- spDat$A
+  mesh <- spDat$mesh
+  rm(spDat); gc() 
 
   if (is.null(grid.df)) {
     Xd_proj <- matrix(1)
@@ -489,6 +454,55 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
     random.names = random.names,
     expert.time = expert.time
   )
+  return(out)
+}
+
+setup.spatialDat <- function(n.i, spatial.list, projection.list){
+  loc <- spatial.list$loc
+  if (!is.null(loc)) {
+    #!TODO: convert from sp to sf if sp type
+    Loc <- loc@coords
+  }
+  mesh <- spatial.list$mesh
+  
+  if ((is.null(mesh) & is.null(loc)) & !is.null(projection.list$grid.df)) {
+    warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
+  }
+  if ((!is.null(mesh) | !is.null(loc)) & is.null(projection.list$grid.df)) {
+    warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
+  }
+  if (!is.null(loc) & is.null(mesh)) {
+    # default mesh - in future add options to include arguments for inla.mesh.2d
+    # for now, user can supply mesh if a more complex mesh is needed
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to build a spatial mesh.")
+    }
+    mesh <- INLA::inla.mesh.create(loc)
+    warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
+            the simple mesh may result in spatial bias. Consider bulding a
+            more appropriate mesh using [INLA::meshbuilder()]")
+  }
+  if (is.null(loc) & !is.null(mesh)) {
+    if (is.null(mesh$idx$loc)) {
+      # if user-supplied mesh built without observation locations, the user must also provide observation lovations
+      stop("Need to provide locations for observations in spatial.list$loc")
+    } else {
+      # if user-supplied mesh built using observation locations, these can be obtained from the mesh if not provided
+      loc <- mesh$loc[mesh$idx$loc, 1:2]
+    }
+  }
+  if (is.null(mesh)) {
+    A <- as(matrix(0, n.i, 1), "dgCMatrix")
+    n.v <- 1 #TODO: need to identify nv?
+  } else {
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to build a spatial mesh.")
+    }
+    A <- INLA::inla.spde.make.A(mesh, Loc)
+    n.v <- mesh$n #TODO: need to identify nv?
+  }
+  
+  out <- list(A = A, mesh = mesh)
   return(out)
 }
 

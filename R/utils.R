@@ -457,6 +457,14 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   return(out)
 }
 
+#' setup spatial data for mkDat
+#'
+#' @param n.i number of observations
+#' @param spatial.list list of spatial locations and mesh
+#' @param projection.list list of projection coordinates and data
+#'
+#' @return list of spatial mesh and sparse A matrix
+#' 
 setup.spatialDat <- function(n.i, spatial.list, projection.list){
   loc <- spatial.list$loc
   if (!is.null(loc)) {

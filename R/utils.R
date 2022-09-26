@@ -484,11 +484,11 @@ setup.spatialDat <- function(n.i, spatial.list, projection.list){
   }
   if (is.null(loc) & !is.null(mesh)) {
     if (is.null(mesh$idx$loc)) {
-      # if user-supplied mesh built without observation locations, the user must also provide observation lovations
+      # if user-supplied mesh built without observation locations, the user must also provide observation locations to the loc argument of spatial.list
       stop("Need to provide locations for observations in spatial.list$loc")
     } else {
       # if user-supplied mesh built using observation locations, these can be obtained from the mesh if not provided
-      loc <- mesh$loc[mesh$idx$loc, 1:2]
+      Loc <- mesh$loc[mesh$idx$loc, 1:2]
     }
   }
   if (is.null(mesh)) {

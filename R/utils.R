@@ -250,50 +250,18 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   n.f.rand <- dim.list$n.f.rand
   n.f.sp <- dim.list$n.f.sp
   n.v <- dim.list$n.v
-  # list2env(dim.list, environment(mkDat)) ##! environment locked. try new.env?
- 
-  # list2env(spatial.list, environment(mkDat))
-  grid.df <- projection.list$grid.df
-  expert.pred.names <- projection.list$expert.pred.names
-  gating.pred.names <- projection.list$gating.pred.names
-  # list2env(projection.list)
 
   spDat <- setup.spatialDat(n.i, spatial.list, projection.list)
   A <- spDat$A
   mesh <- spDat$mesh
   rm(spDat); gc() 
-
-  if (is.null(grid.df)) {
-    Xd_proj <- matrix(1)
-    Xg_proj <- matrix(1)
-    doProj <- FALSE
-    A.proj <- as(matrix(0), "dgCMatrix")
-  } else {
-    grid.loc <- as.matrix(grid.df@coords)
-    if (class(grid.df) == "SpatialPoints") { ## !is this the best way to do this?
-      Xd_proj <- matrix(1, nrow(grid.loc), 1)
-      Xg_proj <- matrix(1, nrow(grid.loc), 1)
-    } else {
-      grid.data <- grid.df@data
-      if (is.null(expert.pred.names)) {
-        Xd_proj <- matrix(1, nrow(grid.loc), 1)
-      } else {
-        Xd_proj <- as.matrix(grid.data[expert.pred.names])
-      }
-      if (is.null(gating.pred.names)) {
-        Xg_proj <- matrix(1, nrow(grid.loc), 1)
-      } else {
-        Xg_proj <- as.matrix(grid.data[gating.pred.names])
-      }
-    }
-    doProj <- TRUE
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop("INLA must be installed to build a projection grid.")
-    }
-    A.proj <- INLA::inla.spde.make.A(mesh, grid.loc)
-  }
-
-
+  
+  projDat <- setup.spatialProj(mesh, projection.list)
+  doProj <- projDat$doProj
+  XdProj <- projDat$Xd_proj
+  XgProj <- projDat$Xg_proj
+  AProj <- projdat$A_proj
+  
   if (is.null(offset)) offset <- rep(1, dim.list$n.i)
 
   Dat <- list(
@@ -304,10 +272,10 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
     Xpz = matrix(1, n.i, 1),
     Offset = offset,
     A = A,
-    A_proj = A.proj,
+    A_proj = AProj,
     doProj = doProj,
-    Xd_proj = Xd_proj,
-    Xg_proj = Xg_proj
+    Xd_proj = XdProj,
+    Xg_proj = XgProj
   )
 
   Dat$spde <- spdeStruct(mesh)
@@ -512,6 +480,53 @@ setup.spatialDat <- function(n.i, spatial.list, projection.list){
   
   out <- list(A = A, mesh = mesh)
   return(out)
+}
+
+setup.projDat <- function(mesh, projection.list){
+  
+  grid.df <- projection.list$grid.df
+  expert.pred.names <- projection.list$expert.pred.names
+  gating.pred.names <- projection.list$gating.pred.names
+  
+  if (is.null(grid.df)) {
+    Xd_proj <- matrix(1)
+    Xg_proj <- matrix(1)
+    doProj <- FALSE
+    A_proj <- as(matrix(0), "dgCMatrix")
+  } else {
+    grid.loc <- as.matrix(grid.df@coords)
+    if (class(grid.df) == "SpatialPoints") { ## !is this the best way to do this?
+      Xd_proj <- matrix(1, nrow(grid.loc), 1)
+      Xg_proj <- matrix(1, nrow(grid.loc), 1)
+    } else {
+      grid.data <- grid.df@data
+      if (is.null(expert.pred.names)) {
+        Xd_proj <- matrix(1, nrow(grid.loc), 1)
+      } else {
+        Xd_proj <- as.matrix(grid.data[expert.pred.names])
+      }
+      if (is.null(gating.pred.names)) {
+        Xg_proj <- matrix(1, nrow(grid.loc), 1)
+      } else {
+        Xg_proj <- as.matrix(grid.data[gating.pred.names])
+      }
+    }
+    doProj <- TRUE
+    if (!requireNamespace("INLA", quietly = TRUE)) {
+      stop("INLA must be installed to build a projection grid.")
+    }
+    A_proj <- INLA::inla.spde.make.A(mesh, grid.loc)
+  }
+  
+  out <- list(
+    doProj = doProj,
+    Xd_proj = Xd_proj,
+    Xg_proj = Xg_proj,
+    A_proj = A_proj
+  )
+  
+  return(out)
+  
 }
 
 

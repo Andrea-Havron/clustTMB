@@ -20,7 +20,7 @@
 #' 3. mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
 #' 4. user - Numeric or character vector defining user specified intial classification. init.method must be set to 'user' when using this option.
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
-#' @param projection.list List of data objects needed for projection
+#' @param projection.dat Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #' @param control List controlling whether models are run and whether standard errors are calculated.
 #' @importFrom stats model.matrix model.frame as.formula setNames terms update vcov
 #' @importFrom lme4 nobars
@@ -56,13 +56,7 @@ clustTMB <- function(response = NULL,
                          expert.range = NULL
                        )
                      ),
-                     projection.list = list(
-                       grid.df = NULL, ## !Need more rules about grid.df spatial structure
-                       ## !need to ensure order of covariates preserved somehow
-                       ## ?match names from expert.dat/gating.dat to grid.df?
-                       expert.pred.names = NULL,
-                       gating.pred.names = NULL
-                     ),
+                     projection.dat =  NULL,
                      control = run.options()) {
 
   # set str of response to matrix
@@ -105,26 +99,7 @@ clustTMB <- function(response = NULL,
   } else {
     ll.method <- 2
   }
-  if (is.null(expertdata)) expertdata <- data.frame(x = rep(1, dim.list$n.i))
-  if (is.null(gatingdata)) gatingdata <- data.frame(x = rep(1, dim.list$n.i))
-  if (!is.data.frame(expertdata)) {
-    stop("expert data needs to be a data.frame")
-  }
-  if (!is.data.frame(gatingdata)) {
-    stop("gating data needs to be a data.frame")
-  }
-  if (!is.null(expertdata)) {
-    if (nrow(expertdata) != dim.list$n.i) {
-      stop("expert data and response need to
-           have the same number of observations")
-    }
-  }
-  if (!is.null(gatingdata)) {
-    if (nrow(gatingdata) != dim.list$n.i) {
-      stop("gating data and response need to
-           have the same number of observations")
-    }
-  }
+ 
   if ((covariance.structure == "E" | covariance.structure == "V") &
     dim.list$n.j > 1) {
     stop("Need to specify multivariate covariance structure")
@@ -146,12 +121,6 @@ clustTMB <- function(response = NULL,
       stop("Locations need to be SpatialPoints
            of SpatialPointsDataFrame class")
     }
-  }
-
-  # set up factors for locations in expert/gating data when spatial data present
-  if (!is.null(spatial.list$loc)) {
-    expertdata$loc <- factor(row.names(spatial.list$loc@coords))
-    gatingdata$loc <- factor(row.names(spatial.list$loc@coords))
   }
 
   # set up random component of model
@@ -179,27 +148,7 @@ clustTMB <- function(response = NULL,
             when random effects specified")
   }
 
-  # set up input expert/gating covariate data
-  expert.fix.dat <- model.matrix(nobars(expertformula), expertdata)
-  gating.fix.dat <- model.matrix(nobars(gatingformula), gatingdata)
-
-  #
-  if ((length(dimnames(expert.fix.dat)[[2]]) == 1) &
-    dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
-    expert.fix.dat <- matrix(1,
-      dim.list$n.i,
-      1,
-      dimnames = list(NULL, "(Intercept)")
-    )
-  }
-  if ((length(dimnames(gating.fix.dat)[[2]]) == 1) &
-    dimnames(gating.fix.dat)[[2]][1] == "(Intercept)") {
-    gating.fix.dat <- matrix(1,
-      dim.list$n.i,
-      1,
-      dimnames = list(NULL, "(Intercept)")
-    )
-  }
+ 
 
   ## Rank reduction settings
   # clustTMB currently allows for spatial and random rank reduction
@@ -252,8 +201,10 @@ clustTMB <- function(response = NULL,
   Dat <- mkDat(
     response,
     time.vector = expert.time - 1,
-    expert.dat = expert.fix.dat,
-    gating.dat = gating.fix.dat,
+    expert.data = expertdata,
+    gating.data = gatingdata,
+    expert.formula = expertformula, 
+    gating.formula = gatingformula,
     family = family,
     ll.method = ll.method,
     fixStruct = covariance.structure,
@@ -262,7 +213,7 @@ clustTMB <- function(response = NULL,
     dim.list = dim.list,
     offset = Offset,
     spatial.list = spatial.list,
-    projection.list = projection.list
+    projection.dat = projection.dat
   )
   dim.list$n.v <- Dat$spde$n_s
   initialization.args$Data <- Dat

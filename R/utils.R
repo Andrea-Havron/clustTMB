@@ -215,7 +215,7 @@ lognormal <- function(link = "identity") {
 #' @param response A numeric matrix of observations.
 #'
 #' @param time.vector A numeric indicator vector specifying time classification.
-#' @param expert.dat A dataframe specifying covariates in the expert model. If no expret model, defaults to a unit matrix.
+#' @param expert.data A dataframe specifying covariates in the expert model. If no expret model, defaults to a unit matrix.
 #' @param gating.dat A dataframe specifying covariates in the gating model. If no gating model, defaults to a unit matrix.
 #' @param family Distribution family
 #' @param ll.method Integer specifying whether to use marginal (0) or conditional (1) lieklihood during optimization
@@ -223,26 +223,22 @@ lognormal <- function(link = "identity") {
 #' @param rrStruct Integer vector specifying whether or not rank reduction is turned on for each random effect
 #' @param reStruct Integer matrix specifying random effects structure
 #' @param dim.list List of parameter dimensions
-#' @param offset Expertformula offset term
+#' @param offset expert.formula offset term
 #' @param spatial.list List of spatial objects when fitting a spatial model
-#' @param projection.list List of spatial objects used when returning spatial projection results
+#' @param projection.dat Spatial Points class of projection coordinates of Spatial Points Dataframe containing projection coordinates and projection covariates
 #'
 #' @return Data list for input into TMB::MakeADFun
 #' @keywords internal
 #' @noRd
 
-mkDat <- function(response, time.vector, expert.dat, gating.dat,
+mkDat <- function(response, time.vector, expert.data, gating.data,
+                  expert.formula, gating.formula,
                   family = gaussian(link = "identity"), ll.method,
                   fixStruct, rrStruct, reStruct, dim.list,
                   offset = NULL,
                   spatial.list = list(loc = NULL, mesh = NULL),
-                  projection.list = list(
-                    grid.df = NULL, ## !Need more rules about grid.df spatial structure
-                    ## !need to ensure order of covariates preserved somehow
-                    ## ?match names from expert.dat/gating.dat to grid.df?
-                    expert.pred.names = NULL,
-                    gating.pred.names = NULL
-                  )) {
+                  projection.dat = NULL
+                  ) {
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
   n.t <- dim.list$n.t
@@ -250,25 +246,78 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
   n.f.rand <- dim.list$n.f.rand
   n.f.sp <- dim.list$n.f.sp
   n.v <- dim.list$n.v
+  
+  # error checking
+  if (is.null(expert.data)) expert.data <- data.frame(x = rep(1, dim.list$n.i))
+  if (is.null(gating.data)) gating.data <- data.frame(x = rep(1, dim.list$n.i))
+  if (!is.data.frame(expert.data)) {
+    stop("expert data needs to be a data.frame")
+  }
+  if (!is.data.frame(gating.data)) {
+    stop("gating data needs to be a data.frame")
+  }
+  if (!is.null(expert.data)) {
+    if (nrow(expert.data) != dim.list$n.i) {
+      stop("expert data and response need to
+           have the same number of observations")
+    }
+  }
+  if (!is.null(gating.data)) {
+    if (nrow(gating.data) != dim.list$n.i) {
+      stop("gating data and response need to
+           have the same number of observations")
+    }
+  }
+  
+  ## gating and expert data
+  # set up factors for locations in expert/gating data when spatial data present
+  if (!is.null(spatial.list$loc)) {
+    expert.data$loc <- factor(row.names(spatial.list$loc@coords))
+    gating.data$loc <- factor(row.names(spatial.list$loc@coords))
+  }
+  
+  # set up input expert/gating covariate data
+  expert.fix.dat <- model.matrix(lme4::nobars(expert.formula), expert.data)
+  gating.fix.dat <- model.matrix(lme4::nobars(gating.formula), gating.data)
+  
+  #
+  if ((length(dimnames(expert.fix.dat)[[2]]) == 1) &
+      dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
+    expert.fix.dat <- matrix(1,
+                             dim.list$n.i,
+                             1,
+                             dimnames = list(NULL, "(Intercept)")
+    )
+  }
+  if ((length(dimnames(gating.fix.dat)[[2]]) == 1) &
+      dimnames(gating.fix.dat)[[2]][1] == "(Intercept)") {
+    gating.fix.dat <- matrix(1,
+                             dim.list$n.i,
+                             1,
+                             dimnames = list(NULL, "(Intercept)")
+    )
+  }
 
-  spDat <- setup.spatialDat(n.i, spatial.list, projection.list)
+  spDat <- setup.spatialDat(n.i, spatial.list, projection.dat )
   A <- spDat$A
   mesh <- spDat$mesh
   rm(spDat); gc() 
   
-  projDat <- setup.spatialProj(mesh, projection.list)
+  projDat <- setup.projDat(mesh, projection.dat,
+                               expert.formula,
+                               gating.formula)
   doProj <- projDat$doProj
   XdProj <- projDat$Xd_proj
   XgProj <- projDat$Xg_proj
-  AProj <- projdat$A_proj
+  AProj <- projDat$A_proj
   
   if (is.null(offset)) offset <- rep(1, dim.list$n.i)
 
   Dat <- list(
     Y = as.array(response),
     t = time.vector,
-    Xd = expert.dat,
-    Xg = gating.dat,
+    Xd = expert.fix.dat,
+    Xg = gating.fix.dat,
     Xpz = matrix(1, n.i, 1),
     Offset = offset,
     A = A,
@@ -292,10 +341,10 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 
 #' mkRandom: set up random effects component of the model
 #'
-#' @param expertformula Formula defining expert model.
-#' @param gatingformula Formula defining gating model.
-#' @param expertdata  Data frame containing expert model covariates.
-#' @param gatingdata  Data frame containing gating model covariates.
+#' @param expert.formula Formula defining expert model.
+#' @param gating.formula Formula defining gating model.
+#' @param expert.data  Data frame containing expert model covariates.
+#' @param gating.data  Data frame containing gating model covariates.
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
 #' @param dim.list Class object containing model dimensions
 #'
@@ -303,10 +352,10 @@ mkDat <- function(response, time.vector, expert.dat, gating.dat,
 #'
 #' @return list vector containing random effects components of the model
 #' @noRd
-mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spatial.list, dim.list) {
-  expert.split <- splitForm(expertformula)
+mkRandom <- function(expert.formula, gating.formula, expert.data, gating.data, spatial.list, dim.list) {
+  expert.split <- splitForm(expert.formula)
   expert.re.names <- expert.split$reTrmClasses
-  gating.split <- splitForm(gatingformula)
+  gating.split <- splitForm(gating.formula)
   gating.re.names <- gating.split$reTrmClasses
 
   if (("gmrf" %in% expert.re.names | "gmrfSpeedup" %in% expert.re.names) &
@@ -340,7 +389,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
     idx <- which(expert.re.names == "ar1")
     ar1.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
     ## ! make sure this enters TMB as numeric - although consider using glmmTMB factor approach
-    expert.time <- model.frame(subbars(ar1.form), expertdata)
+    expert.time <- model.frame(subbars(ar1.form), expert.data)
   } else {
     expert.time <- rep(1, dim.list$n.i)
   }
@@ -349,7 +398,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   # if ("ar1" %in% gating.re.names) {
   #   idx <- which(gating.re.names == "ar1")
   #   ar1.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
-  #   gating.time <- model.frame(subbars(ar1.form), gatingdata)
+  #   gating.time <- model.frame(subbars(ar1.form), gating.data)
   # } else {
   #   gating.time <- rep(1, dim.list$n.i)
   # }
@@ -366,10 +415,10 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   #
   # if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
   #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
-  #   gatingdata$loc <- as.numeric(factor(loc.id))
+  #   gating.data$loc <- as.numeric(factor(loc.id))
   #   idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
   #   gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))
-  #   gating.gmrf <- model.frame(subbars(gmrf.form), gatingdata)
+  #   gating.gmrf <- model.frame(subbars(gmrf.form), gating.data)
   # } else {
   #   gating.gmrf <- NA
   # }
@@ -425,7 +474,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
   return(out)
 }
 
-#' setup spatial data for mkDat
+#' Setup spatial data for mkDat
 #'
 #' @param n.i number of observations
 #' @param spatial.list list of spatial locations and mesh
@@ -433,7 +482,7 @@ mkRandom <- function(expertformula, gatingformula, expertdata, gatingdata, spati
 #'
 #' @return list of spatial mesh and sparse A matrix
 #' 
-setup.spatialDat <- function(n.i, spatial.list, projection.list){
+setup.spatialDat <- function(n.i, spatial.list, projection.dat){
   loc <- spatial.list$loc
   if (!is.null(loc)) {
     #!TODO: convert from sp to sf if sp type
@@ -441,10 +490,10 @@ setup.spatialDat <- function(n.i, spatial.list, projection.list){
   }
   mesh <- spatial.list$mesh
   
-  if ((is.null(mesh) & is.null(loc)) & !is.null(projection.list$grid.df)) {
+  if ((is.null(mesh) & is.null(loc)) & !is.null(projection.dat)) {
     warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
   }
-  if ((!is.null(mesh) | !is.null(loc)) & is.null(projection.list$grid.df)) {
+  if ((!is.null(mesh) | !is.null(loc)) & is.null(projection.dat)) {
     warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
   }
   if (!is.null(loc) & is.null(mesh)) {
@@ -482,11 +531,19 @@ setup.spatialDat <- function(n.i, spatial.list, projection.list){
   return(out)
 }
 
-setup.projDat <- function(mesh, projection.list){
+#' Setup projection data for mkDat
+#'
+#' @param mesh spatial constrained Delaunay triangulation derived from R-INLA
+#' @param projection.dat Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
+#' @param expert.formula Formula defining expert model. This formula corresponds to the covariates included in the response densities. Defaults to intercept only (~1) when no covariates are used.
+#' @param gating.formula Formula defining gating model. This formula corresponds to the covariates included in the mixing proportions (logistic regression). Defaults to intercept only (~1) when no covariates are used. When a random effects term is included in the gating network, this formula will be updated so that the intercept term is removed.
+#'
+#' @return list of projection data
+setup.projDat <- function(mesh, projection.dat,
+                          expert.formula,
+                          gating.formula){
   
-  grid.df <- projection.list$grid.df
-  expert.pred.names <- projection.list$expert.pred.names
-  gating.pred.names <- projection.list$gating.pred.names
+  grid.df <- projection.dat$grid.df
   
   if (is.null(grid.df)) {
     Xd_proj <- matrix(1)
@@ -495,22 +552,14 @@ setup.projDat <- function(mesh, projection.list){
     A_proj <- as(matrix(0), "dgCMatrix")
   } else {
     grid.loc <- as.matrix(grid.df@coords)
-    if (class(grid.df) == "SpatialPoints") { ## !is this the best way to do this?
-      Xd_proj <- matrix(1, nrow(grid.loc), 1)
-      Xg_proj <- matrix(1, nrow(grid.loc), 1)
+    if (class(grid.df) == "SpatialPoints") { 
+      df <- data.frame(x = rep(1, nrow(grid.loc)))
     } else {
-      grid.data <- grid.df@data
-      if (is.null(expert.pred.names)) {
-        Xd_proj <- matrix(1, nrow(grid.loc), 1)
-      } else {
-        Xd_proj <- as.matrix(grid.data[expert.pred.names])
-      }
-      if (is.null(gating.pred.names)) {
-        Xg_proj <- matrix(1, nrow(grid.loc), 1)
-      } else {
-        Xg_proj <- as.matrix(grid.data[gating.pred.names])
-      }
+      df <- grid.df@data
     }
+    
+    Xd_proj <- model.matrix(lme4::nobars(expert.formula), df)
+    Xg_proj <- model.matrix(lme4::nobars(gating.formula), df)
     doProj <- TRUE
     if (!requireNamespace("INLA", quietly = TRUE)) {
       stop("INLA must be installed to build a projection grid.")

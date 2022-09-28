@@ -28,7 +28,8 @@ Imports:
     glmmTMB,
     cluster,
     clustMixType,
-    MoEClust
+    MoEClust,
+    sf
 Depends:
     R (>= 4.0.0)
 LinkingTo:
@@ -50,11 +51,11 @@ Suggests:
     cowplot,
     ggspatial,
     giscoR,
-    sf,
     wesanderson,
     covr,
     mvnfast,
-    tweedie
+    tweedie,
+    MixSim
 VignetteBuilder: knitr
 Additional_repositories: 
     https://inla.r-inla-download.org/R/stable

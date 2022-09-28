@@ -94,7 +94,7 @@ test_that("gmrf in expert", {
   Loc <- data.frame(x = runif(n.i), y = runif(n.i))
   sp::coordinates(Loc) <- ~ x * y
   expertformula <- ~ gmrf(0 + 1 | loc)
-  expertdata <- data.frame(x = rep(1, dim.list$n.i))
+  expertdata <- data.frame(x = rep(1, n.i))
   gatingformula <- ~1
   gatingdata <- matrix(1, n.i, 1)
   spatial.list <- list(
@@ -137,11 +137,11 @@ test_that("gmrf in gating", {
   n.g <- 3
   set.seed(123)
   Loc <- data.frame(x = runif(n.i), y = runif(n.i))
-  sp::coordinates(Loc) <- ~ x * y
+  Loc <- sf::st_as_sf(Loc, coords = c("x", "y"))
   expertformula <- ~1
   expertdata <- matrix(1, n.i, 1)
   gatingformula <- ~ gmrf(0 + 1 | loc)
-  gatingdata <- data.frame(x = rep(1, dim.list$n.i))
+  gatingdata <- data.frame(x = rep(1, n.i))
   spatial.list <- list(
     loc = Loc,
     mesh = NULL,

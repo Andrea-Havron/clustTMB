@@ -521,13 +521,12 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat){
   }
   if (is.null(mesh)) {
     A <- as(matrix(0, n.i, 1), "dgCMatrix")
-    #n.v <- 1 #TODO: need to identify nv?
-  } else {
+  }
+  if(!is.null(mesh)){
     if (!requireNamespace("INLA", quietly = TRUE)) {
       stop("INLA must be installed to build a spatial mesh.")
     }
     A <- INLA::inla.spde.make.A(mesh, Loc)
-    #n.v <- mesh$n #TODO: need to identify nv?
   }
   
   out <- list(A = A, mesh = mesh)

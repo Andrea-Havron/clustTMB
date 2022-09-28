@@ -1,7 +1,11 @@
 # Reusable workflow to calculate coverage from codecov.io
+# Workflow derived from https://github.com/nmfs-fish-tools/ghactions4r/tree/main/.github/workflows
 
 on:
-  workflow_call:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 name: calc-coverage
 

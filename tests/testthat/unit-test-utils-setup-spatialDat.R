@@ -4,6 +4,9 @@ stopifnot(
   
 )
 
+#install INLA
+
+
 context("test utils-setup-spatialDat")
 
 
@@ -15,11 +18,6 @@ test_that("loc and mesh - sp object", {
       gating.range = NULL,
       expert.range = NULL
     )
-  )
-  projection.list = list(
-    grid.df = NULL, 
-    expert.pred.names = NULL,
-    gating.pred.names = NULL
   )
   
   n.i <- 100
@@ -63,6 +61,47 @@ test_that("loc and mesh - sp object", {
 
 test_that("loc and mesh - sf object", {
   
+  spatial.list = list(
+    loc = NULL,
+    mesh = NULL,
+    init.range = list(
+      gating.range = NULL,
+      expert.range = NULL
+    )
+  )
+  
+  n.i <- 100
+  Loc <- matrix(runif(n.i*2),n.i,2)
+  mesh1 <- INLA::inla.mesh.create(Loc)
+  bnd <- INLA::inla.nonconvex.hull(Loc)
+  mesh2 <- INLA::inla.mesh.create(boundary = bnd) 
+  A1 <- INLA::inla.spde.make.A(mesh1, Loc)
+  A2 <- INLA::inla.spde.make.A(mesh2, Loc)
+  
+ 
+  loc <- data.frame(x = Loc[,1], y = Loc[,2])
+  spatial.list$loc <- sf::st_as_sf(loc, coords = c("x", "y"))
+
+  expect_warning(setup.spatialDat(n.i, 
+                                  spatial.list,
+                                  NULL))
+  grid.df <- 1
+  spatial.list$mesh <- mesh1
+  
+  spDat <- setup.spatialDat(n.i, 
+                            spatial.list,
+                            grid.df)
+  expect_equal(spDat$mesh, mesh1)
+  expect_equal(spDat$A, A1)
+  
+  spatial.list$mesh <- mesh2
+  spDat <- setup.spatialDat(n.i, 
+                            spatial.list,
+                            grid.df)
+  expect_equal(spDat$mesh, mesh2)
+  expect_equal(spDat$A, A2)
+  
+  
 })
 
 test_that("loc, no mesh", {
@@ -80,8 +119,7 @@ test_that("loc, no mesh", {
   mesh <- INLA::inla.mesh.create(Loc)
   A <- INLA::inla.spde.make.A(mesh, Loc)
   loc <- data.frame(x = Loc[,1], y = Loc[,2])
-  sp::coordinates(loc) <- ~x*y
-  spatial.list$loc <- loc
+  spatial.list$loc <- sf::st_as_sf(loc, coords = c("x", "y"))
   
   grid.df <- 1
   
@@ -130,6 +168,15 @@ test_that("no loc, mesh", {
   expect_error(setup.spatialDat(n.i, 
                                 spatial.list,
                                 grid.df))
+  
+  loc <- data.frame(x = Loc[,1], y = Loc[,2])
+  spatial.list$loc <- sf::st_as_sf(loc, coords = c("x", "y"))
+  spDat <- setup.spatialDat(n.i, 
+                            spatial.list,
+                            grid.df)
+  
+  expect_equal(spDat$mesh[2:8], mesh2[2:8]) 
+  expect_equal(spDat$A, A2)
 })
 
 test_that("no loc, no mesh", {

@@ -1,6 +1,7 @@
 library(clustTMB)
 library(MoEClust)
 library(testthat)
+library(MixSim)
 
 #load data
 data("CO2data")
@@ -32,28 +33,28 @@ cT.m4 <- clustTMB(response = CO2,
 test_that("covariate test, m1", {
   expect_equal(-summary(m1)$loglik, 
                cT.m1$opt$objective, tolerance = .01)
-  expect_equal(1,  MixSim::ClassProp(as.vector(m1$classification),  
-                                     cT.m1$report$classification+1))
+  expect_equal(1,  ClassProp(as.vector(m1$classification),  
+                             cT.m1$report$classification+1))
 })
 
 test_that("covariate test, m2", {
   expect_equal(-summary(m2)$loglik, 
                cT.m2$opt$objective, tolerance = .01)
-  expect_equal(1,  MixSim::ClassProp(as.vector(m2$classification),  
-                                     cT.m2$report$classification+1))
+  expect_equal(1,  ClassProp(as.vector(m2$classification),  
+                             cT.m2$report$classification+1))
 })
 
 test_that("covariate test, m3", {
   expect_equal(-summary(m3)$loglik, 
                cT.m3$opt$objective, tolerance = .01)
-  expect_equal(1,  MixSim::ClassProp(as.vector(m3$classification),  
-                                     cT.m3$report$classification+1))
+  expect_equal(1, ClassProp(as.vector(m3$classification),  
+                            cT.m3$report$classification+1))
 })
 
 #tolerance higher
 test_that("covariate test, m4", {
   expect_equal(-summary(m4)$loglik, 
                cT.m4$opt$objective, tolerance = .1)
-  expect_equal(1,  MixSim::ClassProp(as.vector(m4$classification),  
-                                     cT.m4$report$classification+1))
+  expect_equal(1, ClassProp(as.vector(m4$classification),  
+                            cT.m4$report$classification+1))
 })

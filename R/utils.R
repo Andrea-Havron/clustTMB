@@ -486,7 +486,7 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat){
   loc <- spatial.list$loc
   if (!is.null(loc)) {
     #convert from sp to sf if sp type
-    if(class(loc)[1] != "sf"){
+    if(!is(loc, "sf")){
       loc <- sf::st_as_sf(loc)
     }
     Loc <- sf::st_coordinates(loc)
@@ -553,7 +553,7 @@ setup.projDat <- function(mesh, projection.dat,
     doProj <- FALSE
     A_proj <- as(matrix(0), "dgCMatrix")
   } else {
-    if(class(grid.df) != "sf"){
+    if(!is(grid.df, "sf")){
       grid.df <- sf::st_as_sf(grid.df)
     }
     grid.loc <- sf::st_coordinates(grid.df)

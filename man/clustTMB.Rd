@@ -20,8 +20,7 @@ clustTMB(
   initialization.args = list(control = init.options()),
   spatial.list = list(loc = NULL, mesh = NULL, init.range = list(gating.range = NULL,
     expert.range = NULL)),
-  projection.list = list(grid.df = NULL, expert.pred.names = NULL, gating.pred.names =
-    NULL),
+  projection.dat = NULL,
   control = run.options()
 )
 }
@@ -61,7 +60,7 @@ control Calls init.options() to generate settings for initial values. Arguments 
 
 \item{spatial.list}{List of data objects needed when fitting a spatial GMRF model}
 
-\item{projection.list}{List of data objects needed for projection}
+\item{projection.dat}{Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates}
 
 \item{control}{List controlling whether models are run and whether standard errors are calculated.}
 }

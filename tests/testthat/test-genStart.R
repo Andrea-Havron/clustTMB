@@ -39,8 +39,10 @@ dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp -
   (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 Dat <- mkDat(
   response = as.matrix(faithful), time.vector = rep(1, nrow(faithful)),
-  expert.dat = as.matrix(rep(1, nrow(faithful))),
-  gating.dat = as.matrix(rep(1, nrow(faithful))),
+  expert.dat = as.data.frame(rep(1, nrow(faithful))),
+  gating.dat = as.data.frame(rep(1, nrow(faithful))),
+  expert.formula = ~1,
+  gating.formula = ~1,
   ll.method = 0,
   fixStruct = "VVV",
   rrStruct = rep(0, 2),
@@ -147,8 +149,10 @@ dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp -
   (dim.list$n.f.sp * (dim.list$n.f.sp - 1)) / 2
 Dat <- mkDat(
   response = as.matrix(faithful$waiting), time.vector = rep(1, nrow(faithful)),
-  expert.dat = as.matrix(rep(1, nrow(faithful))),
-  gating.dat = as.matrix(rep(1, nrow(faithful))),
+  expert.dat = as.data.frame(rep(1, nrow(faithful))),
+  gating.dat = as.data.frame(rep(1, nrow(faithful))),
+  expert.formula = ~1,
+  gating.formula = ~1,
   ll.method = 0,
   fixStruct = "E",
   rrStruct = rep(0, 2),

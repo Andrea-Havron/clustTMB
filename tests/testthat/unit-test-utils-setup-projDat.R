@@ -8,12 +8,7 @@ context("test utils-setup-projDat")
 
 
 test_that("grid.loc, proj data - sp object", {
-  projection.dat = list(
-    grid.df = NULL, 
-    expert.pred.names = NULL,
-    gating.pred.names = NULL
-  )
-  
+
   n.i <- 100
   Loc <- matrix(runif(n.i*2),n.i,2)
   mesh <- INLA::inla.mesh.create(Loc)
@@ -29,13 +24,8 @@ test_that("grid.loc, proj data - sp object", {
   dat <- sp::SpatialPointsDataFrame(coords = proj.grid,
                                     data = df)
   Aproj <- INLA::inla.spde.make.A(mesh, dat@coords)
-
   
-  projection.dat$grid.df <- dat
-  #projection.list$expert.pred.names <- "Xd"
-  #projection.list$gating.pred.names <- "Xg"
-  
-  projDat <- setup.projDat(mesh, projection.dat,
+  projDat <- setup.projDat(mesh, dat,
                            expert.formula,
                            gating.formula)
   
@@ -51,11 +41,7 @@ test_that("grid.loc, proj data - sf object", {
 
 
 test_that("grid.loc, no proj data - sp object", {
-  projection.dat = list(
-    grid.df = NULL, 
-    expert.pred.names = NULL,
-    gating.pred.names = NULL
-  )
+
   
   n.i <- 100
   Loc <- matrix(runif(n.i*2),n.i,2)
@@ -69,10 +55,7 @@ test_that("grid.loc, no proj data - sp object", {
   sp::coordinates(proj.grid) <- ~x*y
   Aproj <- INLA::inla.spde.make.A(mesh, proj.grid@coords)
   
-  
-  projection.dat$grid.df <- proj.grid
-  
-  projDat <- setup.projDat(mesh, projection.dat,
+  projDat <- setup.projDat(mesh, proj.grid,
                            expert.formula,
                            gating.formula)
   
@@ -83,19 +66,15 @@ test_that("grid.loc, no proj data - sp object", {
 })
 
 test_that("no grid.loc, no proj data", {
-  projection.list = list(
-    grid.df = NULL, 
-    expert.pred.names = NULL,
-    gating.pred.names = NULL
-  )
-  
+
+  projection.dat = NULL
   mesh <- NULL
   
   Xd_proj <- Xg_proj <- matrix(1)
   doProj <- FALSE
   A_proj <- as(matrix(0), "dgCMatrix")
   
-  projDat <- setup.projDat(mesh, projection.list)
+  projDat <- setup.projDat(mesh, projection.dat)
   
   expect_equal(Xd_proj, projDat$Xd_proj)
   expect_equal(Xg_proj, projDat$Xg_proj)  

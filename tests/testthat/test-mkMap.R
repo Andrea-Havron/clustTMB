@@ -24,8 +24,10 @@ dim.list$nl.sp <- dim.list$n.j * dim.list$n.f.sp -
 test_that("mvn with no random effect, no rank reduction", {
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    expert.dat = as.data.frame(rep(1, dim.list$n.i)),
+    gating.dat = as.data.frame(rep(1, dim.list$n.i)),
+    expert.formula = ~1,
+    gating.formula = ~1,
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
@@ -62,8 +64,10 @@ test_that("mvn with no random effect, no rank reduction", {
 test_that("mvn with gating random effects, no rank reduction", {
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    expert.dat = as.data.frame(rep(1, dim.list$n.i)),
+    gating.dat = as.data.frame(rep(1, dim.list$n.i)),
+    expert.formula = ~1,
+    gating.formula = ~1,
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
@@ -123,8 +127,10 @@ test_that("mvn with gating random effects, no rank reduction", {
 test_that("mvn with expert random effects, no rank reduction", {
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    expert.dat = as.data.frame(rep(1, dim.list$n.i)),
+    gating.dat = as.data.frame(rep(1, dim.list$n.i)),
+    expert.formula = ~1,
+    gating.formula = ~1,
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),
@@ -199,8 +205,10 @@ test_that("mvn with expert random effects and rank reduction", {
 
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    expert.dat = as.data.frame(rep(1, dim.list$n.i)),
+    gating.dat = as.data.frame(rep(1, dim.list$n.i)),
+    expert.formula = ~1,
+    gating.formula = ~1,
     ll.method = 0,
     fixStruct = "VVI",
     rrStruct = rep(0, 2),
@@ -268,8 +276,10 @@ test_that("mvn with expert random effects and rank reduction", {
 
   Dat <- mkDat(
     response = as.matrix(y), time.vector = rep(1, dim.list$n.i),
-    expert.dat = as.matrix(rep(1, dim.list$n.i)),
-    gating.dat = as.matrix(rep(1, dim.list$n.i)),
+    expert.dat = as.data.frame(rep(1, dim.list$n.i)),
+    gating.dat = as.data.frame(rep(1, dim.list$n.i)),
+    expert.formula = ~1,
+    gating.formula = ~1,
     ll.method = 0,
     fixStruct = "VVV",
     rrStruct = rep(0, 2),

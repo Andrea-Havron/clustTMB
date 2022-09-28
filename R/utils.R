@@ -225,7 +225,7 @@ lognormal <- function(link = "identity") {
 #' @param dim.list List of parameter dimensions
 #' @param offset expert.formula offset term
 #' @param spatial.list List of spatial objects when fitting a spatial model
-#' @param projection.dat Spatial Points class of projection coordinates of Spatial Points Dataframe containing projection coordinates and projection covariates
+#' @param projection.dat Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #'
 #' @return Data list for input into TMB::MakeADFun
 #' @keywords internal
@@ -478,15 +478,18 @@ mkRandom <- function(expert.formula, gating.formula, expert.data, gating.data, s
 #'
 #' @param n.i number of observations
 #' @param spatial.list list of spatial locations and mesh
-#' @param projection.list list of projection coordinates and data
+#' @param projection.dat Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #'
 #' @return list of spatial mesh and sparse A matrix
 #' 
 setup.spatialDat <- function(n.i, spatial.list, projection.dat){
   loc <- spatial.list$loc
   if (!is.null(loc)) {
-    #!TODO: convert from sp to sf if sp type
-    Loc <- loc@coords
+    #convert from sp to sf if sp type
+    if(class(loc)[1] != "sf"){
+      loc <- sf::st_as_sf(loc)
+    }
+    Loc <- sf::st_coordinates(loc)
   }
   mesh <- spatial.list$mesh
   
@@ -502,7 +505,7 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat){
     if (!requireNamespace("INLA", quietly = TRUE)) {
       stop("INLA must be installed to build a spatial mesh.")
     }
-    mesh <- INLA::inla.mesh.create(loc)
+    mesh <- INLA::inla.mesh.create(Loc)
     warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
             the simple mesh may result in spatial bias. Consider bulding a
             more appropriate mesh using [INLA::meshbuilder()]")
@@ -518,13 +521,13 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat){
   }
   if (is.null(mesh)) {
     A <- as(matrix(0, n.i, 1), "dgCMatrix")
-    n.v <- 1 #TODO: need to identify nv?
+    #n.v <- 1 #TODO: need to identify nv?
   } else {
     if (!requireNamespace("INLA", quietly = TRUE)) {
       stop("INLA must be installed to build a spatial mesh.")
     }
     A <- INLA::inla.spde.make.A(mesh, Loc)
-    n.v <- mesh$n #TODO: need to identify nv?
+    #n.v <- mesh$n #TODO: need to identify nv?
   }
   
   out <- list(A = A, mesh = mesh)
@@ -543,7 +546,7 @@ setup.projDat <- function(mesh, projection.dat,
                           expert.formula,
                           gating.formula){
   
-  grid.df <- projection.dat$grid.df
+  grid.df <- projection.dat
   
   if (is.null(grid.df)) {
     Xd_proj <- matrix(1)
@@ -551,13 +554,15 @@ setup.projDat <- function(mesh, projection.dat,
     doProj <- FALSE
     A_proj <- as(matrix(0), "dgCMatrix")
   } else {
-    grid.loc <- as.matrix(grid.df@coords)
-    if (class(grid.df) == "SpatialPoints") { 
-      df <- data.frame(x = rep(1, nrow(grid.loc)))
-    } else {
-      df <- grid.df@data
+    if(class(grid.df) != "sf"){
+      grid.df <- sf::st_as_sf(grid.df)
     }
-    
+    grid.loc <- sf::st_coordinates(grid.df)
+    df <- sf::st_drop_geometry(grid.df)
+    if(ncol(grid.df) == 0){
+      df <- data.frame(x = rep(1, nrow(grid.loc)))
+    }
+  
     Xd_proj <- model.matrix(lme4::nobars(expert.formula), df)
     Xg_proj <- model.matrix(lme4::nobars(gating.formula), df)
     doProj <- TRUE

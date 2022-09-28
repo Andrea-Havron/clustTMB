@@ -22,6 +22,7 @@ test_that("tweedie",{
   expect_equal("tweedie", f$family)
   expect_equal("log", f$link)
 })
+
 test_that("lognormal",{
   f <- lognormal()
   expect_equal("lognormal", f$family)
@@ -51,4 +52,13 @@ test_that("test skewness", {
       tolerance = 0.01
     )
   }
+})
+
+context("test parm.lookup")
+test_that("test parm.lookup", {
+  expect_equal(23, nrow(parm.lookup()$parm))
+  expect_equal(c("Fixed", "Random"), unique(parm.lookup()$parm$type))
+  expect_equal(c("Matrix", "Array", "Vector"), unique(parm.lookup()$parm$str))
+  expect_equal(10, nrow(parm.lookup()$key))
+  expect_equal(c("Fr", "Fs", "G", "J", "Kd", "Kg", "M", "N", "T", "V"), parm.lookup()$key$dim)
 })

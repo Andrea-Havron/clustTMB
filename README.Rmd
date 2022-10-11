@@ -34,8 +34,7 @@ the Gaussian Markov Random Fields via the FEM-SPDE method introduced by INLA.
 You can install the development version from [GitHub](https://github.com/) with:
 
 ```{r install clustTMB, eval = FALSE}
-install.packages("devtools")
-devtools::install_github("Andrea-Havron/clustTMB")
+remotes::install_github("Andrea-Havron/clustTMB", build_vignettes = TRUE)
 ```
 
 The clustTMB package relies on functions from R-INLA, which is not available on CRAN. Details on installing R-INLA are available on [this](https://www.r-inla.org/download-install) website. To install the stable version, use:

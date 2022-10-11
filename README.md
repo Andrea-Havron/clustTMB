@@ -26,8 +26,7 @@ You can install the development version from
 [GitHub](https://github.com/) with:
 
 ``` r
-install.packages("devtools")
-devtools::install_github("Andrea-Havron/clustTMB")
+remotes::install_github("Andrea-Havron/clustTMB", build_vignettes = TRUE)
 ```
 
 The clustTMB package relies on functions from R-INLA, which is not
@@ -45,28 +44,13 @@ A basic example is illustrated with the faithful dataset:
 
 ``` r
 library(clustTMB)
+#> Warning in checkDepPackageVersion(dep_pkg = "TMB"): Package version inconsistency detected.
+#> glmmTMB was built with TMB version 1.9.1
+#> Current TMB version is 1.9.0
+#> Please re-install glmmTMB from source or restore original 'TMB' package (see '?reinstalling' for more information)
 data("faithful")
 m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
-#> Autopar work split
-#> Chunk 0: 0.705444
-#> Chunk 1: 0.756288
-#> Chunk 2: 0.756084
-#> Chunk 3: 0.755881
-#> Chunk 4: 0.756694
-#> Chunk 5: 0.757508
-#> Chunk 6: 0.757711
-#> Chunk 7: 0.757644
 ```
-
-    #> Autopar work split
-    #> Chunk 0: 0.705444
-    #> Chunk 1: 0.756288
-    #> Chunk 2: 0.756084
-    #> Chunk 3: 0.755881
-    #> Chunk 4: 0.756694
-    #> Chunk 5: 0.757508
-    #> Chunk 6: 0.757711
-    #> Chunk 7: 0.757644
 
 <img src="man/figures/README-pressure-1.png" width="100%" />
 

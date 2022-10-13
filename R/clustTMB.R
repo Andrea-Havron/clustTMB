@@ -11,8 +11,8 @@
 #' @param G Integer specifying the number of clusters.
 #' @param rr List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate ressponse to a smaller dimension independent reponse. When used, the covariance structure of the response is swicthed to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.
 #' @param covariance.structure A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.
-#' @param Start set initial values for random effects parameters (fixed and random terms)
-#' @param Map vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control model specification and user input is limited
+#' @param Start Set initial values for random effects parameters (fixed and random terms)
+#' @param Map Vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control this map argument and user input is limited
 #' @param initialization.args A list consisting of initalization settings used to generate initial values.
 #' control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
 #' 1. init.method - Single character string indicating intial clustering method. Mehtods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'

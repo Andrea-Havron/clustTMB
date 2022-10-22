@@ -45,9 +45,9 @@ clustTMB(
 
 \item{covariance.structure}{A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.}
 
-\item{Start}{set initial values for random effects parameters (fixed and random terms)}
+\item{Start}{Set initial values for random effects parameters (fixed and random terms)}
 
-\item{Map}{vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control model specification and user input is limited}
+\item{Map}{Vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control this map argument and user input is limited}
 
 \item{initialization.args}{A list consisting of initalization settings used to generate initial values.
 control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.

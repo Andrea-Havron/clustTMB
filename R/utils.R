@@ -237,8 +237,7 @@ mkDat <- function(response, time.vector, expert.data, gating.data,
                   fixStruct, rrStruct, reStruct, dim.list,
                   offset = NULL,
                   spatial.list = list(loc = NULL, mesh = NULL),
-                  projection.dat = NULL
-                  ) {
+                  projection.dat = NULL) {
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
   n.t <- dim.list$n.t
@@ -246,7 +245,7 @@ mkDat <- function(response, time.vector, expert.data, gating.data,
   n.f.rand <- dim.list$n.f.rand
   n.f.sp <- dim.list$n.f.sp
   n.v <- dim.list$n.v
-  
+
   # error checking
   if (is.null(expert.data)) expert.data <- data.frame(x = rep(1, dim.list$n.i))
   if (is.null(gating.data)) gating.data <- data.frame(x = rep(1, dim.list$n.i))
@@ -268,49 +267,52 @@ mkDat <- function(response, time.vector, expert.data, gating.data,
            have the same number of observations")
     }
   }
-  
+
   ## gating and expert data
   # set up factors for locations in expert/gating data when spatial data present
   if (!is.null(spatial.list$loc)) {
     expert.data$loc <- factor(row.names(spatial.list$loc@coords))
     gating.data$loc <- factor(row.names(spatial.list$loc@coords))
   }
-  
+
   # set up input expert/gating covariate data
   expert.fix.dat <- model.matrix(lme4::nobars(expert.formula), expert.data)
   gating.fix.dat <- model.matrix(lme4::nobars(gating.formula), gating.data)
-  
+
   #
   if ((length(dimnames(expert.fix.dat)[[2]]) == 1) &
-      dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
+    dimnames(expert.fix.dat)[[2]][1] == "(Intercept)") {
     expert.fix.dat <- matrix(1,
-                             dim.list$n.i,
-                             1,
-                             dimnames = list(NULL, "(Intercept)")
+      dim.list$n.i,
+      1,
+      dimnames = list(NULL, "(Intercept)")
     )
   }
   if ((length(dimnames(gating.fix.dat)[[2]]) == 1) &
-      dimnames(gating.fix.dat)[[2]][1] == "(Intercept)") {
+    dimnames(gating.fix.dat)[[2]][1] == "(Intercept)") {
     gating.fix.dat <- matrix(1,
-                             dim.list$n.i,
-                             1,
-                             dimnames = list(NULL, "(Intercept)")
+      dim.list$n.i,
+      1,
+      dimnames = list(NULL, "(Intercept)")
     )
   }
 
-  spDat <- setup.spatialDat(n.i, spatial.list, projection.dat )
+  spDat <- setup.spatialDat(n.i, spatial.list, projection.dat)
   A <- spDat$A
   mesh <- spDat$mesh
-  rm(spDat); gc() 
-  
-  projDat <- setup.projDat(mesh, projection.dat,
-                               expert.formula,
-                               gating.formula)
+  rm(spDat)
+  gc()
+
+  projDat <- setup.projDat(
+    mesh, projection.dat,
+    expert.formula,
+    gating.formula
+  )
   doProj <- projDat$doProj
   XdProj <- projDat$Xd_proj
   XgProj <- projDat$Xg_proj
   AProj <- projDat$A_proj
-  
+
   if (is.null(offset)) offset <- rep(1, dim.list$n.i)
 
   Dat <- list(
@@ -481,18 +483,18 @@ mkRandom <- function(expert.formula, gating.formula, expert.data, gating.data, s
 #' @param projection.dat Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #'
 #' @return list of spatial mesh and sparse A matrix
-#' 
-setup.spatialDat <- function(n.i, spatial.list, projection.dat){
+#'
+setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
   loc <- spatial.list$loc
   if (!is.null(loc)) {
-    #convert from sp to sf if sp type
-    if(!is(loc, "sf")){
+    # convert from sp to sf if sp type
+    if (!is(loc, "sf")) {
       loc <- sf::st_as_sf(loc)
     }
     Loc <- sf::st_coordinates(loc)
   }
   mesh <- spatial.list$mesh
-  
+
   if ((is.null(mesh) & is.null(loc)) & !is.null(projection.dat)) {
     warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
   }
@@ -522,13 +524,13 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat){
   if (is.null(mesh)) {
     A <- as(matrix(0, n.i, 1), "dgCMatrix")
   }
-  if(!is.null(mesh)){
+  if (!is.null(mesh)) {
     if (!requireNamespace("INLA", quietly = TRUE)) {
       stop("INLA must be installed to build a spatial mesh.")
     }
     A <- INLA::inla.spde.make.A(mesh, Loc)
   }
-  
+
   out <- list(A = A, mesh = mesh)
   return(out)
 }
@@ -543,25 +545,24 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat){
 #' @return list of projection data
 setup.projDat <- function(mesh, projection.dat,
                           expert.formula,
-                          gating.formula){
-  
+                          gating.formula) {
   grid.df <- projection.dat
-  
+
   if (is.null(grid.df)) {
     Xd_proj <- matrix(1)
     Xg_proj <- matrix(1)
     doProj <- FALSE
     A_proj <- as(matrix(0), "dgCMatrix")
   } else {
-    if(!is(grid.df, "sf")){
+    if (!is(grid.df, "sf")) {
       grid.df <- sf::st_as_sf(grid.df)
     }
     grid.loc <- sf::st_coordinates(grid.df)
     df <- sf::st_drop_geometry(grid.df)
-    if(ncol(grid.df) == 0){
+    if (ncol(grid.df) == 0) {
       df <- data.frame(x = rep(1, nrow(grid.loc)))
     }
-  
+
     Xd_proj <- model.matrix(lme4::nobars(expert.formula), df)
     Xg_proj <- model.matrix(lme4::nobars(gating.formula), df)
     doProj <- TRUE
@@ -570,16 +571,15 @@ setup.projDat <- function(mesh, projection.dat,
     }
     A_proj <- INLA::inla.spde.make.A(mesh, grid.loc)
   }
-  
+
   out <- list(
     doProj = doProj,
     Xd_proj = Xd_proj,
     Xg_proj = Xg_proj,
     A_proj = A_proj
   )
-  
+
   return(out)
-  
 }
 
 

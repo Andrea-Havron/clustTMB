@@ -22,7 +22,7 @@ test_that("no mesh", {
   expect_equal(no.mesh.clustTMB, no.mesh.list)
 })
 
-if(inla_installed()){
+if (inla_installed()) {
   test_that("mesh", {
     set.seed(123)
     Loc <- matrix(
@@ -58,7 +58,7 @@ if(inla_installed()){
       "G0"       = spde$param.inla$M0,
       "G0_inv"   = as(diag(1 / diag(spde$param.inla$M0)), "dgTMatrix")
     )
-    
+
     expect_equal(mesh.clustTMB, spde.list)
   })
 }

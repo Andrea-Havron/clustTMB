@@ -480,6 +480,8 @@ mkRandom <- function(expert.formula, gating.formula, expert.data, gating.data, s
 #' @param spatial.list list of spatial locations and mesh
 #' @param projection.dat Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #'
+#' @importFrom methods is
+#'
 #' @return list of spatial mesh and sparse A matrix
 #' 
 setup.spatialDat <- function(n.i, spatial.list, projection.dat){

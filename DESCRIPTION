@@ -1,5 +1,5 @@
 Package: clustTMB
-Title: Spatio-temporal Finite Mixture Model using TMB
+Title: Spatio-Temporal Finite Mixture Model using TMB
 Version: 0.0.1.0
 Authors@R: 
     person(given = "Andrea M.",

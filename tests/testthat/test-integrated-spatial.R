@@ -120,9 +120,13 @@ test_that("test classification",{
 })
 
 test_that("test mu",{
-    expect_equal(Q$Mu[1,], mod$report$mu[1,,1], tolerance = .02 )
-    expect_equal(Q$Mu[2,], mod$report$mu[1,,3], tolerance = .02 )
-    expect_equal(Q$Mu[3,], mod$report$mu[1,,2], tolerance = .02 )
+  beta1 <- summary(mod$sdr, "fixed")[3:6,]
+  beta2 <- summary(mod$sdr, "fixed")[11:14,]
+  beta3 <- summary(mod$sdr, "fixed")[7:10,]
+  
+  expect_equal(unname(abs(Q$Mu[1,] - beta1[,1]) < qnorm(.975)*beta1[,2]), rep(TRUE, 4))
+  expect_equal(unname(abs(Q$Mu[2,] - beta2[,1]) < qnorm(.975)*beta2[,2]), rep(TRUE, 4))
+  expect_equal(unname(abs(Q$Mu[3,] - beta3[,1]) < qnorm(.975)*beta3[,2]), rep(TRUE, 4))
 })
 
 #Add test on covariance

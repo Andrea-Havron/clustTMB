@@ -1,8 +1,11 @@
 stopifnot(
   require("testthat"),
-  require("clustTMB"),
-  require("INLA")
+  require("clustTMB")
 )
+
+if( !clustTMB::inla_installed()){
+  install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+}
 
 context("spatial-utils")
 
@@ -28,9 +31,9 @@ if(inla_installed()){
     Loc <- matrix(
       runif(20), 10, 2
     )
-    mesh <- inla.mesh.create(Loc)
+    mesh <- INLA::inla.mesh.create(Loc)
     mesh.clustTMB <- spdeStruct(mesh)
-    spde <- inla.spde2.matern(mesh)
+    spde <- INLA::inla.spde2.matern(mesh)
     # ---------- Begin code that prepares object for anisotropy.
     Dset <- 1:2
     # Triangle info

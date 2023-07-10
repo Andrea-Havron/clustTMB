@@ -21,7 +21,13 @@ cT.m1 <- clustTMB(response = CO2,
 cT.m2 <- clustTMB(response = CO2,
                   gatingformula = ~GNP, 
                   gatingdata = CO2data,
-                  G=m2$G, covariance.structure = m2$modelName)
+                  G=m2$G, covariance.structure = m2$modelName,
+                  initialization.args = list(
+                    control = init.options(
+                      hc.options = list(
+                        modelName = "VVV", use = "VARS"
+                        )
+                      )))
 cT.m3 <- clustTMB(response = CO2,
                   expertformula = ~GNP, 
                   expertdata = CO2data,
@@ -50,7 +56,7 @@ test_that("covariate test, m2", {
 
 test_that("covariate test, m3", {
   expect_equal(-summary(m3)$loglik, 
-               cT.m3$opt$objective, tolerance = .01)
+               cT.m3$opt$objective, tolerance = 1e-4)
   expect_equal(1, ClassProp(as.vector(m3$classification),  
                             cT.m3$report$classification+1))
 })

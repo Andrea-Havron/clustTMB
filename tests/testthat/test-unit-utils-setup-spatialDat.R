@@ -1,11 +1,11 @@
 stopifnot(
   require("testthat"),
   require("clustTMB")
-  
 )
 
-#install INLA
-
+if( !clustTMB::inla_installed()){
+  install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+}
 
 context("test utils-setup-spatialDat")
 

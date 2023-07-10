@@ -296,6 +296,7 @@ Type prec_fun(Type kappa, Type tau, int rrStruct){
 
 template<class Type>
 array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
+  //factor analysis from adapted from Thorson, James T. VAST, https://github.com/James-Thorson-NOAA/VAST 
   vector<int> d = x.dim;
   int ni = d(0);
   int nf = d(1);

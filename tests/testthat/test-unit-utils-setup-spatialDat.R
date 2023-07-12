@@ -1,16 +1,9 @@
-stopifnot(
-  require("testthat"),
-  require("clustTMB")
-)
-
-if( !clustTMB::inla_installed()){
-  install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
-}
 
 context("test utils-setup-spatialDat")
 
 
 test_that("loc and mesh - sp object", {
+  skip_if_not_installed("INLA")
   spatial.list = list(
     loc = NULL,
     mesh = NULL,
@@ -60,7 +53,7 @@ test_that("loc and mesh - sp object", {
 })
 
 test_that("loc and mesh - sf object", {
-  
+  skip_if_not_installed("INLA")
   spatial.list = list(
     loc = NULL,
     mesh = NULL,
@@ -105,6 +98,7 @@ test_that("loc and mesh - sf object", {
 })
 
 test_that("loc, no mesh", {
+  skip_if_not_installed("INLA")
   spatial.list = list(
     loc = NULL,
     mesh = NULL,
@@ -139,6 +133,7 @@ test_that("loc, no mesh", {
 })
 
 test_that("no loc, mesh", {
+  skip_if_not_installed("INLA")
   spatial.list = list(
     loc = NULL,
     mesh = NULL,
@@ -180,6 +175,7 @@ test_that("no loc, mesh", {
 })
 
 test_that("no loc, no mesh", {
+  skip_if_not_installed("INLA")
   spatial.list = list(
     loc = NULL,
     mesh = NULL,

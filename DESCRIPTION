@@ -41,7 +41,6 @@ Suggests:
     bookdown,
     covr,
     cowplot,
-    datasets,
     GGally,
     ggplot2,
     ggspatial,

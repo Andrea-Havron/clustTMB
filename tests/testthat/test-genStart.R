@@ -244,7 +244,7 @@ G <- 2
 z.co2 <- unmap(hclass(hc(cbind(CO2, GNP), use = "VARS"), G))
 y.co2 <- as.matrix(CO2)
 x.co2 <- as.matrix(GNP)
-new.z <- run.mahala(z.co2, y.co2, x.co2)
+new.z <- clustTMB:::run.mahala(z.co2, y.co2, x.co2)
 # MoEclust Mahalanobis distance
 ## MoEClust code
 init.z <- function(y., dat, g, max.init = 1000) {
@@ -288,7 +288,7 @@ init.z <- function(y., dat, g, max.init = 1000) {
 
         res <-
           res.G[[k]] <- xN - pred
-        mahala[[k]] <- MoE_mahala(exp, res, squared = TRUE, identity = TRUE)
+        mahala[[k]] <- MoEClust::MoE_mahala(exp, res, squared = TRUE, identity = TRUE)
       }
     }
 

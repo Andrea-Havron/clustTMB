@@ -11,7 +11,7 @@ on:
   pull_request:
     branches: [main, master]
 
-name: style-r-code-with-styler
+name: doc-and-style-r
 
 jobs:
   doc-and-style-r:

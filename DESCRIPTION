@@ -38,24 +38,27 @@ LinkingTo:
 NeedsCompilation: yes
 SystemRequirements: GNU make
 Suggests: 
-    testthat,
-    knitr,
-    rmarkdown,
-    kableExtra,
-    ggplot2,
-    INLA (>= 21.2.23),
-    inlabru,
-    sp,
-    splancs,
-    GGally,
+    bookdown,
+    covr,
     cowplot,
+    GGally,
+    ggplot2,
     ggspatial,
     giscoR,
-    wesanderson,
-    covr,
+    INLA (>= 21.2.23),
+    inlabru,
+    kableExtra,
+    rmarkdown,
+    knitr,
+    magrittr,
+    MixSim,
     mvnfast,
+    sp,
+    spData,
+    splancs,
+    testthat,
     tweedie,
-    MixSim
+    wesanderson
 VignetteBuilder: knitr
 Additional_repositories: 
     https://inla.r-inla-download.org/R/stable

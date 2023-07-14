@@ -6,25 +6,15 @@ name: call-doc-and-style-r
 # on specifies the build triggers. See more info at https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows
 
 on:
-  workflow_call:
-    secrets:
-      PAT:
-        required: false
-    inputs:
-      run-rm_dollar_sign:
-        required: false
-        type: boolean
-        default: false
-    commit-directly:
-      required: false
-      type: boolean
-      default: false
+  push:
+    branches: [main, master, fix-workflows]
+  pull_request:
+    branches: [main, master]
 
 name: style-r-code-with-styler
 
 jobs:
   doc-and-style-r:
-    name: doc-and-style
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.PAT }}

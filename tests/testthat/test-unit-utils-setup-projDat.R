@@ -3,14 +3,11 @@ stopifnot(
   require("clustTMB")
 )
 
-if( !clustTMB::inla_installed()){
-  install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
-}
-
 context("test utils-setup-projDat")
 
 
 test_that("grid.loc, proj data - sp object", {
+  skip_if_not_installed("INLA")
 
   n.i <- 100
   Loc <- matrix(runif(n.i*2),n.i,2)
@@ -39,6 +36,7 @@ test_that("grid.loc, proj data - sp object", {
 })
 
 test_that("grid.loc, proj data - sf object", {
+  skip_if_not_installed("INLA")
   n.i <- 100
   Loc <- matrix(runif(n.i*2),n.i,2)
   mesh <- INLA::inla.mesh.create(Loc)
@@ -69,7 +67,7 @@ test_that("grid.loc, proj data - sf object", {
 
 
 test_that("grid.loc, no proj data - sp object", {
-
+  skip_if_not_installed("INLA")
   
   n.i <- 100
   Loc <- matrix(runif(n.i*2),n.i,2)
@@ -111,7 +109,7 @@ test_that("no grid.loc, no proj data", {
 })
 
 test_that("grid.loc, no proj data - sf object", {
-  
+  skip_if_not_installed("INLA")
   n.i <- 100
   Loc <- matrix(runif(n.i*2),n.i,2)
   mesh <- INLA::inla.mesh.create(Loc)

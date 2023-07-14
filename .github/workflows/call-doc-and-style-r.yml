@@ -20,11 +20,11 @@ on:
       type: boolean
       default: false
 
-name: style r code with styler
+name: style-r-code-with-styler
 
 jobs:
   doc-and-style-r:
-    name: doc and style
+    name: doc-and-style
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.PAT }}

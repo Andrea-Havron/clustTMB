@@ -236,9 +236,8 @@ test_that("Random Effects dim", {
 
 
 context("univariate normal data with covaraites")
-data(CO2data)
-CO2 <- CO2data$CO2
-GNP <- CO2data$GNP
+CO2 <- MoEClust::CO2data$CO2
+GNP <- MoEClust::CO2data$GNP
 G <- 2
 
 z.co2 <- unmap(hclass(hc(cbind(CO2, GNP), use = "VARS"), G))
@@ -250,7 +249,7 @@ new.z <- clustTMB:::run.mahala(z.co2, y.co2, x.co2)
 init.z <- function(y., dat, g, max.init = 1000) {
   expN <- CO2 ~ GNP
   n <- nrow(dat)
-  z.tmp <- unmap(hclass(hc(dat, use = "VARS"), g))
+  z.tmp <- mclust::unmap(mclust::hclass(mclust::hcVVV(dat), G=g))
   n <- nrow(dat)
   z.mat <- z.alloc <- matrix(0L, nrow = n * g, ncol = g)
   muX <- vector("numeric", g)

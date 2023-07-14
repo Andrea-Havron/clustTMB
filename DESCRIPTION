@@ -53,6 +53,8 @@ Suggests:
     magrittr,
     MixSim,
     mvnfast,
+    mvtnorm,
+    sdmTMB,
     sp,
     spData,
     splancs,

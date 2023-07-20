@@ -18,7 +18,7 @@ test_that("test integrated spatial", {
   
   Mesh.fit <- INLA::inla.mesh.2d(Loc, max.edge = c(.1,.5))
   Mesh.sim <- INLA::inla.mesh.2d(Loc, max.edge = c(.03,.1))
-  mesh.sim <- make_mesh(data = Loc, xy_cols = c("x", "y"), mesh = Mesh)
+  mesh.sim <- make_mesh(data = Loc, xy_cols = c("x", "y"), mesh = Mesh.sim)
   
   # Generate three spatial fields:
   sim_dat_1 <- sdmTMB_simulate(

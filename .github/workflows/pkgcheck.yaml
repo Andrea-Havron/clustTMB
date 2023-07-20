@@ -1,9 +1,3 @@
-on:
-  push:
-    branches: [main, master, fix-workflows]
-  pull_request:
-    branches: [main, master]
-
 name: pkgcheck
 
 # This will cancel running jobs once a new run is triggered
@@ -17,7 +11,7 @@ on:
   # Run on every push to main
   push:
     branches:
-      - main
+      - main, fix-workflows
 
 jobs:
   pkgcheck:

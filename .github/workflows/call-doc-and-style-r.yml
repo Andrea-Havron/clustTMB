@@ -11,8 +11,6 @@ on:
   pull_request:
     branches: [main, master]
 
-name: doc-and-style-r
-
 jobs:
   doc-and-style-r:
     runs-on: ubuntu-latest

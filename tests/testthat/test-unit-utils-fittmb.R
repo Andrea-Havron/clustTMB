@@ -5,34 +5,7 @@ stopifnot(
 )
 
 context("unit test utils-fit.tmb")
-runExample('simple')
-sdr <- sdreport(obj)
-report <- obj$report(obj$env$last.par.best)
 
-#from TMB's simple example
-## Test data
-set.seed(123)
-y <- rep(1900:2010,each=2)
-year <- factor(y)
-quarter <- factor(rep(1:4,length.out=length(year)))
-period <- factor((y > mean(y))+1)
-## Random year+quarter effect, fixed period effect:
-B <- model.matrix(~year+quarter-1)
-A <- model.matrix(~period-1)
-B <- as(B,"dgTMatrix")
-A <- as(A,"dgTMatrix")
-u <- rnorm(ncol(B)) ## logsdu=0
-beta <- rnorm(ncol(A))*100
-eps <- rnorm(nrow(B),sd=1) ## logsd0=0
-x <- as.numeric( A %*% beta + B %*% u + eps )
-
-args <- list(
-  data=list(x=x, B=B, A=A),
-  parameters=list(u=u*0, beta=beta*0, logsdu=1, logsd0=1),
-  random="u",
-  DLL="simple",
-  silent=TRUE
-)
 
 test_that("run.model = FALSE", {
   clustTMB.mod <- fit.tmb(args, 
@@ -94,3 +67,8 @@ test_that("run.model = TRUE, sdr.report = TRUE", {
   expect_equal(sdr, clustTMB.mod$sdr)
   
 })
+
+dyn.unload(dynlib(testthat::test_path("ref","simple")))
+file.remove(dynlib(testthat::test_path("ref","simple")))
+file.remove(dynlib(testthat::test_path("ref","simple.o")))
+

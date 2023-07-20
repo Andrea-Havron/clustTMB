@@ -16,16 +16,17 @@ test_that("test integrated spatial", {
   set.seed(123)
   Loc <- data.frame(x = runif(300), y = runif(300))
   
-  Mesh <- INLA::inla.mesh.2d(Loc, max.edge = c(.1,.5))
-  mesh <- make_mesh(data = Loc, xy_cols = c("x", "y"), mesh = Mesh)
+  Mesh.fit <- INLA::inla.mesh.2d(Loc, max.edge = c(.1,.5))
+  Mesh.sim <- INLA::inla.mesh.2d(Loc, max.edge = c(.03,.1))
+  mesh.sim <- make_mesh(data = Loc, xy_cols = c("x", "y"), mesh = Mesh)
   
   # Generate three spatial fields:
   sim_dat_1 <- sdmTMB_simulate(
     formula = ~ 1,
     data = Loc,
-    mesh = mesh,
+    mesh = mesh.sim,
     family = gaussian(),
-    range = 2/3,
+    range = .25,
     phi = 0.1,
     sigma_O = 1,
     seed = 11,
@@ -35,9 +36,9 @@ test_that("test integrated spatial", {
   sim_dat_2 <- sdmTMB_simulate(
     formula = ~ 1,
     data = Loc,
-    mesh = mesh,
+    mesh = mesh.sim,
     family = gaussian(),
-    range = 2/3,
+    range = .25,
     phi = 0.1,
     sigma_O = 1,
     seed = 22,
@@ -47,9 +48,9 @@ test_that("test integrated spatial", {
   sim_dat_3 <- sdmTMB_simulate(
     formula = ~ 1,
     data = Loc,
-    mesh = mesh,
+    mesh = mesh.sim,
     family = gaussian(),
-    range = 2/3,
+    range = .25,
     phi = 0.1,
     sigma_O = 1,
     seed = 33,
@@ -88,10 +89,11 @@ test_that("test integrated spatial", {
   #cluster probability from simulated spatial data:
   cluster_counts <- table(cluster_id)
   
-  set.seed(123)
+  
   simdat <- data.frame()
   id <- c()
   for(g in 1:3){
+    set.seed(g*10)
     simdat <- rbind(simdat,
                     mvtnorm::rmvnorm(n = cluster_counts[g], 
                                      mean = Q$Mu[g,], 
@@ -108,7 +110,7 @@ test_that("test integrated spatial", {
              family = gaussian(), 
              gatingformula = ~ gmrf(0 + 1|loc),
              G = 3, covariance.structure = "VVV",
-             spatial.list = list(loc = Loc, mesh = Mesh)
+             spatial.list = list(loc = Loc, mesh = Mesh.fit)
              ))
 
   expect_equal(mod$opt$convergence, 0)

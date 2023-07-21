@@ -70,5 +70,5 @@ test_that("run.model = TRUE, sdr.report = TRUE", {
 
 dyn.unload(dynlib(testthat::test_path("ref","simple")))
 file.remove(dynlib(testthat::test_path("ref","simple")))
-file.remove(dynlib(testthat::test_path("ref","simple.o")))
+file.remove(testthat::test_path("ref","simple.o"))
 

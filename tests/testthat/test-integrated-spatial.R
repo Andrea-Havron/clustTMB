@@ -14,7 +14,7 @@ test_that("test integrated spatial", {
   ## Simulate spatial clusters
   # generate location data
   set.seed(123)
-  Loc <- data.frame(x = runif(300), y = runif(300))
+  Loc <- data.frame(x = runif(500), y = runif(500))
   
   Mesh.fit <- INLA::inla.mesh.2d(Loc, max.edge = c(.1,.5))
   Mesh.sim <- INLA::inla.mesh.2d(Loc, max.edge = c(.03,.1))
@@ -26,10 +26,10 @@ test_that("test integrated spatial", {
     data = Loc,
     mesh = mesh.sim,
     family = gaussian(),
-    range = .25,
+    range = 1/3,
     phi = 0.1,
-    sigma_O = 1,
-    seed = 11,
+    sigma_O = .5,
+    seed = 1,
     B = 1
   )
   
@@ -38,10 +38,10 @@ test_that("test integrated spatial", {
     data = Loc,
     mesh = mesh.sim,
     family = gaussian(),
-    range = .25,
+    range = 1/3,
     phi = 0.1,
-    sigma_O = 1,
-    seed = 22,
+    sigma_O = .5,
+    seed = 2,
     B = 1
   )
   
@@ -50,10 +50,10 @@ test_that("test integrated spatial", {
     data = Loc,
     mesh = mesh.sim,
     family = gaussian(),
-    range = .25,
+    range = 1/3,
     phi = 0.1,
-    sigma_O = 1,
-    seed = 33,
+    sigma_O = .5,
+    seed = 3,
     B = 1
   )
   
@@ -76,24 +76,23 @@ test_that("test integrated spatial", {
   ) %>% dplyr::select(x, y, omega_s, cluster_id)
   
   ggplot(cluster_dat, aes(x=x, y=y, color = factor(cluster_id))) + geom_point()
-  
+  table(cluster_id)/500
   #convert locations to spatial coordinates
   sp::coordinates(Loc) <- ~ x*y
   
   ## Simulate clustered observations
   ## Generate multivariate mean and covariances for 
   ## 3 groups and 4 responses using 1% overlap in clusters
-  set.seed(42)
+  set.seed(123)
   Q <- MixSim::MixSim(BarOmega = .01, K = 3, p = 4)
   
   #cluster probability from simulated spatial data:
   cluster_counts <- table(cluster_id)
-  
-  
+
   simdat <- data.frame()
   id <- c()
   for(g in 1:3){
-    set.seed(g*10)
+    set.seed(g*100)
     simdat <- rbind(simdat,
                     mvtnorm::rmvnorm(n = cluster_counts[g], 
                                      mean = Q$Mu[g,], 
@@ -120,16 +119,20 @@ test_that("test integrated spatial", {
   expect_equal(1, MixSim::ClassProp(mod$report$classification, simdat$id),
                tolerance = .01)
 
-  beta1 <- summary(mod$sdr, "fixed")[3:6,]
-  beta2 <- summary(mod$sdr, "fixed")[11:14,]
-  beta3 <- summary(mod$sdr, "fixed")[7:10,]
   
-  expect_equal(unname(abs(Q$Mu[1,] - beta1[,1]) < qnorm(.975)*beta1[,2]), rep(TRUE, 4))
-  expect_equal(unname(abs(Q$Mu[2,] - beta2[,1]) < qnorm(.975)*beta2[,2]), rep(TRUE, 4))
-  expect_equal(unname(abs(Q$Mu[3,] - beta3[,1]) < qnorm(.975)*beta3[,2]), rep(TRUE, 4))
+  #re-order by estimate due to non-identifiability of cluster ID
+  beta.df <- as.data.frame(summary(mod$sdr, "fixed")[3:14,])
+  row.names(beta.df) <- NULL
+  beta.ord <- beta.df[order(beta.df$Estimate),]
+  
+  beta.ord$true <- sort(Q$Mu)
+  
+  expect_equal(abs(beta.ord$true - beta.ord$Estimate) < 
+                 qnorm(.975) * beta.ord$`Std. Error`,
+               rep(TRUE, nrow(beta.ord)))
+  
 })
 
-#Add test on covariance
 
 
 

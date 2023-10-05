@@ -16,43 +16,44 @@ test_that("test integrated spatial", {
   set.seed(123)
   Loc <- data.frame(x = runif(500), y = runif(500))
   
-  Mesh.fit <- INLA::inla.mesh.2d(Loc, max.edge = c(.1,.5))
-  Mesh.sim <- INLA::inla.mesh.2d(Loc, max.edge = c(.03,.1))
-  mesh.sim <- make_mesh(data = Loc, xy_cols = c("x", "y"), mesh = Mesh.sim)
+  Mesh.sim <- INLA::inla.mesh.2d(Loc, max.edge = c(.03,.05))
+  Loc.sim <- data.frame(x = Mesh.sim$loc[,1], y = Mesh.sim$loc[,2])
+  mesh.sim <- make_mesh(data = Loc.sim, xy_cols = c("x", "y"), 
+                        mesh = Mesh.sim)
   
   # Generate three spatial fields:
   sim_dat_1 <- sdmTMB_simulate(
     formula = ~ 1,
-    data = Loc,
+    data = Loc.sim,
     mesh = mesh.sim,
     family = gaussian(),
     range = 1/3,
     phi = 0.1,
-    sigma_O = .5,
+    sigma_O = 1,
     seed = 1,
     B = 1
   )
   
   sim_dat_2 <- sdmTMB_simulate(
     formula = ~ 1,
-    data = Loc,
+    data = Loc.sim,
     mesh = mesh.sim,
     family = gaussian(),
     range = 1/3,
     phi = 0.1,
-    sigma_O = .5,
+    sigma_O = 1,
     seed = 2,
     B = 1
   )
   
   sim_dat_3 <- sdmTMB_simulate(
     formula = ~ 1,
-    data = Loc,
+    data = Loc.sim,
     mesh = mesh.sim,
     family = gaussian(),
     range = 1/3,
     phi = 0.1,
-    sigma_O = .5,
+    sigma_O = 1,
     seed = 3,
     B = 1
   )
@@ -75,8 +76,14 @@ test_that("test integrated spatial", {
     sim1, sim2, sim3
   ) %>% dplyr::select(x, y, omega_s, cluster_id)
   
+  cluster_samp <- cluster_dat[cluster_dat$x>0 & cluster_dat$x<1 & cluster_dat$y > 0 & cluster_dat$y<1,]
+  cluster_samp_ <- cluster_samp[sample(1:nrow(cluster_samp), 500),]
+  Loc <- cluster_samp_[,1:2]
+  Mesh.fit <- INLA::inla.mesh.2d(Loc, max.edge = c(.1, .5))
+
   ggplot(cluster_dat, aes(x=x, y=y, color = factor(cluster_id))) + geom_point()
-  table(cluster_id)/500
+  table(cluster_id)/nrow(Loc.sim)
+  table(cluster_samp_$cluster_id)/nrow(cluster_samp_)
   #convert locations to spatial coordinates
   sp::coordinates(Loc) <- ~ x*y
   
@@ -86,8 +93,8 @@ test_that("test integrated spatial", {
   set.seed(123)
   Q <- MixSim::MixSim(BarOmega = .01, K = 3, p = 4)
   
-  #cluster probability from simulated spatial data:
-  cluster_counts <- table(cluster_id)
+  #cluster probability from simulated spatial data (sample):
+  cluster_counts <- table(cluster_samp_$cluster_id)
 
   simdat <- data.frame()
   id <- c()

@@ -9,8 +9,7 @@ on:
   workflow_dispatch:
   # Run on every push to main
   push:
-    branches:
-      - main, fix-workflows
+    branches: [main, fix-workflows]
   # Run on every PR to main
   pull_request:
     branches:

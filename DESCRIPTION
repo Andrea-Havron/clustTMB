@@ -2,41 +2,31 @@ Package: clustTMB
 Title: Spatio-Temporal Finite Mixture Model using TMB
 Version: 0.0.1.0
 Authors@R: 
-    person(given = "Andrea M.",
-           family = "Havron",
-           role = c("aut", "cre"),
-           email = "andrea.havron@noaa.gov",
+    person("Andrea M.", "Havron", , "andrea.havron@noaa.gov", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4080-448X"))
-Description: Fits a spatio-temporal finite mixture model using TMB. 
-    Spatial and temporal random effects can be incorporated into the 
-    gating formula using multinomial logistic regression, the expert 
+Description: Fits a spatio-temporal finite mixture model using TMB.
+    Spatial and temporal random effects can be incorporated into the
+    gating formula using multinomial logistic regression, the expert
     formula using a generalized linear mixed model framework, or both.
-URL: https://github.com/Andrea-Havron/clustTMB, https://andrea-havron.github.io/clustTMB, https://andrea-havron.github.io/clustTMB/
-BugReports: https://github.com/Andrea-Havron/clustTMB/issues
 License: GPL-3
-Encoding: UTF-8
-LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
-Imports: 
-    methods,
-    TMB (>= 1.8.1),
-    Matrix,
-    stats,
-    mclust,
-    lme4,
-    glmmTMB,
-    cluster,
-    clustMixType,
-    MoEClust,
-    sf
+URL: https://github.com/Andrea-Havron/clustTMB,
+    https://andrea-havron.github.io/clustTMB,
+    https://andrea-havron.github.io/clustTMB/
+BugReports: https://github.com/Andrea-Havron/clustTMB/issues
 Depends:
     R (>= 4.0.0)
-LinkingTo:
-    TMB,
-    RcppEigen
-NeedsCompilation: yes
-SystemRequirements: GNU make
+Imports: 
+    cluster,
+    clustMixType,
+    glmmTMB,
+    lme4,
+    Matrix,
+    mclust,
+    methods,
+    MoEClust,
+    sf,
+    stats,
+    TMB (>= 1.8.1)
 Suggests: 
     bookdown,
     covr,
@@ -50,21 +40,30 @@ Suggests:
     INLA (>= 21.2.23),
     inlabru,
     kableExtra,
-    rmarkdown,
     knitr,
     magrittr,
     MixSim,
     mvnfast,
     mvtnorm,
     palmerpenguins,
+    rmarkdown,
     sdmTMB,
     sp,
     spData,
     splancs,
-    tidyr,
     testthat,
+    tidyr,
     tweedie,
     wesanderson
-VignetteBuilder: knitr
-Additional_repositories: 
-    https://inla.r-inla-download.org/R/stable
+LinkingTo:
+    RcppEigen,
+    TMB
+VignetteBuilder: 
+    knitr
+Additional_repositories: https://inla.r-inla-download.org/R/stable
+Encoding: UTF-8
+LazyData: true
+NeedsCompilation: yes
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+SystemRequirements: GNU make

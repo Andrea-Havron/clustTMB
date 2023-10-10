@@ -39,7 +39,7 @@ remotes::install_github("Andrea-Havron/clustTMB", build_vignettes = TRUE)
 
 The clustTMB package relies on functions from R-INLA, which is not available on CRAN. Details on installing R-INLA are available on [this](https://www.r-inla.org/download-install) website. To install the stable version, use:
 ```{r install INLA, eval = FALSE}
-install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dep = TRUE)
 ```
 
 
@@ -57,13 +57,13 @@ m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
 ```{r pressure, echo = FALSE}
 data("faithful")
 m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
-plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification+1, xlab = 'eruptions', ylab = 'waiting')
-legend(4.2, 57.5, legend=c("Class 1", "Class 2"), col = c('black', 'red'), pch = 16)
+plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification + 1, xlab = "eruptions", ylab = "waiting")
+legend(4.2, 57.5, legend = c("Class 1", "Class 2"), col = c("black", "red"), pch = 16)
 ```
 
 For more detailed examples, see vignettes:
 ```{r vignettes, eval = FALSE}
-## Not Run 
+## Not Run
 
 # install.packages("utils")
 utils::browseVignettes("clustTMB")

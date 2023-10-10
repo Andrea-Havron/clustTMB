@@ -11,11 +11,11 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 BiocManager::install(c("graph", "Rgraphviz"), dep=TRUE)
 install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
-pak::lockfile_create(
-  "local::.",
-  lockfile = ".pkgcheck/pkg.lock",
-  dependencies = "all"
-)
+# pak::lockfile_create(
+#   "local::.",
+#   lockfile = ".pkgcheck/pkg.lock",
+#   dependencies = "all"
+# )
 pak::lockfile_install(".pkgcheck/pkg.lock")
 if (packageVersion("sessioninfo") >= "1.2.1") {
   sessioninfo::session_info(pkgs = "installed", include_base = TRUE)

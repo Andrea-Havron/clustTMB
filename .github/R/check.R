@@ -7,6 +7,9 @@ octo_start_group("Install dependencies")
 
 file_dir <- fs::dir_create(".pkgcheck")
 Sys.setenv("PKGCACHE_HTTP_VERSION" = "2")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(c("graph", "Rgraphviz"), dep=TRUE)
 install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
 pak::lockfile_create(
   "local::.",

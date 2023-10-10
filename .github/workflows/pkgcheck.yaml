@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run pkgcheck
         id: pkgcheck
-        run: source("../Rcheck.R")  # adjust path to script here
+        run: source("../R/check.R")  # adjust path to script here
         shell: Rscript {0}
       - uses: actions/upload-artifact@v2
         with:

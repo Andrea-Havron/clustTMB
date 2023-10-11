@@ -5,25 +5,25 @@ stopifnot(
 
 context("test mkFac")
 test_that("test mkFac", {
-  d <- c(3,3)
-  map.vec <- rep(factor(NA), d[1]*d[2])
+  d <- c(3, 3)
+  map.vec <- rep(factor(NA), d[1] * d[2])
   map.dim <- map.vec
   dim(map.dim) <- d
   expect_equal(map.dim, mkFac(d, map.vec))
-  
+
   d <- 3
   map.vec <- rep(factor(NA), d)
   expect_equal(map.vec, mkFac(d, map.vec))
 })
 
 context("test families")
-test_that("tweedie",{
+test_that("tweedie", {
   f <- tweedie()
   expect_equal("tweedie", f$family)
   expect_equal("log", f$link)
 })
 
-test_that("lognormal",{
+test_that("lognormal", {
   f <- lognormal()
   expect_equal("lognormal", f$family)
   expect_equal("identity", f$link)

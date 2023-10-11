@@ -2,7 +2,8 @@ stopifnot(
   require("testthat"),
   require("clustTMB"),
   require("mclust"),
-  require("MoEClust")
+  require("MoEClust"),
+  require("FMsmsnReg")
 )
 
 context("test set parameters, no covariates")
@@ -68,7 +69,7 @@ test_that("test set.MuVarPow, expmod = TRUE", {
   nj <- ncol(y)
 
   mod <- MoE_clust(y,
-    G = ng, gating = ~1, expert = ~sex,
+    G = ng, gating = ~1, expert = ~Sex,
     modelNames = c("VEE"), network.data = ais
   )
 
@@ -78,13 +79,13 @@ test_that("test set.MuVarPow, expmod = TRUE", {
     for (j in 1:nj) {
       # Subset data by cluster and column
       y.sub <- y[Class[, g] == 1, j]
-      x.sub <- as.matrix(ais$sex)[Class[, g] == 1, ]
+      x.sub <- as.matrix(ais$Sex)[Class[, g] == 1, ]
       mod.sub <- glm(y.sub ~ x.sub)
       Pars <- set.MuVarPow(
         Class. = Class[, g],
         ysub = y.sub,
         expmod = TRUE,
-        Xd = as.matrix(ais$sex),
+        Xd = as.matrix(ais$Sex),
         family. = gaussian()
       )
       expect_equal(

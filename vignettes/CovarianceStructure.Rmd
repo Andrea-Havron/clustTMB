@@ -18,10 +18,10 @@ This vignette details the different covariance structures available in clustTMB.
 
 ```{r table, echo = FALSE, warnings = FALSE}
 tbl <- data.frame(
-  'Covariance' = c('Spatial GMRF', 'AR(1)', 'Rank Reduction', 'Spatial Rank Reduction'),
-  'Notation' = c('gmrf', 'ar1', 'rr(random = H)', 'rr(spatial = H)' ),
-  'No. of Parameters' = c('2', '2', 'JH - (H(H-1))/2', '1 + JH - (H(H-1))/2'),
-  'Data requirements' = c('spatial coordinates', 'unit spaced levels', '', 'spatial coordinates')
+  "Covariance" = c("Spatial GMRF", "AR(1)", "Rank Reduction", "Spatial Rank Reduction"),
+  "Notation" = c("gmrf", "ar1", "rr(random = H)", "rr(spatial = H)"),
+  "No. of Parameters" = c("2", "2", "JH - (H(H-1))/2", "1 + JH - (H(H-1))/2"),
+  "Data requirements" = c("spatial coordinates", "unit spaced levels", "", "spatial coordinates")
 )
 kbl(tbl, booktabs = TRUE)
 ```
@@ -40,52 +40,55 @@ $$\omega_{i} \sim GMRF(Q[\kappa, \tau])$$
 Prior to fitting a spatial cluster model with clustTMB, users need to set up the constrained Delaunay Triangulation network using INLA. For guidance on setting up an appropriate mesh, see [Triangulation details and examples](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh) and [Tools for mesh assessment](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) from 
 ```{r spatial example, include = FALSE}
 library(clustTMB)
-#refactor from sp to sf when meuse dataset available through sf
-library(sp) #currently require sp to load meuse dataset
+# refactor from sp to sf when meuse dataset available through sf
+library(sp) # currently require sp to load meuse dataset
 data("meuse")
 ```
 
 ```{r run INLA meshbuilder, eval = FALSE}
 library(clustTMB)
-library(sp) 
+library(sp)
 library(INLA)
 data("meuse")
-meshbuilder() #launches INLA mesh shiny app
+meshbuilder() # launches INLA mesh shiny app
 ```
 
 In this example, the following mesh specifications were used:
 ```{r meuse mesh}
-Loc <- meuse[,1:2]
-Bnd <- INLA::inla.nonconvex.hull(as.matrix(Loc), convex=200)
+Loc <- meuse[, 1:2]
+Bnd <- INLA::inla.nonconvex.hull(as.matrix(Loc), convex = 200)
 meuse.mesh <- INLA::inla.mesh.2d(as.matrix(Loc),
-                           max.edge = c(300,1000),
-                           boundary = Bnd)
+  max.edge = c(300, 1000),
+  boundary = Bnd
+)
 ```
 
 ```{r fig1, fig.height = 3, fig.width = 5, echo = FALSE}
 library(ggplot2)
 library(inlabru)
-ggplot() + gg(meuse.mesh) +  
-  geom_point(mapping = aes(x=Loc[,1],y=Loc[,2], size=0.5), size = 0.5) +
+ggplot() +
+  gg(meuse.mesh) +
+  geom_point(mapping = aes(x = Loc[, 1], y = Loc[, 2], size = 0.5), size = 0.5) +
   theme_classic()
 ```
 
 Coordinates are converted to a spatial point dataframe and read into the clustTMB model, along with the mesh, using the spatial.list argument. The gating formula is specified using the gmrf() command:
 ```{r set up model}
-sp::coordinates(Loc) <- ~ x*y
-mod <- clustTMB(response = meuse[,3:6], 
-                 family = lognormal(link = 'identity'),
-                 gatingformula =  ~ gmrf(0 + 1|loc),
-                 G=4, covariance.structure = 'VVV', 
-                 spatial.list = list(loc = Loc, mesh = meuse.mesh)
+sp::coordinates(Loc) <- ~ x * y
+mod <- clustTMB(
+  response = meuse[, 3:6],
+  family = lognormal(link = "identity"),
+  gatingformula = ~ gmrf(0 + 1 | loc),
+  G = 4, covariance.structure = "VVV",
+  spatial.list = list(loc = Loc, mesh = meuse.mesh)
 )
 ```
 
 Models are optimized with nlminb(), model results can be viewed with nlminb commands:
 ```{r view results}
-#Estimated fixed parameters
+# Estimated fixed parameters
 mod$opt$par
-#Minimum negative log likelihood
+# Minimum negative log likelihood
 mod$opt$objective
 ```
 ## Gating Network Examples

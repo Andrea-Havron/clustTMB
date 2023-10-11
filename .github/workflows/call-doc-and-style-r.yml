@@ -8,8 +8,6 @@ name: call-doc-and-style-r
 on:
   push:
     branches: main
-  pull_request:
-    branches: main
 
 jobs:
   doc-and-style-r:

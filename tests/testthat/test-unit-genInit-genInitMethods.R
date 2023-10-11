@@ -12,7 +12,6 @@ context("test init.methods")
 data("faithful")
 ng <- 2
 test_that("test hc using default settings", {
-
   # clustTMB default use = "SVD"
   clss.true <- as.vector(
     hclass(hc(faithful, use = "SVD"), ng)
@@ -47,7 +46,6 @@ test_that("test hc using user defined settings", {
 })
 
 test_that("test quantile", {
-
   # univariate method
   clss.true <- clustTMB:::mc.qclass(faithful[, 1], as.numeric(ng))
 
@@ -63,7 +61,6 @@ test_that("test quantile", {
 })
 
 test_that("test random", {
-
   # random method, so set seed
   set.seed(123)
   clss.true <- sample(1:ng, nrow(faithful), replace = TRUE)

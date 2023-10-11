@@ -1,13 +1,3 @@
-stopifnot(
-  require("testthat"),
-  require("clustTMB"),
-  require("mclust"),
-  require("MoEClust"),
-  require("mvnfast")
-)
-
-# multivariate normal data
-data("faithful")
 clss <- unmap(hclass(hc(faithful), 2))
 init.parm.mclust <- list(
   mu = list(
@@ -236,159 +226,41 @@ test_that("Random Effects dim", {
 
 
 context("univariate normal data with covaraites")
-data(CO2data)
-CO2 <- CO2data$CO2
-GNP <- CO2data$GNP
 G <- 2
 
 z.co2 <- unmap(hclass(hc(cbind(CO2, GNP), use = "VARS"), G))
 y.co2 <- as.matrix(CO2)
 x.co2 <- as.matrix(GNP)
-new.z <- run.mahala(z.co2, y.co2, x.co2)
+newz <- clustTMB:::run.mahala(z.co2, y.co2, x.co2)
 # MoEclust Mahalanobis distance
-## MoEClust code
-init.z <- function(y., dat, g, max.init = 1000) {
-  expN <- CO2 ~ GNP
-  n <- nrow(dat)
-  z.tmp <- unmap(hclass(hc(dat, use = "VARS"), g))
-  n <- nrow(dat)
-  z.mat <- z.alloc <- matrix(0L, nrow = n * g, ncol = g)
-  muX <- vector("numeric", g)
+adjz <- init.z(
+  y. = data.frame(CO2 = CO2),
+  dat = data.frame(CO2, GNP),
+  expN = CO2 ~ GNP, g = 2
+)
 
-  tmp.z <- matrix(NA, nrow = n, ncol = g)
-  mahala <- res.G <- Efit <- list()
-  xN <- as.matrix(y.)
-  # xN        <- X[!noise,, drop=FALSE]
-  # expnoise  <- expx.covs[!noise,, drop=FALSE]
-  #  expN      <- stats::update.formula(expert, xN ~ .)
-  ix <- 0L
-  ne <- ncol(dat)
-  oldcrit <- Inf
-  newcrit <- .Machine$double.xmax
-  while (!identical(tmp.z, z.tmp) &&
-    newcrit <= oldcrit && ix <= max.init) {
-    old.z <- tmp.z
-    tmp.z <- z.tmp
-    oldcrit <- newcrit
-    ix <- ix + 1L
-    for (k in 1:g) {
-      sub <- z.tmp[, k] == 1
-      exp <- tryCatch(stats::lm(expN, data = dat, subset = sub))
-      if (inherits(exp, "try-error")) {
-        init.exp <- FALSE
-        break
-      } else {
-        Efit[[k]] <- exp
-      }
-      pred <- tryCatch(suppressWarnings(stats::predict(exp, newdata = dat)))
-      if (inherits(pred, "try-error")) {
-        init.exp <- FALSE
-      } else {
-        pred <- as.matrix(pred)
-
-        res <-
-          res.G[[k]] <- xN - pred
-        mahala[[k]] <- MoE_mahala(exp, res, squared = TRUE, identity = TRUE)
-      }
-    }
-
-    maha <- do.call(cbind, mahala)
-    if (anyNA(maha)) {
-      init.exp <- FALSE
-      break
-    } else {
-      mahamin <- apply(maha, 1, min)
-      newcrit <- pmin(sum(mahamin), oldcrit)
-      z.tmp <- t(apply(maha, 1, function(x) ifelse(x == min(x), 1, 0)))
-      if (identical(z.tmp, old.z)) {
-        break
-      }
-    }
-  }
-  return(z.tmp)
-}
-adj.z <- init.z(y. = data.frame(CO2 = CO2), dat = data.frame(CO2, GNP), 2)
 test_that("class", {
-  expect_equal(new.z, adj.z)
+  expect_equal(newz, adjz)
 })
 
 context("multivariate normal data with covaraites")
 data(ais)
 hema <- ais[, 3:7]
+hema.sb <- cbind(hema, ais$Sex, ais$BMI)
 G <- 3
 
-z.ais <- unmap(hclass(hc(cbind(hema, ais$sex, ais$BMI), use = "VARS"), G))
+z.ais <- unmap(hclass(hc(hema.sb, use = "VARS"), G))
 y.ais <- as.matrix(hema)
-x.ais <- cbind(ais$sex, ais$BMI)
-new.z <- run.mahala(z.ais, y.ais, x.ais)
-# MoEclust Mahalanobis distance
-## MoEClust code
-init.z <- function(y., dat, g, max.init = 1000) {
-  expN <- y.ais ~ ais$sex + ais$BMI
-  n <- nrow(dat)
-  z.tmp <- unmap(hclass(hc(dat, use = "VARS"), g))
-  n <- nrow(dat)
-  z.mat <- z.alloc <- matrix(0L, nrow = n * g, ncol = g)
-  muX <- vector("numeric", g)
+x.ais <- cbind(ais$Sex, ais$BMI)
+newz <- clustTMB:::run.mahala(z.ais, y.ais, x.ais)
 
-  tmp.z <- matrix(NA, nrow = n, ncol = g)
-  mahala <- res.G <- Efit <- list()
-  xN <- as.matrix(y.)
-  # xN        <- X[!noise,, drop=FALSE]
-  # expnoise  <- expx.covs[!noise,, drop=FALSE]
-  #  expN      <- stats::update.formula(expert, xN ~ .)
-  ix <- 0L
-  ne <- ncol(dat)
-  oldcrit <- Inf
-  newcrit <- .Machine$double.xmax
-  while (!identical(tmp.z, z.tmp) &&
-    newcrit <= oldcrit && ix <= max.init) {
-    old.z <- tmp.z
-    tmp.z <- z.tmp
-    oldcrit <- newcrit
-    ix <- ix + 1L
-    for (k in 1:g) {
-      sub <- z.tmp[, k] == 1
-      exp <- tryCatch(stats::lm(expN, data = dat, subset = sub))
-      if (inherits(exp, "try-error")) {
-        init.exp <- FALSE
-        break
-      } else {
-        Efit[[k]] <- exp
-      }
-      pred <- tryCatch(suppressWarnings(stats::predict(exp, newdata = dat)))
-      if (inherits(pred, "try-error")) {
-        init.exp <- FALSE
-      } else {
-        pred <- as.matrix(pred)
-
-        res <-
-          res.G[[k]] <- xN - pred
-        mahala[[k]] <- MoE_mahala(exp, res, squared = TRUE, identity = TRUE)
-      }
-    }
-
-    maha <- do.call(cbind, mahala)
-    if (anyNA(maha)) {
-      init.exp <- FALSE
-      break
-    } else {
-      mahamin <- apply(maha, 1, min)
-      newcrit <- pmin(sum(mahamin), oldcrit)
-      z.tmp <- t(apply(maha, 1, function(x) ifelse(x == min(x), 1, 0)))
-      if (identical(z.tmp, old.z)) {
-        break
-      }
-    }
-  }
-  return(z.tmp)
-}
-adj.z <- init.z(
-  y. = as.matrix(hema),
-  dat = data.frame(y.ais, ais$sex, ais$BMI), 3
+adjz <- init.z(
+  y. = data.frame(hema),
+  dat = data.frame(hema, Sex = ais$Sex, BMI = ais$BMI),
+  expN = cbind(Wt, LBM, RCC, WCC, Hc) ~ Sex + BMI, g = G
 )
 test_that("class", {
-  expect_equal(new.z, adj.z)
+  expect_equal(newz, adjz)
 })
 
 

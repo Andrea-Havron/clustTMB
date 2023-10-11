@@ -18,7 +18,6 @@
 #' @keywords internal
 #' @noRd
 genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
-
   # list2env(dim.list, environment(genStart))
   n.i <- dim.list$n.i
   n.j <- dim.list$n.j
@@ -535,7 +534,6 @@ init.options <- function(init.method = "hc",
                          exp.init = list(mahala = TRUE),
                          mix.method = "Gower kmeans",
                          user.class = integer()) {
-
   # track defaults
   defaults <- character()
   if (missing(init.method)) defaults <- c(defaults, "init.method")

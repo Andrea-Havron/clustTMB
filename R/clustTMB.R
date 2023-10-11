@@ -56,9 +56,8 @@ clustTMB <- function(response = NULL,
                          expert.range = NULL
                        )
                      ),
-                     projection.dat =  NULL,
+                     projection.dat = NULL,
                      control = run.options()) {
-
   # set str of response to matrix
   response <- as.matrix(response)
 
@@ -99,7 +98,7 @@ clustTMB <- function(response = NULL,
   } else {
     ll.method <- 2
   }
- 
+
   if ((covariance.structure == "E" | covariance.structure == "V") &
     dim.list$n.j > 1) {
     stop("Need to specify multivariate covariance structure")
@@ -148,7 +147,7 @@ clustTMB <- function(response = NULL,
             when random effects specified")
   }
 
- 
+
 
   ## Rank reduction settings
   # clustTMB currently allows for spatial and random rank reduction
@@ -203,7 +202,7 @@ clustTMB <- function(response = NULL,
     time.vector = expert.time - 1,
     expert.data = expertdata,
     gating.data = gatingdata,
-    expert.formula = expertformula, 
+    expert.formula = expertformula,
     gating.formula = gatingformula,
     family = family,
     ll.method = ll.method,

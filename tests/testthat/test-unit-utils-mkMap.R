@@ -189,7 +189,6 @@ test_that("mvn with expert random effects, no rank reduction", {
 })
 
 test_that("mvn with expert random effects and rank reduction", {
-
   ## random reduction
   dim.list <- list(
     n.i = n.i, n.j = n.j, n.t = 1,

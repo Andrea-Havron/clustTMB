@@ -1,0 +1,50 @@
+navbar:
+  structure:
+    left:
+    - home
+    - reference
+    - issue
+    - articles
+    - documents
+    - news
+    right: github
+
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
+    
+    reference:
+      text: Functions
+      icon: far fa-file-code fa-lg
+      href: reference/index.html
+
+    github:
+      text: Source Code
+      icon: fab fa-github fa-lg
+      href: https://github.com/Andrea-Havron/clustTMB
+
+    issue:
+      text: Issues
+      icon: fas fa-question-circle fa-lg
+      href: https://github.com/Andrea-Havron/clustTMB/issues
+
+    articles:
+      text: Vignettes
+      icon: fas fa-file-contract fa-lg
+      menu:
+      - text: Covariance Structures
+        href: articles/CovarianceStructure.html
+      - text: Spatial Example - Meuse Dataset
+        href: articles/SpatialExMeuseData.html
+
+    authors:
+      Andrea M. Havron
+        href: https://github.com/Andrea-Havron-NOAA
+    
+    citation:
+      - text: Citation
+        href: authors.html
+
+
+

@@ -57,6 +57,6 @@ test_that("mesh", {
     "G0"       = spde$param.inla$M0,
     "G0_inv"   = as(diag(1 / diag(spde$param.inla$M0)), "dgTMatrix")
   )
-  
+
   expect_equal(mesh.clustTMB, spde.list)
 })

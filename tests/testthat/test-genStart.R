@@ -1,5 +1,3 @@
-
-
 clss <- unmap(hclass(hc(faithful), 2))
 init.parm.mclust <- list(
   mu = list(
@@ -235,9 +233,11 @@ y.co2 <- as.matrix(CO2)
 x.co2 <- as.matrix(GNP)
 newz <- clustTMB:::run.mahala(z.co2, y.co2, x.co2)
 # MoEclust Mahalanobis distance
-adjz <- init.z(y. = data.frame(CO2 = CO2),
-               dat = data.frame(CO2, GNP), 
-               expN = CO2 ~ GNP, g = 2)
+adjz <- init.z(
+  y. = data.frame(CO2 = CO2),
+  dat = data.frame(CO2, GNP),
+  expN = CO2 ~ GNP, g = 2
+)
 
 test_that("class", {
   expect_equal(newz, adjz)
@@ -256,8 +256,8 @@ newz <- clustTMB:::run.mahala(z.ais, y.ais, x.ais)
 
 adjz <- init.z(
   y. = data.frame(hema),
-  dat = data.frame(hema, Sex = ais$Sex, BMI = ais$BMI), 
-  expN =  cbind(Wt, LBM, RCC, WCC, Hc) ~ Sex + BMI, g = G
+  dat = data.frame(hema, Sex = ais$Sex, BMI = ais$BMI),
+  expN = cbind(Wt, LBM, RCC, WCC, Hc) ~ Sex + BMI, g = G
 )
 test_that("class", {
   expect_equal(newz, adjz)

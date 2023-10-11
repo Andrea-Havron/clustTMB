@@ -239,7 +239,6 @@ splitForm <- function(formula,
                       allowFixedOnly = TRUE,
                       allowNoSpecials = TRUE,
                       debug = FALSE) {
-
   ## logic:
 
   ## string for error message *if* specials not allowed

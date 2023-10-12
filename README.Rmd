@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # clustTMB
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/workflows/R-CMD-check/badge.svg)](https://github.com/Andrea-Havron/clustTMB/actions)
+[![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/Andrea-Havron/clustTMB/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/Andrea-Havron/clustTMB/branch/main/graph/badge.svg?token=kfHYcSdj88)](https://codecov.io/gh/Andrea-Havron/clustTMB)
 <!-- badges: end -->
 

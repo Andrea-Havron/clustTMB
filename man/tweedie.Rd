@@ -9,6 +9,9 @@ tweedie(link = "log")
 \arguments{
 \item{link}{link function association with family}
 }
+\value{
+An object of class "family"
+}
 \description{
 Tweedie family and link specification
 }

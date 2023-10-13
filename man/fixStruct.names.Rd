@@ -6,6 +6,9 @@
 \usage{
 fixStruct.names()
 }
+\value{
+character vector naming available fixed Covariance Structures
+}
 \description{
 Fixed Covariance Structure names
 }

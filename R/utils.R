@@ -181,6 +181,7 @@ mkMap <- function(Family, covstruct, rrStruct, reStruct, dim.list, map.ops = NUL
 #'
 #' @param link link function association with family
 #' @importFrom stats make.link
+#' @return An object of class "family"
 #' @export
 #' @examples
 #' fam <- tweedie()
@@ -197,6 +198,7 @@ tweedie <- function(link = "log") {
 #'
 #' @param link link function association with family
 #' @importFrom stats make.link
+#' @return An object of class "family"
 #' @export
 #' @examples
 #' fam <- lognormal()
@@ -586,6 +588,7 @@ setup.projDat <- function(mesh, projection.dat,
 
 
 #' Fixed Covariance Structure names
+#' @return character vector naming available fixed Covariance Structures
 #' @export
 #' @examples
 #' fixStruct.names()
@@ -701,6 +704,7 @@ skewness <- function(x) {
 }
 
 #' Check if INLA installed (i.e., not on CRAN)
+#' @return Returns TRUE of FALSE
 #'
 #' @export
 #' @examples
@@ -714,7 +718,7 @@ inla_installed <- function() {
 #'
 #' @param fixStruct user input character vector
 #'
-#' @return numeric value associated with character vector
+#' @return numeric value associated with character vector naming available Covariance Structures
 #' @noRd
 fixStruct.lookup <- function(fixStruct) {
   df <- data.frame(

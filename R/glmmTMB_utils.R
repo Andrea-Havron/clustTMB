@@ -129,6 +129,7 @@ findReTrmClasses <- function() {
 ##' findbars_x(~ (1|Subject))
 ##' findbars_x(~ 1 + x)
 ##' @export
+##' @return a list of expressions
 findbars_x <- function(term,
                        debug = FALSE,
                        specials = character(0),

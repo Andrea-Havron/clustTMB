@@ -9,6 +9,9 @@ lognormal(link = "identity")
 \arguments{
 \item{link}{link function association with family}
 }
+\value{
+An object of class "family"
+}
 \description{
 Lognormal family and link specification
 }

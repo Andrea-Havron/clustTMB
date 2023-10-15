@@ -28,6 +28,9 @@ special type; we won't allow pathological cases like
 ((xx|gg))
 }}
 }
+\value{
+a list of expressions
+}
 \description{
 find and process random effects terms
 }

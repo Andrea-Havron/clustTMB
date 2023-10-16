@@ -5,6 +5,7 @@
 #' @importFrom stats logLik
 #' @method logLik clustTMB
 #' @exportS3Method logLik clustTMB
+#' @return object of class \code{logLik} with attributes
 logLik.clustTMB <- function(object, ...) {
   val <- -object$opt$objective
   df <- length(object$opt$par) # fixed effects only
@@ -24,6 +25,7 @@ logLik.clustTMB <- function(object, ...) {
 #' 
 #' @method extractAIC clustTMB
 #' @exportS3Method extractAIC clustTMB
+#' @return numeric value
 extractAIC.clustTMB <- function(object, scale, k = 2, ...) {
   L <- logLik(object)
   edf <- attr(L, "df")
@@ -39,6 +41,7 @@ extractAIC.clustTMB <- function(object, scale, k = 2, ...) {
 #' 
 #' @method coef clustTMB
 #' @exportS3Method coef clustTMB
+#' @return names numeric vector
 coef.clustTMB <- function(object, complete = FALSE, ...) {
   out <- object$opt$par
   out
@@ -58,6 +61,8 @@ coef.clustTMB <- function(object, complete = FALSE, ...) {
 #' @return matrix
 #' @method summary clustTMB
 #' @exportS3Method summary clustTMB
+#' 
+#' @return numeric matrix of parameter estimate and standard errors
 summary.clustTMB <- function(object, select = c("all", "fixed", "random", "report"),
                              p.value=FALSE, ...)
 {
@@ -73,6 +78,8 @@ summary.clustTMB <- function(object, select = c("all", "fixed", "random", "repor
 #' @return NULL
 #' @method print clustTMB
 #' @exportS3Method print clustTMB
+#' 
+#' @return numeric matrix of parameter estimate and standard errors
 print.clustTMB <- function(object){
   print(object$sdr)
   invisible(object)

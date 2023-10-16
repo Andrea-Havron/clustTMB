@@ -9,6 +9,9 @@
 \arguments{
 \item{object}{The fitted clustTMB model}
 }
+\value{
+object of class \code{logLik} with attributes
+}
 \description{
 Extract the log likelihood of a clustTMB model
 }

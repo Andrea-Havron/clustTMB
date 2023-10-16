@@ -25,6 +25,8 @@
 }
 \value{
 matrix
+
+numeric matrix of parameter estimate and standard errors
 }
 \description{
 Invoke TMB's summary.sdreport function

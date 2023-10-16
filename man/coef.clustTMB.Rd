@@ -13,6 +13,9 @@
 
 \item{...}{Currently ignored}
 }
+\value{
+names numeric vector
+}
 \description{
 Get fixed-effect coefficients
 }

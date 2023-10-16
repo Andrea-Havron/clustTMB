@@ -9,6 +9,9 @@
 \arguments{
 \item{object}{The fitted clustTMB model}
 }
+\value{
+numeric matrix of parameter estimate and standard errors
+}
 \description{
 Invoke TMB's print.report function
 }

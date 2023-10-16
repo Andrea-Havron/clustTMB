@@ -15,6 +15,9 @@
 
 \item{...}{Anything else}
 }
+\value{
+numeric value
+}
 \description{
 Extract the AIC of a clustTMB model
 }

@@ -34,10 +34,11 @@ fit.tmb <- function(obj.args, opt.args = list(
         class = "clustTMB")
     }
   } else {
+    report <- obj$report(obj$env$last.par)
     fit.results <- structure(list(
       obj = obj, 
       inits = obj$par, 
-      init.report = obj$report(obj$par)),
+      init.report = report),
       class = "clustTMB")
   }
   return(fit.results)

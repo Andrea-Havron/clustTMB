@@ -4,10 +4,12 @@
 \alias{print.clustTMB}
 \title{Print brief model summary}
 \usage{
-\method{print}{clustTMB}(object)
+\method{print}{clustTMB}(x, ...)
 }
 \arguments{
-\item{object}{The fitted clustTMB model}
+\item{x}{The fitted clustTMB model}
+
+\item{...}{Not used}
 }
 \value{
 numeric matrix of parameter estimate and standard errors

@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{object}{The fitted clustTMB model}
+
+\item{...}{Not used}
 }
 \value{
 object of class \code{logLik} with attributes

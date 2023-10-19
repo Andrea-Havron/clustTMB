@@ -2,6 +2,7 @@
 #' Extract the log likelihood of a clustTMB model
 #'
 #' @param object The fitted clustTMB model
+#' @param ... Not used
 #' @importFrom stats logLik
 #' @method logLik clustTMB
 #' @exportS3Method logLik clustTMB
@@ -74,13 +75,14 @@ summary.clustTMB <- function(object, select = c("all", "fixed", "random", "repor
 #' Invoke TMB's print.report function
 #'
 #' @title Print brief model summary
-#' @param object The fitted clustTMB model
+#' @param x The fitted clustTMB model
+#' @param ... Not used
 #' @return NULL
 #' @method print clustTMB
 #' @exportS3Method print clustTMB
 #' 
 #' @return numeric matrix of parameter estimate and standard errors
-print.clustTMB <- function(object){
-  print(object$sdr)
-  invisible(object)
+print.clustTMB <- function(x, ...){
+  print(x$sdr)
+  invisible(x)
 }

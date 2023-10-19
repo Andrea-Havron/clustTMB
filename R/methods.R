@@ -1,7 +1,7 @@
 #' Extract the log likelihood of a clustTMB model
 #'
 #' @param object The fitted clustTMB model
-#' @param ... Not used
+#' @param ... Currently ignored
 #' @importFrom stats logLik
 #' @method logLik clustTMB
 #' @exportS3Method logLik clustTMB
@@ -18,16 +18,16 @@ logLik.clustTMB <- function(object, ...) {
 
 #' Extract the AIC of a clustTMB model
 #'
-#' @param object The fitted clustTMB model
-#' @param scale The scale (not used)
+#' @param fit The fitted clustTMB model
+#' @param scale The scale, currently ignored
 #' @param k Penalization parameter, defaults to 2
-#' @param ... Anything else
+#' @param ... Currently ignored
 #'
 #' @method extractAIC clustTMB
 #' @exportS3Method extractAIC clustTMB
 #' @return numeric value
-extractAIC.clustTMB <- function(object, scale, k = 2, ...) {
-  L <- logLik(object)
+extractAIC.clustTMB <- function(fit, scale, k = 2, ...) {
+  L <- logLik(fit)
   edf <- attr(L, "df")
   return(c(edf, c(-2 * L + k * edf)))
 }
@@ -57,7 +57,7 @@ coef.clustTMB <- function(object, complete = FALSE, ...) {
 #' \code{"report"} (\eqn{\phi(\hat u,\hat\theta)}) using notation as
 #' \code{\link{sdreport}}.
 #' @param p.value Add column with approximate p-values
-#' @param ... Not used
+#' @param ... Currently ignored
 #' @return matrix
 #' @method summary clustTMB
 #' @exportS3Method summary clustTMB

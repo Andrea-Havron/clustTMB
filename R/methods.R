@@ -1,4 +1,3 @@
-
 #' Extract the log likelihood of a clustTMB model
 #'
 #' @param object The fitted clustTMB model
@@ -10,10 +9,10 @@
 logLik.clustTMB <- function(object, ...) {
   val <- -object$opt$objective
   df <- length(object$opt$par) # fixed effects only
- 
+
   structure(val,
-            df = df,
-            class = "logLik"
+    df = df,
+    class = "logLik"
   )
 }
 
@@ -23,7 +22,7 @@ logLik.clustTMB <- function(object, ...) {
 #' @param scale The scale (not used)
 #' @param k Penalization parameter, defaults to 2
 #' @param ... Anything else
-#' 
+#'
 #' @method extractAIC clustTMB
 #' @exportS3Method extractAIC clustTMB
 #' @return numeric value
@@ -39,7 +38,7 @@ extractAIC.clustTMB <- function(object, scale, k = 2, ...) {
 #' @param complete Currently ignored
 #' @param ... Currently ignored
 #' @importFrom stats coef
-#' 
+#'
 #' @method coef clustTMB
 #' @exportS3Method coef clustTMB
 #' @return names numeric vector
@@ -62,11 +61,10 @@ coef.clustTMB <- function(object, complete = FALSE, ...) {
 #' @return matrix
 #' @method summary clustTMB
 #' @exportS3Method summary clustTMB
-#' 
+#'
 #' @return numeric matrix of parameter estimate and standard errors
 summary.clustTMB <- function(object, select = c("all", "fixed", "random", "report"),
-                             p.value=FALSE, ...)
-{
+                             p.value = FALSE, ...) {
   ans <- summary(object$sdr, select, p.value, ...)
   ans
 }
@@ -80,7 +78,7 @@ summary.clustTMB <- function(object, select = c("all", "fixed", "random", "repor
 #' @return NULL
 #' @method print clustTMB
 #' @exportS3Method print clustTMB
-#' 
+#'
 #' @return numeric matrix of parameter estimate and standard errors
 print.clustTMB <- function(x, ...){
   print(x$sdr)

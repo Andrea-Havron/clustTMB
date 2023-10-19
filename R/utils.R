@@ -20,26 +20,35 @@ fit.tmb <- function(obj.args, opt.args = list(
     report <- obj$report(obj$env$last.par.best)
     if (control$do.sdreport) {
       sdr <- sdreport(obj)
-      fit.results <- structure(list(
-        obj = obj, 
-        opt = opt, 
-        report = report, 
-        sdr = sdr),
-        class = "clustTMB")
+      fit.results <- structure(
+        list(
+          obj = obj,
+          opt = opt,
+          report = report,
+          sdr = sdr
+        ),
+        class = "clustTMB"
+      )
     } else {
-      fit.results <- structure(list(
-        obj = obj, 
-        opt = opt, 
-        report = report),
-        class = "clustTMB")
+      fit.results <- structure(
+        list(
+          obj = obj,
+          opt = opt,
+          report = report
+        ),
+        class = "clustTMB"
+      )
     }
   } else {
     report <- obj$report(obj$env$last.par)
-    fit.results <- structure(list(
-      obj = obj, 
-      inits = obj$par, 
-      init.report = report),
-      class = "clustTMB")
+    fit.results <- structure(
+      list(
+        obj = obj,
+        inits = obj$par,
+        init.report = report
+      ),
+      class = "clustTMB"
+    )
   }
   return(fit.results)
 }

@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{The fitted clustTMB model}
 
-\item{...}{Not used}
+\item{...}{Currently ignored}
 }
 \value{
 object of class \code{logLik} with attributes

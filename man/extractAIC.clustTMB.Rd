@@ -4,16 +4,16 @@
 \alias{extractAIC.clustTMB}
 \title{Extract the AIC of a clustTMB model}
 \usage{
-\method{extractAIC}{clustTMB}(object, scale, k = 2, ...)
+\method{extractAIC}{clustTMB}(fit, scale, k = 2, ...)
 }
 \arguments{
-\item{object}{The fitted clustTMB model}
+\item{fit}{The fitted clustTMB model}
 
-\item{scale}{The scale (not used)}
+\item{scale}{The scale, currently ignored}
 
 \item{k}{Penalization parameter, defaults to 2}
 
-\item{...}{Anything else}
+\item{...}{Currently ignored}
 }
 \value{
 numeric value

@@ -14,19 +14,19 @@ test_that("test integrated spatial", {
   ## Simulate spatial clusters
   # generate location data
   set.seed(123)
-  Loc <- data.frame(x = runif(500), y = runif(500))
+  loc <- data.frame(x = runif(500), y = runif(500))
 
-  Mesh.sim <- fmesher::fm_mesh_2d(Loc, max.edge = c(.03, .05))
-  Loc.sim <- data.frame(x = Mesh.sim$loc[, 1], y = Mesh.sim$loc[, 2])
+  Mesh.sim <- fmesher::fm_mesh_2d(loc, max.edge = c(.03, .05))
+  loc.sim <- data.frame(x = Mesh.sim$loc[, 1], y = Mesh.sim$loc[, 2])
   mesh.sim <- make_mesh(
-    data = Loc.sim, xy_cols = c("x", "y"),
+    data = loc.sim, xy_cols = c("x", "y"),
     mesh = Mesh.sim
   )
 
   # Generate three spatial fields:
   sim_dat_1 <- sdmTMB_simulate(
     formula = ~1,
-    data = Loc.sim,
+    data = loc.sim,
     mesh = mesh.sim,
     family = gaussian(),
     range = 1 / 3,
@@ -38,7 +38,7 @@ test_that("test integrated spatial", {
 
   sim_dat_2 <- sdmTMB_simulate(
     formula = ~1,
-    data = Loc.sim,
+    data = loc.sim,
     mesh = mesh.sim,
     family = gaussian(),
     range = 1 / 3,
@@ -50,7 +50,7 @@ test_that("test integrated spatial", {
 
   sim_dat_3 <- sdmTMB_simulate(
     formula = ~1,
-    data = Loc.sim,
+    data = loc.sim,
     mesh = mesh.sim,
     family = gaussian(),
     range = 1 / 3,
@@ -80,15 +80,15 @@ test_that("test integrated spatial", {
 
   cluster_samp <- cluster_dat[cluster_dat$x > 0 & cluster_dat$x < 1 & cluster_dat$y > 0 & cluster_dat$y < 1, ]
   cluster_samp_ <- cluster_samp[sample(1:nrow(cluster_samp), 500), ]
-  Loc <- cluster_samp_[, 1:2]
-  Mesh.fit <- fmesher::fm_mesh_2d(Loc, max.edge = c(.1, .5))
+  loc.samp <- cluster_samp_[, 1:2]
+  Mesh.fit <- fmesher::fm_mesh_2d(loc.samp, max.edge = c(.1, .5))
 
   ggplot(cluster_dat, aes(x = x, y = y, color = factor(cluster_id))) +
     geom_point()
-  table(cluster_id) / nrow(Loc.sim)
+  table(cluster_id) / nrow(loc.sim)
   table(cluster_samp_$cluster_id) / nrow(cluster_samp_)
   # convert locations to spatial coordinates
-  sp::coordinates(Loc) <- ~ x * y
+  Loc.samp <- sf::st_as_sf(loc.samp, coords = c("x", "y"))
 
   ## Simulate clustered observations
   ## Generate multivariate mean and covariances for
@@ -123,7 +123,7 @@ test_that("test integrated spatial", {
       family = gaussian(),
       gatingformula = ~ gmrf(0 + 1 | loc),
       G = 3, covariance.structure = "VVV",
-      spatial.list = list(loc = Loc, mesh = Mesh.fit)
+      spatial.list = list(loc = Loc.samp, mesh = Mesh.fit)
     )
   )
 

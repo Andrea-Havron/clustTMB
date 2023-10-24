@@ -135,17 +135,17 @@ mod.ln <- clustTMB(
 ```
 
 ## Spatial FMM
-The inclusion of spatial random effects in the expectation of the cluster probability in clustTMB depends on the SPDE-FEM approximation to a spatial Gaussian Markov Random Field (GMRF) introduced by the package, [R-INLA](https://www.r-inla.org/). See [Spatial GMRF] and [Gating Network] for details on these clustTMB formulations.
+The inclusion of spatial random effects in the expectation of the cluster probability in clustTMB depends on the SPDE-FEM approximation to a spatial Gaussian Markov Random Field (GMRF) introduced by the package, [R-INLA](https://www.r-inla.org/). See [Spatial GMRF] and [Gating Network] for details on these clustTMB formulations. The [fmesher R package](https://inlabru-org.github.io/fmesher) ([github source code](https://github.com/inlabru-org/fmesher)) is used to run functions needed to implement this SPDE-FEM method.
 
 ### Setting up the spatial mesh
-The spatial model in clustTMB first requires the definition of the spatial mesh using the fmesher R package. This mesh defines the discretization of the continuous space using a constrained Delaunay triangulation. For details on building the spatial mesh, see [Krainski et al., 2021, Sec 2.6](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh). 
+The spatial model in clustTMB first requires the definition of the spatial mesh. This mesh defines the discretization of the continuous space using a constrained Delaunay triangulation. For details on building the spatial mesh, see [Krainski et al., 2021, Sec 2.6](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh). 
 
-As an example, the spatial mesh for the meuse data is built using the R-INLA functions, inla.convex.hull() to set up the boundary and inla.mesh.2d() to generate the spatial mesh:
+As an example, the spatial mesh for the meuse data is built using the fmesher functions, fm_nonconvex_hull() to set up the boundary and fm_mesh_2d() to generate the spatial mesh:
 ```{r}
-library(INLA) 
-Loc <- meuse[, 1:2]
-Bnd <- inla.nonconvex.hull(as.matrix(Loc), convex = 200)
-meuse.mesh <- inla.mesh.2d(as.matrix(Loc),
+library(fmesher) 
+loc <- meuse[, 1:2]
+Bnd <- fmesher::fm_nonconvex_hull(as.matrix(Loc), convex = 200)
+meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(Loc),
   max.edge = c(300, 1000),
   boundary = Bnd
 )
@@ -164,18 +164,18 @@ Coordinates are converted to a spatial point data frame and read into the clustT
 
 ```{r, warning = FALSE}
 # convert coordinates to a spatial point data frame
-sp::coordinates(Loc) <- ~ x * y
+Loc <- sf::st_as_sf(loc, coords = c("x", "y"))
 
 # define spatial prediction coordinates
 data("meuse.grid")
-sp::coordinates(meuse.grid) <- ~ x * y
+Meuse.Grid <- sf::st_as_sf(meuse.grid, coords = c("x", "y"))
 mod.ln.sp <- clustTMB(
   response = meuse[, 3:6],
   family = lognormal(link = "identity"),
   gatingformula = ~ gmrf(0 + 1 | loc),
   G = 4, covariance.structure = "VVV",
   spatial.list = list(loc = Loc, mesh = meuse.mesh),
-  projection.dat = meuse.grid
+  projection.dat = Meuse.Grid
 )
 ```
 

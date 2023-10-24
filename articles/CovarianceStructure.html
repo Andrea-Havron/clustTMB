@@ -112,7 +112,7 @@
 <p>This vignette details the different covariance structures available
 in clustTMB.</p>
 <div class="section level2">
-<h2 id="random-effect-covariace-matrices">Random Effect Covariace Matrices<a class="anchor" aria-label="anchor" href="#random-effect-covariace-matrices"></a>
+<h2 id="random-effect-covariance-matrices">Random Effect Covariance Matrices<a class="anchor" aria-label="anchor" href="#random-effect-covariance-matrices"></a>
 </h2>
 <table class="table">
 <thead><tr>
@@ -216,9 +216,9 @@ details and examples</a> and <a href="https://becarioprecario.bitbucket.io/spde-
 for mesh assessment</a> from</p>
 <p>In this example, the following mesh specifications were used:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">Loc</span> <span class="op">&lt;-</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
-<span><span class="va">Bnd</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_nonconvex_hull.html" class="external-link">fm_nonconvex_hull</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">Loc</span><span class="op">)</span>, convex <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
-<span><span class="va">meuse.mesh</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_mesh_2d.html" class="external-link">fm_mesh_2d</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">Loc</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">loc</span> <span class="op">&lt;-</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">Bnd</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_nonconvex_hull.html" class="external-link">fm_nonconvex_hull</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>, convex <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
+<span><span class="va">meuse.mesh</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_mesh_2d.html" class="external-link">fm_mesh_2d</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>,</span>
 <span>  max.edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">300</span>, <span class="fl">1000</span><span class="op">)</span>,</span>
 <span>  boundary <span class="op">=</span> <span class="va">Bnd</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -228,7 +228,7 @@ for mesh assessment</a> from</p>
 the clustTMB model, along with the mesh, using the spatial.list
 argument. The gating formula is specified using the gmrf() command:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">sp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/coordinates.html" class="external-link">coordinates</a></span><span class="op">(</span><span class="va">Loc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">~</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span></span>
+<code class="sourceCode R"><span><span class="va">Loc</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">loc</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clustTMB.html">clustTMB</a></span><span class="op">(</span></span>
 <span>  response <span class="op">=</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>,</span>
 <span>  family <span class="op">=</span> <span class="fu"><a href="../reference/lognormal.html">lognormal</a></span><span class="op">(</span>link <span class="op">=</span> <span class="st">"identity"</span><span class="op">)</span>,</span>
@@ -247,17 +247,17 @@ nlminb commands:</p>
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="va">mod</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">par</span></span></code></pre></div>
 <pre><code><span><span class="co">##      betag      betag      betag      betad      betad      betad      betad </span></span>
-<span><span class="co">##  0.1779633  0.5710262  0.1653805  2.0157754  4.3160879  5.4259854  6.7095846 </span></span>
+<span><span class="co">##  0.1778528  0.5710487  0.1653790  2.0157806  4.3160917  5.4259825  6.7095843 </span></span>
 <span><span class="co">##      betad      betad      betad      betad      betad      betad      betad </span></span>
-<span><span class="co">##  1.0064930  3.6030490  5.2113133  6.2155349  0.1259768  3.1475084  4.2016906 </span></span>
+<span><span class="co">##  1.0064951  3.6030499  5.2113145  6.2155354  0.1259816  3.1475079  4.2016933 </span></span>
 <span><span class="co">##      betad      betad      betad      betad      betad      theta      theta </span></span>
-<span><span class="co">##  5.2523426 -1.4361462  3.1132983  4.2118618  5.1996603 -1.2100823 -2.9055409 </span></span>
+<span><span class="co">##  5.2523427 -1.4361541  3.1132965  4.2118641  5.1996590 -1.2100842 -2.9055361 </span></span>
 <span><span class="co">##      theta      theta      theta      theta      theta      theta      theta </span></span>
-<span><span class="co">## -1.2794678 -1.2502165 -2.5623734 -3.1154904 -2.2459369 -2.3607750 -1.8075105 </span></span>
+<span><span class="co">## -1.2794745 -1.2502162 -2.5623862 -3.1154910 -2.2459436 -2.3607736 -1.8075205 </span></span>
 <span><span class="co">##      theta      theta      theta      theta      theta      theta      theta </span></span>
-<span><span class="co">## -4.0486806 -2.6845167 -3.0661953 -2.4648421 -3.3381013 -2.7804343 -2.6686288 </span></span>
+<span><span class="co">## -4.0486953 -2.6845260 -3.0661872 -2.4648550 -3.3381349 -2.7804419 -2.6686037 </span></span>
 <span><span class="co">##  ln_kappag </span></span>
-<span><span class="co">## -5.9132661</span></span></code></pre>
+<span><span class="co">## -5.9132723</span></span></code></pre>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>

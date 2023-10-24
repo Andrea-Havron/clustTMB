@@ -173,38 +173,34 @@ measured in the topsoil of the Meuse river floodplain, Netherlands.
 cluster probability in clustTMB depends on the SPDE-FEM approximation to
 a spatial Gaussian Markov Random Field (GMRF) introduced by the package,
 <a href="https://www.r-inla.org/" class="external-link">R-INLA</a>. See <a href="#spatial-gmrf">Spatial GMRF</a> and <a href="#gating-network">Gating Network</a> for details on these clustTMB
-formulations.</p>
+formulations. The <a href="https://inlabru-org.github.io/fmesher" class="external-link">fmesher R package</a> (<a href="https://github.com/inlabru-org/fmesher" class="external-link">github source code</a>) is
+used to run functions needed to implement this SPDE-FEM method.</p>
 <div class="section level4">
 <h4 id="setting-up-the-spatial-mesh">Setting up the spatial mesh<a class="anchor" aria-label="anchor" href="#setting-up-the-spatial-mesh"></a>
 </h4>
 <p>The spatial model in clustTMB first requires the definition of the
-spatial mesh using the fmesher R package. This mesh defines the
-discretization of the continuous space using a constrained Delaunay
-triangulation. For details on building the spatial mesh, see <a href="https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh" class="external-link">Krainski
+spatial mesh. This mesh defines the discretization of the continuous
+space using a constrained Delaunay triangulation. For details on
+building the spatial mesh, see <a href="https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh" class="external-link">Krainski
 et al., 2021, Sec 2.6</a>.</p>
 <p>As an example, the spatial mesh for the meuse data is built using the
-R-INLA functions, inla.convex.hull() to set up the boundary and
-inla.mesh.2d() to generate the spatial mesh:</p>
+fmesher functions, fm_nonconvex_hull() to set up the boundary and
+fm_mesh_2d() to generate the spatial mesh:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">INLA</span><span class="op">)</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Loading required package: Matrix</span></span></code></pre>
-<pre><code><span><span class="co">## This is INLA_23.10.19-1 built 2023-10-19 08:26:30 UTC.</span></span>
-<span><span class="co">##  - See www.r-inla.org/contact-us for how to get help.</span></span>
-<span><span class="co">##  - List available models/likelihoods/etc with inla.list.models()</span></span>
-<span><span class="co">##  - Use inla.doc(&lt;NAME&gt;) to access documentation</span></span></code></pre>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">Loc</span> <span class="op">&lt;-</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
-<span><span class="va">Bnd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.nonconvex.hull.html" class="external-link">inla.nonconvex.hull</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">Loc</span><span class="op">)</span>, convex <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
-<span><span class="va">meuse.mesh</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.mesh.2d.html" class="external-link">inla.mesh.2d</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">Loc</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://inlabru-org.github.io/fmesher/" class="external-link">fmesher</a></span><span class="op">)</span> </span>
+<span><span class="va">loc</span> <span class="op">&lt;-</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">Bnd</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_nonconvex_hull.html" class="external-link">fm_nonconvex_hull</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>, convex <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
+<span><span class="va">meuse.mesh</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_mesh_2d.html" class="external-link">fm_mesh_2d</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>,</span>
 <span>  max.edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">300</span>, <span class="fl">1000</span><span class="op">)</span>,</span>
 <span>  boundary <span class="op">=</span> <span class="va">Bnd</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The inlabru R package can be used to visualize the mesh:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">inlabru</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/inlabru/reference/gg.html" class="external-link">gg</a></span><span class="op">(</span><span class="va">meuse.mesh</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">geom_point</span><span class="op">(</span>mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">Loc</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, y <span class="op">=</span> <span class="va">Loc</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">loc</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, y <span class="op">=</span> <span class="va">loc</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">theme_classic</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Loading required namespace: INLA</span></span></code></pre>
 <p><img src="SpatialExMeuseData_files/figure-html/fig1-1.png" width="384"></p>
 </div>
 <div class="section level4">
@@ -216,66 +212,66 @@ argument. Spatial projections can be generated by defining a spatial
 data frame of prediction coordinates. These can be passed into the model
 via the projection.dat argument of clustTMB. The gating formula is
 specified using the gmrf() command:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># convert coordinates to a spatial point data frame</span></span>
-<span><span class="fu">sp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/coordinates.html" class="external-link">coordinates</a></span><span class="op">(</span><span class="va">Loc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">~</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span></span>
+<span><span class="va">Loc</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">loc</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># define spatial prediction coordinates</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"meuse.grid"</span><span class="op">)</span></span>
-<span><span class="fu">sp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/coordinates.html" class="external-link">coordinates</a></span><span class="op">(</span><span class="va">meuse.grid</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">~</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span></span>
+<span><span class="va">Meuse.Grid</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">meuse.grid</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">mod.ln.sp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clustTMB.html">clustTMB</a></span><span class="op">(</span></span>
 <span>  response <span class="op">=</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>,</span>
 <span>  family <span class="op">=</span> <span class="fu"><a href="../reference/lognormal.html">lognormal</a></span><span class="op">(</span>link <span class="op">=</span> <span class="st">"identity"</span><span class="op">)</span>,</span>
 <span>  gatingformula <span class="op">=</span> <span class="op">~</span> <span class="fu">gmrf</span><span class="op">(</span><span class="fl">0</span> <span class="op">+</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">loc</span><span class="op">)</span>,</span>
 <span>  G <span class="op">=</span> <span class="fl">4</span>, covariance.structure <span class="op">=</span> <span class="st">"VVV"</span>,</span>
 <span>  spatial.list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>loc <span class="op">=</span> <span class="va">Loc</span>, mesh <span class="op">=</span> <span class="va">meuse.mesh</span><span class="op">)</span>,</span>
-<span>  projection.dat <span class="op">=</span> <span class="va">meuse.grid</span></span>
+<span>  projection.dat <span class="op">=</span> <span class="va">Meuse.Grid</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Results can be viewed via model output:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">sdr</span>, <span class="st">"fixed"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             Estimate Std. Error</span></span>
-<span><span class="co">## betag      0.1683812 0.51601529</span></span>
-<span><span class="co">## betag      0.5590729 0.51004272</span></span>
-<span><span class="co">## betag      0.1889659 0.50496727</span></span>
-<span><span class="co">## betad      2.0157803 0.09100879</span></span>
-<span><span class="co">## betad      4.3160900 0.03898682</span></span>
-<span><span class="co">## betad      5.4259834 0.08790526</span></span>
-<span><span class="co">## betad      6.7095859 0.08920062</span></span>
-<span><span class="co">## betad      1.0164095 0.03989451</span></span>
-<span><span class="co">## betad      3.6119050 0.03016298</span></span>
-<span><span class="co">## betad      5.2215840 0.04708026</span></span>
-<span><span class="co">## betad      6.2274890 0.04395388</span></span>
-<span><span class="co">## betad      0.1353934 0.06134531</span></span>
-<span><span class="co">## betad      3.1482199 0.02002526</span></span>
-<span><span class="co">## betad      4.2137136 0.04068769</span></span>
-<span><span class="co">## betad      5.2614043 0.03329949</span></span>
-<span><span class="co">## betad     -1.4361492 0.05510442</span></span>
-<span><span class="co">## betad      3.1132983 0.03560889</span></span>
-<span><span class="co">## betad      4.2118646 0.04706055</span></span>
-<span><span class="co">## betad      5.1996621 0.04976677</span></span>
-<span><span class="co">## theta     -1.2100794 0.16013202</span></span>
-<span><span class="co">## theta     -2.9055444 0.19071016</span></span>
-<span><span class="co">## theta     -1.2794723 0.15756915</span></span>
-<span><span class="co">## theta     -1.2502156 0.13950111</span></span>
-<span><span class="co">## theta     -2.5718322 0.17343370</span></span>
-<span><span class="co">## theta     -3.1310792 0.14034869</span></span>
-<span><span class="co">## theta     -2.2406020 0.13544295</span></span>
-<span><span class="co">## theta     -2.3780278 0.13367706</span></span>
-<span><span class="co">## theta     -1.8212730 0.17220463</span></span>
-<span><span class="co">## theta     -4.0603214 0.19161619</span></span>
-<span><span class="co">## theta     -2.6424593 0.14302688</span></span>
-<span><span class="co">## theta     -3.0432262 0.15385285</span></span>
-<span><span class="co">## theta     -2.4648462 0.25661329</span></span>
-<span><span class="co">## theta     -3.3381154 0.23942140</span></span>
-<span><span class="co">## theta     -2.7804358 0.20016979</span></span>
-<span><span class="co">## theta     -2.6686112 0.19753636</span></span>
-<span><span class="co">## ln_kappag -5.9298889 0.27995166</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<span><span class="co">## betag      0.1778771 0.51240631</span></span>
+<span><span class="co">## betag      0.5710424 0.50603607</span></span>
+<span><span class="co">## betag      0.1653881 0.50250851</span></span>
+<span><span class="co">## betad      2.0157756 0.09100875</span></span>
+<span><span class="co">## betad      4.3160883 0.03898690</span></span>
+<span><span class="co">## betad      5.4259832 0.08790506</span></span>
+<span><span class="co">## betad      6.7095832 0.08920048</span></span>
+<span><span class="co">## betad      1.0064947 0.03967224</span></span>
+<span><span class="co">## betad      3.6030502 0.03008715</span></span>
+<span><span class="co">## betad      5.2113155 0.04647309</span></span>
+<span><span class="co">## betad      6.2155372 0.04387996</span></span>
+<span><span class="co">## betad      0.1259819 0.06250001</span></span>
+<span><span class="co">## betad      3.1475092 0.02038050</span></span>
+<span><span class="co">## betad      4.2016946 0.04031251</span></span>
+<span><span class="co">## betad      5.2523443 0.03330892</span></span>
+<span><span class="co">## betad     -1.4361509 0.05510449</span></span>
+<span><span class="co">## betad      3.1132984 0.03560900</span></span>
+<span><span class="co">## betad      4.2118630 0.04706059</span></span>
+<span><span class="co">## betad      5.1996609 0.04976673</span></span>
+<span><span class="co">## theta     -1.2100802 0.16013200</span></span>
+<span><span class="co">## theta     -2.9055404 0.19071068</span></span>
+<span><span class="co">## theta     -1.2794769 0.15756868</span></span>
+<span><span class="co">## theta     -1.2502188 0.13950085</span></span>
+<span><span class="co">## theta     -2.5623868 0.17078779</span></span>
+<span><span class="co">## theta     -3.1154938 0.13779683</span></span>
+<span><span class="co">## theta     -2.2459434 0.13350847</span></span>
+<span><span class="co">## theta     -2.3607749 0.13177502</span></span>
+<span><span class="co">## theta     -1.8075075 0.17469416</span></span>
+<span><span class="co">## theta     -4.0486840 0.19343376</span></span>
+<span><span class="co">## theta     -2.6845175 0.14489439</span></span>
+<span><span class="co">## theta     -3.0661905 0.15618033</span></span>
+<span><span class="co">## theta     -2.4648436 0.25661363</span></span>
+<span><span class="co">## theta     -3.3381094 0.23942221</span></span>
+<span><span class="co">## theta     -2.7804342 0.20017000</span></span>
+<span><span class="co">## theta     -2.6686127 0.19753608</span></span>
+<span><span class="co">## ln_kappag -5.9132703 0.28191188</span></span></code></pre>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 2318.831</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 2318.892</span></span></code></pre>
 </div>
 </div>
 </div>

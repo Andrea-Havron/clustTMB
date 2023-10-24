@@ -2,7 +2,6 @@ context("test utils-setup-spatialDat")
 
 
 test_that("loc and mesh - sp object", {
-  skip_if_not_installed("INLA")
   spatial.list <- list(
     loc = NULL,
     mesh = NULL,
@@ -14,11 +13,11 @@ test_that("loc and mesh - sp object", {
 
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh1 <- INLA::inla.mesh.create(Loc)
-  bnd <- INLA::inla.nonconvex.hull(Loc)
-  mesh2 <- INLA::inla.mesh.create(boundary = bnd)
-  A1 <- INLA::inla.spde.make.A(mesh1, Loc)
-  A2 <- INLA::inla.spde.make.A(mesh2, Loc)
+  mesh1 <- fmesher::fm_rcdt_2d(Loc)
+  bnd <- fmesher::fm_nonconvex_hull(Loc)
+  mesh2 <- fmesher::fm_rcdt_2d(boundary = bnd)
+  A1 <- fmesher::fm_basis(mesh1, Loc)
+  A2 <- fmesher::fm_basis(mesh2, Loc)
 
   spatial.list$loc <- Loc
   spatial.list$mesh <- mesh1
@@ -58,7 +57,6 @@ test_that("loc and mesh - sp object", {
 })
 
 test_that("loc and mesh - sf object", {
-  skip_if_not_installed("INLA")
   spatial.list <- list(
     loc = NULL,
     mesh = NULL,
@@ -70,11 +68,11 @@ test_that("loc and mesh - sf object", {
 
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh1 <- INLA::inla.mesh.create(Loc)
-  bnd <- INLA::inla.nonconvex.hull(Loc)
-  mesh2 <- INLA::inla.mesh.create(boundary = bnd)
-  A1 <- INLA::inla.spde.make.A(mesh1, Loc)
-  A2 <- INLA::inla.spde.make.A(mesh2, Loc)
+  mesh1 <- fmesher::fm_rcdt_2d(Loc)
+  bnd <- fmesher::fm_nonconvex_hull(Loc)
+  mesh2 <- fmesher::fm_rcdt_2d(boundary = bnd)
+  A1 <- fmesher::fm_basis(mesh1, Loc)
+  A2 <- fmesher::fm_basis(mesh2, Loc)
 
 
   loc <- data.frame(x = Loc[, 1], y = Loc[, 2])
@@ -107,7 +105,6 @@ test_that("loc and mesh - sf object", {
 })
 
 test_that("loc, no mesh", {
-  skip_if_not_installed("INLA")
   spatial.list <- list(
     loc = NULL,
     mesh = NULL,
@@ -119,8 +116,8 @@ test_that("loc, no mesh", {
 
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh <- INLA::inla.mesh.create(Loc)
-  A <- INLA::inla.spde.make.A(mesh, Loc)
+  mesh <- fmesher::fm_rcdt_2d(Loc)
+  A <- fmesher::fm_basis(mesh, Loc)
   loc <- data.frame(x = Loc[, 1], y = Loc[, 2])
   spatial.list$loc <- sf::st_as_sf(loc, coords = c("x", "y"))
 
@@ -139,13 +136,12 @@ test_that("loc, no mesh", {
       grid.df
     )
   )
-  # mesh meta does not match because inla.mesh.create() called separately
+  # mesh meta does not match because fmesher::fm_rcdt_2d() called separately
   expect_equal(spDat$mesh[2:8], mesh[2:8])
   expect_equal(spDat$A, A)
 })
 
 test_that("no loc, mesh", {
-  skip_if_not_installed("INLA")
   spatial.list <- list(
     loc = NULL,
     mesh = NULL,
@@ -156,11 +152,11 @@ test_that("no loc, mesh", {
   )
 
   Loc <- matrix(runif(100), 50, 2)
-  mesh1 <- INLA::inla.mesh.create(Loc)
-  bnd <- INLA::inla.nonconvex.hull(Loc)
-  mesh2 <- INLA::inla.mesh.create(boundary = bnd)
-  A1 <- INLA::inla.spde.make.A(mesh1, Loc)
-  A2 <- INLA::inla.spde.make.A(mesh2, Loc)
+  mesh1 <- fmesher::fm_rcdt_2d(Loc)
+  bnd <- fmesher::fm_nonconvex_hull(Loc)
+  mesh2 <- fmesher::fm_rcdt_2d(boundary = bnd)
+  A1 <- fmesher::fm_basis(mesh1, Loc)
+  A2 <- fmesher::fm_basis(mesh2, Loc)
 
   spatial.list$mesh <- mesh1
   grid.df <- 1
@@ -193,7 +189,6 @@ test_that("no loc, mesh", {
 })
 
 test_that("no loc, no mesh", {
-  skip_if_not_installed("INLA")
   spatial.list <- list(
     loc = NULL,
     mesh = NULL,

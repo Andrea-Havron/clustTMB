@@ -353,7 +353,6 @@ mkDat <- function(response, time.vector, expert.data, gating.data,
     Xd_proj = XdProj,
     Xg_proj = XgProj
   )
-
   Dat$spde <- spdeStruct(mesh)
   Dat$family <- .valid_family[family[[1]]]
   Dat$link <- .valid_link[family[[2]]]
@@ -529,15 +528,12 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
     warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
   }
   if (!is.null(loc) & is.null(mesh)) {
-    # default mesh - in future add options to include arguments for inla.mesh.2d
+    # default mesh - in future add options to include arguments for fmesher::fm_mesh_2d
     # for now, user can supply mesh if a more complex mesh is needed
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop("INLA must be installed to build a spatial mesh.")
-    }
-    mesh <- INLA::inla.mesh.create(Loc)
+    mesh <- fmesher::fm_rcdt_2d(Loc)
     warning("Building simple spatial mesh. If using the SPDE-FEM GMRF method,
             the simple mesh may result in spatial bias. Consider bulding a
-            more appropriate mesh using [INLA::meshbuilder()]")
+            more appropriate mesh")
   }
   if (is.null(loc) & !is.null(mesh)) {
     if (is.null(mesh$idx$loc)) {
@@ -549,13 +545,10 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
     }
   }
   if (is.null(mesh)) {
-    A <- as(matrix(0, n.i, 1), "dgCMatrix")
+    A <- fmesher::fm_as_dgCMatrix(matrix(0, n.i, 1))
   }
   if (!is.null(mesh)) {
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop("INLA must be installed to build a spatial mesh.")
-    }
-    A <- INLA::inla.spde.make.A(mesh, Loc)
+    A <- fmesher::fm_basis(mesh, Loc)
   }
 
   out <- list(A = A, mesh = mesh)
@@ -564,7 +557,7 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
 
 #' Setup projection data for mkDat
 #'
-#' @param mesh spatial constrained Delaunay triangulation derived from R-INLA
+#' @param mesh spatial constrained Delaunay triangulation derived from the fmesher R package
 #' @param projection.dat Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #' @param expert.formula Formula defining expert model. This formula corresponds to the covariates included in the response densities. Defaults to intercept only (~1) when no covariates are used.
 #' @param gating.formula Formula defining gating model. This formula corresponds to the covariates included in the mixing proportions (logistic regression). Defaults to intercept only (~1) when no covariates are used. When a random effects term is included in the gating network, this formula will be updated so that the intercept term is removed.
@@ -593,10 +586,7 @@ setup.projDat <- function(mesh, projection.dat,
     Xd_proj <- model.matrix(lme4::nobars(expert.formula), df)
     Xg_proj <- model.matrix(lme4::nobars(gating.formula), df)
     doProj <- TRUE
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop("INLA must be installed to build a projection grid.")
-    }
-    A_proj <- INLA::inla.spde.make.A(mesh, grid.loc)
+    A_proj <- fmesher::fm_basis(mesh, grid.loc)
   }
 
   out <- list(
@@ -701,7 +691,7 @@ parm.lookup <- function() {
       "Number of covariates in zero inflation",
       "Number of observations in the response",
       "Number of unique temporal units",
-      "Number of vertices in INLA mesh"
+      "Number of vertices in mesh"
     )
   )
   note <- list("ln_sigma_v not estimated - fixed to ln(1)")
@@ -724,16 +714,6 @@ skewness <- function(x) {
   y <- sqrt(n) * sum(x^3) / (sum(x^2)^(3 / 2))
   y <- y * ((1 - 1 / n))^(3 / 2)
   return(y)
-}
-
-#' Check if INLA installed (i.e., not on CRAN)
-#' @return Returns TRUE of FALSE
-#'
-#' @export
-#' @examples
-#' inla_installed()
-inla_installed <- function() {
-  requireNamespace("INLA", quietly = TRUE)
 }
 
 

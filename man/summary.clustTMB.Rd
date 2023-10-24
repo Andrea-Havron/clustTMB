@@ -21,7 +21,7 @@
 
 \item{p.value}{Add column with approximate p-values}
 
-\item{...}{Not used}
+\item{...}{Currently ignored}
 }
 \value{
 matrix

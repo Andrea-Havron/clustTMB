@@ -7,7 +7,7 @@
 spdeStruct(mesh)
 }
 \arguments{
-\item{mesh}{INLA mesh object generated from \code{\link[INLA:inla.mesh.create]{INLA::inla.mesh.create()}} or \code{\link[INLA:inla.mesh.2d]{INLA::inla.mesh.2d()}}}
+\item{mesh}{mesh object generated from \code{\link[fmesher:fm_rcdt_2d]{fmesher::fm_rcdt_2d()}} or \code{\link[fmesher:fm_mesh_2d]{fmesher::fm_mesh_2d()}}}
 }
 \value{
 spde List used as input into TMB anisotropic model

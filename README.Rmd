@@ -37,12 +37,6 @@ You can install the development version from [GitHub](https://github.com/) with:
 remotes::install_github("Andrea-Havron/clustTMB", build_vignettes = TRUE)
 ```
 
-The clustTMB package relies on functions from R-INLA, which is not available on CRAN. Details on installing R-INLA are available on [this](https://www.r-inla.org/download-install) website. To install the stable version, use:
-```{r install INLA, eval = FALSE}
-install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dep = TRUE)
-```
-
-
 ## Example
 
 A basic example is illustrated with the faithful dataset:

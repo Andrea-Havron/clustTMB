@@ -7,11 +7,9 @@ context("test utils-setup-projDat")
 
 
 test_that("grid.loc, proj data - sp object", {
-  skip_if_not_installed("INLA")
-
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh <- INLA::inla.mesh.create(Loc)
+  mesh <- fmesher::fm_rcdt_2d(Loc)
   gating.formula <- ~Xg
   expert.formula <- ~Xd
 
@@ -28,7 +26,7 @@ test_that("grid.loc, proj data - sp object", {
     coords = proj.grid,
     data = df
   )
-  Aproj <- INLA::inla.spde.make.A(mesh, dat@coords)
+  Aproj <- fmesher::fm_basis(mesh, dat@coords)
 
   projDat <- setup.projDat(
     mesh, dat,
@@ -43,10 +41,9 @@ test_that("grid.loc, proj data - sp object", {
 })
 
 test_that("grid.loc, proj data - sf object", {
-  skip_if_not_installed("INLA")
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh <- INLA::inla.mesh.create(Loc)
+  mesh <- fmesher::fm_rcdt_2d(Loc)
   gating.formula <- ~Xg
   expert.formula <- ~Xd
 
@@ -54,7 +51,7 @@ test_that("grid.loc, proj data - sf object", {
     x = seq(0, 1, 0.1),
     y = seq(0, 1, 0.1)
   )
-  Aproj <- INLA::inla.spde.make.A(mesh, as.matrix(proj.grid))
+  Aproj <- fmesher::fm_basis(mesh, as.matrix(proj.grid))
   n.proj <- nrow(proj.grid)
 
   df <- data.frame(
@@ -79,11 +76,10 @@ test_that("grid.loc, proj data - sf object", {
 
 
 test_that("grid.loc, no proj data - sp object", {
-  skip_if_not_installed("INLA")
 
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh <- INLA::inla.mesh.create(Loc)
+  mesh <- fmesher::fm_rcdt_2d(Loc)
   gating.formula <- ~1
   expert.formula <- ~1
 
@@ -93,7 +89,7 @@ test_that("grid.loc, no proj data - sp object", {
   )
   n.proj <- nrow(proj.grid)
   sp::coordinates(proj.grid) <- ~ x * y
-  Aproj <- INLA::inla.spde.make.A(mesh, proj.grid@coords)
+  Aproj <- fmesher::fm_basis(mesh, proj.grid@coords)
 
   projDat <- setup.projDat(
     mesh, proj.grid,
@@ -124,10 +120,9 @@ test_that("no grid.loc, no proj data", {
 })
 
 test_that("grid.loc, no proj data - sf object", {
-  skip_if_not_installed("INLA")
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
-  mesh <- INLA::inla.mesh.create(Loc)
+  mesh <- fmesher::fm_rcdt_2d(Loc)
   gating.formula <- ~1
   expert.formula <- ~1
 
@@ -135,7 +130,7 @@ test_that("grid.loc, no proj data - sf object", {
     x = seq(0, 1, 0.1),
     y = seq(0, 1, 0.1)
   )
-  Aproj <- INLA::inla.spde.make.A(mesh, as.matrix(proj.grid))
+  Aproj <- fmesher::fm_basis(mesh, as.matrix(proj.grid))
   n.proj <- nrow(proj.grid)
   proj.grid <- sf::st_as_sf(as.data.frame(proj.grid), coords = c("x", "y"))
   projDat <- setup.projDat(

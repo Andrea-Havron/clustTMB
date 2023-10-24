@@ -7,7 +7,7 @@
 setup.projDat(mesh, projection.dat, expert.formula, gating.formula)
 }
 \arguments{
-\item{mesh}{spatial constrained Delaunay triangulation derived from R-INLA}
+\item{mesh}{spatial constrained Delaunay triangulation derived from the fmesher R package}
 
 \item{projection.dat}{Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates}
 

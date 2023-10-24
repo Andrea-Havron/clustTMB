@@ -191,7 +191,7 @@ spatial coordinates
 <h3 id="spatial-gmrf">Spatial GMRF<a class="anchor" aria-label="anchor" href="#spatial-gmrf"></a>
 </h3>
 <p>clustTMB fits spatial random effects using a Gaussian Markov Random
-Field (GMRF). The precision matrix, <span class="math inline">\(Q\)</span>, of the GMRF is the inverse of a Matrn
+Field (GMRF). The precision matrix, <span class="math inline">\(Q\)</span>, of the GMRF is the inverse of a Matern
 covariance function and takes two parameters: 1) <span class="math inline">\(\kappa\)</span>, which is the spatial decay
 parameter and a scaled function of the spatial range, <span class="math inline">\(\phi = \sqrt{8}/\kappa\)</span>, the distance at
 which two locations are considered independent; and 2) <span class="math inline">\(\tau\)</span>, which is a function of <span class="math inline">\(\kappa\)</span> and the marginal spatial variance
@@ -247,17 +247,17 @@ nlminb commands:</p>
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="va">mod</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">par</span></span></code></pre></div>
 <pre><code><span><span class="co">##      betag      betag      betag      betad      betad      betad      betad </span></span>
-<span><span class="co">##  0.1778528  0.5710487  0.1653790  2.0157806  4.3160917  5.4259825  6.7095843 </span></span>
+<span><span class="co">##  0.1778429  0.5710302  0.1653604  2.0157749  4.3160880  5.4259829  6.7095827 </span></span>
 <span><span class="co">##      betad      betad      betad      betad      betad      betad      betad </span></span>
-<span><span class="co">##  1.0064951  3.6030499  5.2113145  6.2155354  0.1259816  3.1475079  4.2016933 </span></span>
+<span><span class="co">##  1.0064938  3.6030494  5.2113144  6.2155363  0.1259826  3.1475094  4.2016949 </span></span>
 <span><span class="co">##      betad      betad      betad      betad      betad      theta      theta </span></span>
-<span><span class="co">##  5.2523427 -1.4361541  3.1132965  4.2118641  5.1996590 -1.2100842 -2.9055361 </span></span>
+<span><span class="co">##  5.2523448 -1.4361501  3.1132989  4.2118630  5.1996611 -1.2100860 -2.9055387 </span></span>
 <span><span class="co">##      theta      theta      theta      theta      theta      theta      theta </span></span>
-<span><span class="co">## -1.2794745 -1.2502162 -2.5623862 -3.1154910 -2.2459436 -2.3607736 -1.8075205 </span></span>
+<span><span class="co">## -1.2794701 -1.2502178 -2.5623866 -3.1154896 -2.2459434 -2.3607714 -1.8075107 </span></span>
 <span><span class="co">##      theta      theta      theta      theta      theta      theta      theta </span></span>
-<span><span class="co">## -4.0486953 -2.6845260 -3.0661872 -2.4648550 -3.3381349 -2.7804419 -2.6686037 </span></span>
+<span><span class="co">## -4.0486825 -2.6845172 -3.0661891 -2.4648437 -3.3381083 -2.7804341 -2.6686093 </span></span>
 <span><span class="co">##  ln_kappag </span></span>
-<span><span class="co">## -5.9132723</span></span></code></pre>
+<span><span class="co">## -5.9132664</span></span></code></pre>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>

@@ -2,7 +2,7 @@
 % Please edit documentation in R/spatial_utils.R
 \name{spdeStruct}
 \alias{spdeStruct}
-\title{Generate SPDE list needed as imput to FEM-SPDE spatial TMB models}
+\title{Generate SPDE list needed as input to FEM-SPDE spatial TMB models}
 \usage{
 spdeStruct(mesh)
 }
@@ -13,6 +13,6 @@ spdeStruct(mesh)
 spde List used as input into TMB anisotropic model
 }
 \description{
-Generate SPDE list needed as imput to FEM-SPDE spatial TMB models
+Generate SPDE list needed as input to FEM-SPDE spatial TMB models
 }
 \keyword{internal}

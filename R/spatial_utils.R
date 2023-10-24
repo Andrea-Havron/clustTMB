@@ -1,6 +1,6 @@
 ## Functions used to setup spatial structure
 
-#' Generate SPDE list needed as imput to FEM-SPDE spatial TMB models
+#' Generate SPDE list needed as input to FEM-SPDE spatial TMB models
 #'
 #' @param mesh mesh object generated from [fmesher::fm_rcdt_2d()] or [fmesher::fm_mesh_2d()]
 #'

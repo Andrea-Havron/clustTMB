@@ -41,7 +41,7 @@ clustTMB(
 
 \item{G}{Integer specifying the number of clusters.}
 
-\item{rr}{List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate ressponse to a smaller dimension independent reponse. When used, the covariance structure of the response is swicthed to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.}
+\item{rr}{List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate response to a smaller dimension independent response. When used, the covariance structure of the response is switched to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.}
 
 \item{covariance.structure}{A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.}
 
@@ -49,10 +49,10 @@ clustTMB(
 
 \item{Map}{Vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control this map argument and user input is limited}
 
-\item{initialization.args}{A list consisting of initalization settings used to generate initial values.
+\item{initialization.args}{A list consisting of initialization settings used to generate initial values.
 control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
 \enumerate{
-\item init.method - Single character string indicating intial clustering method. Mehtods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
+\item init.method - Single character string indicating initial clustering method. Methods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
 \item hc.options - Named list of two character strings specifying hc modelName and hcUse when init.method = 'hc'. The default modelName is 'VVV' and the default use is 'SVD' unless gating/expert covariates specified, in which case default in VARS. See ?mclust::mclust.options for complete list of options.
 \item mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
 \item user - Numeric or character vector defining user specified intial classification. init.method must be set to 'user' when using this option.

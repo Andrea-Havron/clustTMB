@@ -144,8 +144,8 @@ As an example, the spatial mesh for the meuse data is built using the fmesher fu
 ```{r}
 library(fmesher) 
 loc <- meuse[, 1:2]
-Bnd <- fmesher::fm_nonconvex_hull(as.matrix(Loc), convex = 200)
-meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(Loc),
+Bnd <- fmesher::fm_nonconvex_hull(as.matrix(loc), convex = 200)
+meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(loc),
   max.edge = c(300, 1000),
   boundary = Bnd
 )
@@ -155,7 +155,7 @@ The inlabru R package can be used to visualize the mesh:
 ```{r fig1, fig.height = 3, fig.width = 4, warning = FALSE}
 ggplot() +
   inlabru::gg(meuse.mesh) +
-  geom_point(mapping = aes(x = Loc[, 1], y = Loc[, 2], size = 0.5), size = 0.5) +
+  geom_point(mapping = aes(x = loc[, 1], y = loc[, 2], size = 0.5), size = 0.5) +
   theme_classic()
 ```
 

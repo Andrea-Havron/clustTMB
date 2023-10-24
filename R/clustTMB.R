@@ -115,10 +115,8 @@ clustTMB <- function(response = NULL,
   }
 
   if (!is.null(spatial.list$loc)) {
-    if ((class(spatial.list$loc) != "SpatialPoints") &
-      (class(spatial.list$loc) != "SpatialPointsDataFrame")) {
-      stop("Locations need to be SpatialPoints
-           of SpatialPointsDataFrame class")
+    if (!all(class(spatial.list$loc) == list("sf", "data.frame"))) {
+      stop("Locations need to be defined as sf data.frames")
     }
   }
 

@@ -14,7 +14,7 @@ library(kableExtra)
 
 This vignette details the different covariance structures available in clustTMB. 
 
-## Random Effect Covariace Matrices
+## Random Effect Covariance Matrices
 
 ```{r table, echo = FALSE, warnings = FALSE}
 tbl <- data.frame(

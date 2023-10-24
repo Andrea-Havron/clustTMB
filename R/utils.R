@@ -292,12 +292,15 @@ mkDat <- function(response, time.vector, expert.data, gating.data,
            have the same number of observations")
     }
   }
-
   ## gating and expert data
   # set up factors for locations in expert/gating data when spatial data present
   if (!is.null(spatial.list$loc)) {
-    expert.data$loc <- factor(row.names(spatial.list$loc@coords))
-    gating.data$loc <- factor(row.names(spatial.list$loc@coords))
+    expert.data$loc <- factor(row.names(
+      as.data.frame(sf::st_coordinates(spatial.list$loc))
+      ))
+    gating.data$loc <- factor(row.names(
+      as.data.frame(sf::st_coordinates(spatial.list$loc))
+      ))
   }
 
   # set up input expert/gating covariate data
@@ -430,7 +433,7 @@ mkRandom <- function(expert.formula, gating.formula, expert.data, gating.data, s
   # }
   #
   # if (("gmrf" %in% expert.re.names) | ("gmrfSpeedup" %in% expert.re.names)) {
-  #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
+  #   loc.id <- sf::st_coordinates(spatial.list$loc)[,1] + sf::st_coordinates(spatial.list$loc)[,2]
   #   expertdata$loc <- as.numeric(factor())
   #   idx <- which((expert.re.names == "gmrf") | (expert.re.names == "gmrfSpeedup"))
   #   gmrf.form <- as.formula(paste("~", deparse(expert.split$reTrmFormulas[[idx]])))
@@ -440,7 +443,7 @@ mkRandom <- function(expert.formula, gating.formula, expert.data, gating.data, s
   # }
   #
   # if (("gmrf" %in% gating.re.names) | ("gmrfSpeedup" %in% gating.re.names)) {
-  #   loc.id <- spatial.list$loc@coords[,1] + spatial.list$loc@coords[,2]
+  #   loc.id <- sf::st_coordinates(spatial.list$loc)[,1] + sf::st_coordinates(spatial.list$loc)[,2]
   #   gating.data$loc <- as.numeric(factor(loc.id))
   #   idx <- which((gating.re.names == "gmrf") | (gating.re.names == "gmrfSpeedup"))
   #   gmrf.form <- as.formula(paste("~", deparse(gating.split$reTrmFormulas[[idx]])))

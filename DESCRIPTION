@@ -18,6 +18,7 @@ Depends:
 Imports: 
     cluster,
     clustMixType,
+    fmesher,
     glmmTMB,
     lme4,
     Matrix,
@@ -37,7 +38,6 @@ Suggests:
     ggplot2,
     ggspatial,
     giscoR,
-    INLA (>= 21.2.23),
     inlabru,
     kableExtra,
     knitr,
@@ -60,7 +60,6 @@ LinkingTo:
     TMB
 VignetteBuilder: 
     knitr
-Additional_repositories: https://inla.r-inla-download.org/R/stable
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: yes

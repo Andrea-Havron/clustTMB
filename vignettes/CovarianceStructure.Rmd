@@ -29,7 +29,7 @@ kbl(tbl, booktabs = TRUE)
 
 ### Spatial GMRF
 
-clustTMB fits spatial random effects using a Gaussian Markov Random Field (GMRF). The precision matrix, $Q$, of the GMRF is the inverse of a Mat\'{e}rn covariance function and takes two parameters: 1) $\kappa$, which is the spatial decay parameter and a scaled function of the spatial range, $\phi = \sqrt{8}/\kappa$, the distance at which two locations are considered independent; and 2) $\tau$, which is a function of $\kappa$ and the marginal spatial variance $\sigma^{2}$:
+clustTMB fits spatial random effects using a Gaussian Markov Random Field (GMRF). The precision matrix, $Q$, of the GMRF is the inverse of a Mat\latexcode{\'{e}}rn covariance function and takes two parameters: 1) $\kappa$, which is the spatial decay parameter and a scaled function of the spatial range, $\phi = \sqrt{8}/\kappa$, the distance at which two locations are considered independent; and 2) $\tau$, which is a function of $\kappa$ and the marginal spatial variance $\sigma^{2}$:
 
 $$\tau = \frac{1}{2\sqrt{\pi}\kappa\sigma}.$$
 The precision matrix is approximated following the SPDE-FEM approach \citep{Lindgren2011}, where a constrained Delaunay triangulation network is used to discretize the spatial extent in order to determine a GMRF for a set of irregularly spaced locations, i$. 
@@ -37,27 +37,20 @@ The precision matrix is approximated following the SPDE-FEM approach \citep{Lind
 $$\omega_{i} \sim GMRF(Q[\kappa, \tau])$$
 
 #### Spatial Example
-Prior to fitting a spatial cluster model with clustTMB, users need to set up the constrained Delaunay Triangulation network using INLA. For guidance on setting up an appropriate mesh, see [Triangulation details and examples](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh) and [Tools for mesh assessment](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) from 
+Prior to fitting a spatial cluster model with clustTMB, users need to set up the constrained Delaunay Triangulation network using the R package, fmesher. This package provides a CRAN distributed collection of mesh functions developed for the package, R-INLA. For guidance on setting up an appropriate mesh, see [Triangulation details and examples](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh) and [Tools for mesh assessment](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) from 
 ```{r spatial example, include = FALSE}
 library(clustTMB)
 # refactor from sp to sf when meuse dataset available through sf
 library(sp) # currently require sp to load meuse dataset
 data("meuse")
-```
-
-```{r run INLA meshbuilder, eval = FALSE}
-library(clustTMB)
-library(sp)
-library(INLA)
-data("meuse")
-meshbuilder() # launches INLA mesh shiny app
+library(fmesher)
 ```
 
 In this example, the following mesh specifications were used:
 ```{r meuse mesh}
 Loc <- meuse[, 1:2]
-Bnd <- INLA::inla.nonconvex.hull(as.matrix(Loc), convex = 200)
-meuse.mesh <- INLA::inla.mesh.2d(as.matrix(Loc),
+Bnd <- fmesher::fm_nonconvex_hull(as.matrix(Loc), convex = 200)
+meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(Loc),
   max.edge = c(300, 1000),
   boundary = Bnd
 )

@@ -34,7 +34,7 @@ library(kableExtra)
 library(knitr)
 library(ggplot2)
 library(inlabru)
-library(INLA)
+library(fmesher)
 ```
 
 ```{r}
@@ -138,17 +138,11 @@ mod.ln <- clustTMB(
 The inclusion of spatial random effects in the expectation of the cluster probability in clustTMB depends on the SPDE-FEM approximation to a spatial Gaussian Markov Random Field (GMRF) introduced by the package, [R-INLA](https://www.r-inla.org/). See [Spatial GMRF] and [Gating Network] for details on these clustTMB formulations.
 
 ### Setting up the spatial mesh
-The spatial model in clustTMB first requires the definition of the spatial mesh using INLA. This mesh defines the discretization of the continuous space using a constrained Delaunay triangulation. For details on building the spatial mesh, see [Krainski et al., 2021, Sec 2.6](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh). See [instructions](https://www.r-inla.org/download-install) for downloading and installing R-INLA. The R-INLA package includes a user friendly [shiny app](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:toolsmesh) to aid in spatial mesh setting choices:
-```{r, eval = FALSE}
-# install R-INLA
-install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dep = TRUE)
-library(INLA)
-meshbuilder() # launches INLA mesh shiny app
-```
+The spatial model in clustTMB first requires the definition of the spatial mesh using the fmesher R package. This mesh defines the discretization of the continuous space using a constrained Delaunay triangulation. For details on building the spatial mesh, see [Krainski et al., 2021, Sec 2.6](https://becarioprecario.bitbucket.io/spde-gitbook/ch-intro.html#sec:mesh). 
 
 As an example, the spatial mesh for the meuse data is built using the R-INLA functions, inla.convex.hull() to set up the boundary and inla.mesh.2d() to generate the spatial mesh:
 ```{r}
-library(INLA)
+library(INLA) 
 Loc <- meuse[, 1:2]
 Bnd <- inla.nonconvex.hull(as.matrix(Loc), convex = 200)
 meuse.mesh <- inla.mesh.2d(as.matrix(Loc),

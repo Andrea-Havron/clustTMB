@@ -3,20 +3,20 @@
 ## - Uses the MixSim and mvtnorm package to simulate observations based on cluster IDs
 
 test_that("test integrated spatial", {
-  skip_if_not_installed("INLA")
 
   library(sdmTMB)
   library(clustTMB)
   library(MixSim)
   library(mvtnorm)
   library(ggplot2)
+  library(fmesher)
 
   ## Simulate spatial clusters
   # generate location data
   set.seed(123)
   Loc <- data.frame(x = runif(500), y = runif(500))
 
-  Mesh.sim <- INLA::inla.mesh.2d(Loc, max.edge = c(.03, .05))
+  Mesh.sim <- fmesher::fm_mesh_2d(Loc, max.edge = c(.03, .05))
   Loc.sim <- data.frame(x = Mesh.sim$loc[, 1], y = Mesh.sim$loc[, 2])
   mesh.sim <- make_mesh(
     data = Loc.sim, xy_cols = c("x", "y"),
@@ -81,7 +81,7 @@ test_that("test integrated spatial", {
   cluster_samp <- cluster_dat[cluster_dat$x > 0 & cluster_dat$x < 1 & cluster_dat$y > 0 & cluster_dat$y < 1, ]
   cluster_samp_ <- cluster_samp[sample(1:nrow(cluster_samp), 500), ]
   Loc <- cluster_samp_[, 1:2]
-  Mesh.fit <- INLA::inla.mesh.2d(Loc, max.edge = c(.1, .5))
+  Mesh.fit <- fmesher::fm_mesh_2d(Loc, max.edge = c(.1, .5))
 
   ggplot(cluster_dat, aes(x = x, y = y, color = factor(cluster_id))) +
     geom_point()

@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # clustTMB
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/Andrea-Havron/clustTMB/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/Andrea-Havron/clustTMB/workflows/call-r-cmd-check/badge.svg)](https://github.com/Andrea-Havron/clustTMB/actions)
 [![codecov](https://codecov.io/gh/Andrea-Havron/clustTMB/branch/main/graph/badge.svg?token=kfHYcSdj88)](https://codecov.io/gh/Andrea-Havron/clustTMB)
 <!-- badges: end -->
 
@@ -40,15 +40,15 @@ remotes::install_github("Andrea-Havron/clustTMB", build_vignettes = TRUE)
 ## Example
 
 A basic example is illustrated with the faithful dataset:
-
-```{r example}
+```{r print-example, eval = FALSE}
 library(clustTMB)
 data("faithful")
 m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
 ```
 
 
-```{r pressure, echo = FALSE}
+```{r run-example, echo = FALSE, message=FALSE, warning=FALSE}
+library(clustTMB)
 data("faithful")
 m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
 plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classification + 1, xlab = "eruptions", ylab = "waiting")

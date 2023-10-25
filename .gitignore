@@ -1,9 +1,32 @@
+# R Environment Variables
+.Renviron
 .Rproj.user
+
+# History files
 .Rhistory
+.Rapp.history
+.history
+
+# Session Data files
 .RData
-*.dll
+
+# User-specific files
+.Ruserdata
+
+# Source file extensions
 *.o
 *.so
+*.dll
+
+#vignettes
 inst/doc
-/.vscode
-.Renviron
+/doc/
+/Meta/
+
+# IDE specific files
+*.vscode
+
+# produced vignettes and libraries
+*.html
+*.pdf
+*/libs/

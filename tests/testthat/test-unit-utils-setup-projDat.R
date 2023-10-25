@@ -76,7 +76,6 @@ test_that("grid.loc, proj data - sf object", {
 
 
 test_that("grid.loc, no proj data - sp object", {
-
   n.i <- 100
   Loc <- matrix(runif(n.i * 2), n.i, 2)
   mesh <- fmesher::fm_rcdt_2d(Loc)

@@ -80,7 +80,7 @@ summary.clustTMB <- function(object, select = c("all", "fixed", "random", "repor
 #' @exportS3Method print clustTMB
 #'
 #' @return numeric matrix of parameter estimate and standard errors
-print.clustTMB <- function(x, ...){
+print.clustTMB <- function(x, ...) {
   print(x$sdr)
   invisible(x)
 }

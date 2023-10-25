@@ -297,10 +297,10 @@ mkDat <- function(response, time.vector, expert.data, gating.data,
   if (!is.null(spatial.list$loc)) {
     expert.data$loc <- factor(row.names(
       as.data.frame(sf::st_coordinates(spatial.list$loc))
-      ))
+    ))
     gating.data$loc <- factor(row.names(
       as.data.frame(sf::st_coordinates(spatial.list$loc))
-      ))
+    ))
   }
 
   # set up input expert/gating covariate data

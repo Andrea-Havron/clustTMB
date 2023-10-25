@@ -75,7 +75,7 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
     Loc <- sf::st_coordinates(loc)
   }
   mesh <- spatial.list$mesh
-  
+
   if ((is.null(mesh) & is.null(loc)) & !is.null(projection.dat)) {
     warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
   }
@@ -105,7 +105,7 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
   if (!is.null(mesh)) {
     A <- fmesher::fm_basis(mesh, Loc)
   }
-  
+
   out <- list(A = A, mesh = mesh)
   return(out)
 }
@@ -122,7 +122,7 @@ setup.projDat <- function(mesh, projection.dat,
                           expert.formula,
                           gating.formula) {
   grid.df <- projection.dat
-  
+
   if (is.null(grid.df)) {
     Xd_proj <- matrix(1)
     Xg_proj <- matrix(1)
@@ -137,21 +137,19 @@ setup.projDat <- function(mesh, projection.dat,
     if (ncol(grid.df) == 0) {
       df <- data.frame(x = rep(1, nrow(grid.loc)))
     }
-    
+
     Xd_proj <- model.matrix(lme4::nobars(expert.formula), df)
     Xg_proj <- model.matrix(lme4::nobars(gating.formula), df)
     doProj <- TRUE
     A_proj <- fmesher::fm_basis(mesh, grid.loc)
   }
-  
+
   out <- list(
     doProj = doProj,
     Xd_proj = Xd_proj,
     Xg_proj = Xg_proj,
     A_proj = A_proj
   )
-  
+
   return(out)
 }
-
-

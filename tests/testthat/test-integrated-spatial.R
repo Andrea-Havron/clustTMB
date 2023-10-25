@@ -3,7 +3,6 @@
 ## - Uses the MixSim and mvtnorm package to simulate observations based on cluster IDs
 
 test_that("test integrated spatial", {
-
   library(sdmTMB)
   library(clustTMB)
   library(MixSim)

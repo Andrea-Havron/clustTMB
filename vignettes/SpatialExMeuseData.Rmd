@@ -142,7 +142,7 @@ The spatial model in clustTMB first requires the definition of the spatial mesh.
 
 As an example, the spatial mesh for the meuse data is built using the fmesher functions, fm_nonconvex_hull() to set up the boundary and fm_mesh_2d() to generate the spatial mesh:
 ```{r}
-library(fmesher) 
+library(fmesher)
 loc <- meuse[, 1:2]
 Bnd <- fmesher::fm_nonconvex_hull(as.matrix(loc), convex = 200)
 meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(loc),

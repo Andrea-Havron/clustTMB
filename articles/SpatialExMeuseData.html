@@ -187,7 +187,7 @@ et al., 2021, Sec 2.6</a>.</p>
 fmesher functions, fm_nonconvex_hull() to set up the boundary and
 fm_mesh_2d() to generate the spatial mesh:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://inlabru-org.github.io/fmesher/" class="external-link">fmesher</a></span><span class="op">)</span> </span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://inlabru-org.github.io/fmesher/" class="external-link">fmesher</a></span><span class="op">)</span></span>
 <span><span class="va">loc</span> <span class="op">&lt;-</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="va">Bnd</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_nonconvex_hull.html" class="external-link">fm_nonconvex_hull</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>, convex <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="va">meuse.mesh</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_mesh_2d.html" class="external-link">fm_mesh_2d</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>,</span>
@@ -232,42 +232,42 @@ specified using the gmrf() command:</p>
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">sdr</span>, <span class="st">"fixed"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             Estimate Std. Error</span></span>
-<span><span class="co">## betag      0.1778723 0.51240684</span></span>
-<span><span class="co">## betag      0.5710516 0.50603721</span></span>
-<span><span class="co">## betag      0.1653871 0.50250913</span></span>
-<span><span class="co">## betad      2.0157751 0.09100860</span></span>
-<span><span class="co">## betad      4.3160892 0.03898686</span></span>
-<span><span class="co">## betad      5.4259830 0.08790518</span></span>
-<span><span class="co">## betad      6.7095833 0.08920041</span></span>
-<span><span class="co">## betad      1.0064939 0.03967219</span></span>
-<span><span class="co">## betad      3.6030499 0.03008715</span></span>
-<span><span class="co">## betad      5.2113144 0.04647320</span></span>
-<span><span class="co">## betad      6.2155357 0.04388001</span></span>
-<span><span class="co">## betad      0.1259809 0.06249994</span></span>
-<span><span class="co">## betad      3.1475093 0.02038054</span></span>
-<span><span class="co">## betad      4.2016945 0.04031267</span></span>
-<span><span class="co">## betad      5.2523438 0.03330892</span></span>
-<span><span class="co">## betad     -1.4361510 0.05510450</span></span>
-<span><span class="co">## betad      3.1132981 0.03560909</span></span>
-<span><span class="co">## betad      4.2118612 0.04706062</span></span>
-<span><span class="co">## betad      5.1996597 0.04976670</span></span>
-<span><span class="co">## theta     -1.2100837 0.16013165</span></span>
-<span><span class="co">## theta     -2.9055424 0.19071045</span></span>
-<span><span class="co">## theta     -1.2794741 0.15756907</span></span>
-<span><span class="co">## theta     -1.2502203 0.13950071</span></span>
-<span><span class="co">## theta     -2.5623896 0.17078751</span></span>
-<span><span class="co">## theta     -3.1154941 0.13779677</span></span>
-<span><span class="co">## theta     -2.2459386 0.13350889</span></span>
-<span><span class="co">## theta     -2.3607724 0.13177517</span></span>
-<span><span class="co">## theta     -1.8075099 0.17469381</span></span>
-<span><span class="co">## theta     -4.0486794 0.19343414</span></span>
-<span><span class="co">## theta     -2.6845092 0.14489523</span></span>
-<span><span class="co">## theta     -3.0661906 0.15618016</span></span>
-<span><span class="co">## theta     -2.4648433 0.25661368</span></span>
-<span><span class="co">## theta     -3.3381041 0.23942291</span></span>
-<span><span class="co">## theta     -2.7804331 0.20017016</span></span>
-<span><span class="co">## theta     -2.6686138 0.19753588</span></span>
-<span><span class="co">## ln_kappag -5.9132731 0.28191214</span></span></code></pre>
+<span><span class="co">## betag      0.1778728 0.51240663</span></span>
+<span><span class="co">## betag      0.5710553 0.50603724</span></span>
+<span><span class="co">## betag      0.1653820 0.50250880</span></span>
+<span><span class="co">## betad      2.0157767 0.09100852</span></span>
+<span><span class="co">## betad      4.3160899 0.03898684</span></span>
+<span><span class="co">## betad      5.4259832 0.08790514</span></span>
+<span><span class="co">## betad      6.7095845 0.08920038</span></span>
+<span><span class="co">## betad      1.0064950 0.03967200</span></span>
+<span><span class="co">## betad      3.6030496 0.03008717</span></span>
+<span><span class="co">## betad      5.2113135 0.04647324</span></span>
+<span><span class="co">## betad      6.2155348 0.04388000</span></span>
+<span><span class="co">## betad      0.1259797 0.06249987</span></span>
+<span><span class="co">## betad      3.1475079 0.02038059</span></span>
+<span><span class="co">## betad      4.2016924 0.04031264</span></span>
+<span><span class="co">## betad      5.2523428 0.03330890</span></span>
+<span><span class="co">## betad     -1.4361515 0.05510445</span></span>
+<span><span class="co">## betad      3.1132989 0.03560906</span></span>
+<span><span class="co">## betad      4.2118622 0.04706058</span></span>
+<span><span class="co">## betad      5.1996606 0.04976672</span></span>
+<span><span class="co">## theta     -1.2100854 0.16013149</span></span>
+<span><span class="co">## theta     -2.9055433 0.19071036</span></span>
+<span><span class="co">## theta     -1.2794750 0.15756899</span></span>
+<span><span class="co">## theta     -1.2502211 0.13950067</span></span>
+<span><span class="co">## theta     -2.5623991 0.17078652</span></span>
+<span><span class="co">## theta     -3.1154929 0.13779697</span></span>
+<span><span class="co">## theta     -2.2459371 0.13350904</span></span>
+<span><span class="co">## theta     -2.3607728 0.13177508</span></span>
+<span><span class="co">## theta     -1.8075121 0.17469360</span></span>
+<span><span class="co">## theta     -4.0486750 0.19343464</span></span>
+<span><span class="co">## theta     -2.6845108 0.14489507</span></span>
+<span><span class="co">## theta     -3.0661917 0.15618008</span></span>
+<span><span class="co">## theta     -2.4648450 0.25661345</span></span>
+<span><span class="co">## theta     -3.3381059 0.23942268</span></span>
+<span><span class="co">## theta     -2.7804344 0.20016997</span></span>
+<span><span class="co">## theta     -2.6686132 0.19753600</span></span>
+<span><span class="co">## ln_kappag -5.9132721 0.28191194</span></span></code></pre>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>

@@ -133,11 +133,6 @@ probability.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"meuse"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"meuse.riv"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"meuse.grid"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use the `linewidth` argument instead.</span></span>
-<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
 <div class="figure">
 <img src="SpatialExMeuseData_files/figure-html/sample-1.png" alt="Sample locations of heavy metal concentration levels (ppm) of four metals in the topsoil of the Meuse river floodplain, Netherlands." width="576"><p class="caption">
 Sample locations of heavy metal concentration levels (ppm) of four
@@ -155,12 +150,12 @@ measured in the topsoil of the Meuse river floodplain, Netherlands.
 <h3 id="simple-fmm">Simple FMM<a class="anchor" aria-label="anchor" href="#simple-fmm"></a>
 </h3>
 <p>The simple Gaussian FMM can be fit using the following code:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Andrea-Havron/clustTMB" class="external-link">clustTMB</a></span><span class="op">)</span></span>
 <span><span class="va">mod.gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clustTMB.html">clustTMB</a></span><span class="op">(</span>response <span class="op">=</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>, G <span class="op">=</span> <span class="fl">3</span>, covariance.structure <span class="op">=</span> <span class="st">"VVV"</span><span class="op">)</span></span></code></pre></div>
 <p>Specifying a lognormal distribution is implemented using the
 <em>family</em> and <em>link</em> specification:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mod.ln</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clustTMB.html">clustTMB</a></span><span class="op">(</span></span>
 <span>  response <span class="op">=</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>,</span>
 <span>  family <span class="op">=</span> <span class="fu"><a href="../reference/lognormal.html">lognormal</a></span><span class="op">(</span>link <span class="op">=</span> <span class="st">"identity"</span><span class="op">)</span>,</span>
@@ -187,7 +182,7 @@ et al., 2021, Sec 2.6</a>.</p>
 <p>As an example, the spatial mesh for the meuse data is built using the
 fmesher functions, fm_nonconvex_hull() to set up the boundary and
 fm_mesh_2d() to generate the spatial mesh:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://inlabru-org.github.io/fmesher/" class="external-link">fmesher</a></span><span class="op">)</span></span>
 <span><span class="va">loc</span> <span class="op">&lt;-</span> <span class="va">meuse</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="va">Bnd</span> <span class="op">&lt;-</span> <span class="fu">fmesher</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/fmesher/reference/fm_nonconvex_hull.html" class="external-link">fm_nonconvex_hull</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">loc</span><span class="op">)</span>, convex <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
@@ -196,7 +191,7 @@ fm_mesh_2d() to generate the spatial mesh:</p>
 <span>  boundary <span class="op">=</span> <span class="va">Bnd</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The inlabru R package can be used to visualize the mesh:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">inlabru</span><span class="fu">::</span><span class="fu"><a href="https://inlabru-org.github.io/inlabru/reference/gg.html" class="external-link">gg</a></span><span class="op">(</span><span class="va">meuse.mesh</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">geom_point</span><span class="op">(</span>mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">loc</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, y <span class="op">=</span> <span class="va">loc</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
@@ -213,7 +208,7 @@ argument. Spatial projections can be generated by defining a spatial
 data frame of prediction coordinates. These can be passed into the model
 via the projection.dat argument of clustTMB. The gating formula is
 specified using the gmrf() command:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># convert coordinates to a spatial point data frame</span></span>
 <span><span class="va">Loc</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">loc</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -229,47 +224,47 @@ specified using the gmrf() command:</p>
 <span>  projection.dat <span class="op">=</span> <span class="va">Meuse.Grid</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Results can be viewed via model output:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">sdr</span>, <span class="st">"fixed"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             Estimate Std. Error</span></span>
-<span><span class="co">## betag      0.1778525 0.51240841</span></span>
-<span><span class="co">## betag      0.5710749 0.50604038</span></span>
-<span><span class="co">## betag      0.1654095 0.50251156</span></span>
-<span><span class="co">## betad      2.0157786 0.09100837</span></span>
-<span><span class="co">## betad      4.3160896 0.03898678</span></span>
-<span><span class="co">## betad      5.4259852 0.08790509</span></span>
-<span><span class="co">## betad      6.7095847 0.08920057</span></span>
-<span><span class="co">## betad      1.0064941 0.03967266</span></span>
-<span><span class="co">## betad      3.6030515 0.03008737</span></span>
-<span><span class="co">## betad      5.2113179 0.04647320</span></span>
-<span><span class="co">## betad      6.2155409 0.04387992</span></span>
-<span><span class="co">## betad      0.1259819 0.06250010</span></span>
-<span><span class="co">## betad      3.1475089 0.02038061</span></span>
-<span><span class="co">## betad      4.2016949 0.04031246</span></span>
-<span><span class="co">## betad      5.2523447 0.03330870</span></span>
-<span><span class="co">## betad     -1.4361534 0.05510447</span></span>
-<span><span class="co">## betad      3.1132916 0.03560917</span></span>
-<span><span class="co">## betad      4.2118599 0.04706049</span></span>
-<span><span class="co">## betad      5.1996570 0.04976616</span></span>
-<span><span class="co">## theta     -1.2100887 0.16013098</span></span>
-<span><span class="co">## theta     -2.9055466 0.19071002</span></span>
-<span><span class="co">## theta     -1.2794761 0.15756876</span></span>
-<span><span class="co">## theta     -1.2502169 0.13950123</span></span>
-<span><span class="co">## theta     -2.5623656 0.17078968</span></span>
-<span><span class="co">## theta     -3.1154792 0.13779800</span></span>
-<span><span class="co">## theta     -2.2459385 0.13350887</span></span>
-<span><span class="co">## theta     -2.3607768 0.13177457</span></span>
-<span><span class="co">## theta     -1.8075047 0.17469460</span></span>
-<span><span class="co">## theta     -4.0486729 0.19343498</span></span>
-<span><span class="co">## theta     -2.6845196 0.14489430</span></span>
-<span><span class="co">## theta     -3.0662039 0.15617891</span></span>
-<span><span class="co">## theta     -2.4648445 0.25661360</span></span>
-<span><span class="co">## theta     -3.3380994 0.23942376</span></span>
-<span><span class="co">## theta     -2.7804383 0.20017002</span></span>
-<span><span class="co">## theta     -2.6686357 0.19753309</span></span>
-<span><span class="co">## ln_kappag -5.9132813 0.28191363</span></span></code></pre>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<span><span class="co">## betag      0.1779633 0.51240693</span></span>
+<span><span class="co">## betag      0.5710262 0.50603382</span></span>
+<span><span class="co">## betag      0.1653805 0.50250754</span></span>
+<span><span class="co">## betad      2.0157754 0.09100866</span></span>
+<span><span class="co">## betad      4.3160879 0.03898689</span></span>
+<span><span class="co">## betad      5.4259854 0.08790546</span></span>
+<span><span class="co">## betad      6.7095846 0.08920058</span></span>
+<span><span class="co">## betad      1.0064930 0.03967251</span></span>
+<span><span class="co">## betad      3.6030490 0.03008720</span></span>
+<span><span class="co">## betad      5.2113133 0.04647324</span></span>
+<span><span class="co">## betad      6.2155349 0.04387996</span></span>
+<span><span class="co">## betad      0.1259768 0.06249992</span></span>
+<span><span class="co">## betad      3.1475084 0.02038053</span></span>
+<span><span class="co">## betad      4.2016906 0.04031252</span></span>
+<span><span class="co">## betad      5.2523426 0.03330884</span></span>
+<span><span class="co">## betad     -1.4361462 0.05510453</span></span>
+<span><span class="co">## betad      3.1132983 0.03560914</span></span>
+<span><span class="co">## betad      4.2118618 0.04706059</span></span>
+<span><span class="co">## betad      5.1996603 0.04976633</span></span>
+<span><span class="co">## theta     -1.2100823 0.16013168</span></span>
+<span><span class="co">## theta     -2.9055409 0.19071054</span></span>
+<span><span class="co">## theta     -1.2794678 0.15756966</span></span>
+<span><span class="co">## theta     -1.2502165 0.13950098</span></span>
+<span><span class="co">## theta     -2.5623734 0.17078908</span></span>
+<span><span class="co">## theta     -3.1154904 0.13779699</span></span>
+<span><span class="co">## theta     -2.2459369 0.13350909</span></span>
+<span><span class="co">## theta     -2.3607750 0.13177483</span></span>
+<span><span class="co">## theta     -1.8075105 0.17469387</span></span>
+<span><span class="co">## theta     -4.0486806 0.19343411</span></span>
+<span><span class="co">## theta     -2.6845167 0.14489455</span></span>
+<span><span class="co">## theta     -3.0661953 0.15617981</span></span>
+<span><span class="co">## theta     -2.4648421 0.25661389</span></span>
+<span><span class="co">## theta     -3.3381013 0.23942344</span></span>
+<span><span class="co">## theta     -2.7804343 0.20017039</span></span>
+<span><span class="co">## theta     -2.6686288 0.19753390</span></span>
+<span><span class="co">## ln_kappag -5.9132661 0.28190919</span></span></code></pre>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 2318.892</span></span></code></pre>

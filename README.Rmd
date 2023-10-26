@@ -55,7 +55,13 @@ plot(faithful$eruptions, faithful$waiting, pch = 16, col = m1$report$classificat
 legend(4.2, 57.5, legend = c("Class 1", "Class 2"), col = c("black", "red"), pch = 16)
 ```
 
+## Vignettes
+
 For more detailed examples, see vignettes:
+
+- [Available Covariance Structures](https://andrea-havron.github.io/clustTMB/articles/CovarianceStructure.html)
+- [Spatial Example](https://andrea-havron.github.io/clustTMB/articles/SpatialExMeuseData.html)
+
 ```{r vignettes, eval = FALSE}
 ## Not Run
 
@@ -64,3 +70,6 @@ utils::browseVignettes("clustTMB")
 
 ## End Not Run
 ```
+
+
+

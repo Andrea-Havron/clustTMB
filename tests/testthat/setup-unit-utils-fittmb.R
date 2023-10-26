@@ -11,8 +11,8 @@ period <- factor((y > mean(y)) + 1)
 ## Random year+quarter effect, fixed period effect:
 B <- model.matrix(~ year + quarter - 1)
 A <- model.matrix(~ period - 1)
-B <- as(B, "dgTMatrix")
-A <- as(A, "dgTMatrix")
+B <- as(as(as(B, "dMatrix"), "generalMatrix"), "TsparseMatrix")
+A <- as(as(as(A, "dMatrix"), "generalMatrix"), "TsparseMatrix")
 u <- rnorm(ncol(B)) ## logsdu=0
 beta <- rnorm(ncol(A)) * 100
 eps <- rnorm(nrow(B), sd = 1) ## logsd0=0

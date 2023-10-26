@@ -127,7 +127,7 @@ setup.projDat <- function(mesh, projection.dat,
     Xd_proj <- matrix(1)
     Xg_proj <- matrix(1)
     doProj <- FALSE
-    A_proj <- as(matrix(0), "dgCMatrix")
+    A_proj <- fmesher::fm_as_dgCMatrix(matrix(0))
   } else {
     if (!is(grid.df, "sf")) {
       grid.df <- sf::st_as_sf(grid.df)

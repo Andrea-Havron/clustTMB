@@ -113,9 +113,8 @@ clustTMB <- function(response = NULL,
   if (!(family[[2]] %in% names(.valid_link))) {
     stop("link not supported in specified family")
   }
-
   if (!is.null(spatial.list$loc)) {
-    if (!all(class(spatial.list$loc) == list("sf", "data.frame"))) {
+    if (!inherits(spatial.list$loc, "sf")) {
       stop("Locations need to be defined as sf data.frames")
     }
   }

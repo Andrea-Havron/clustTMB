@@ -41,7 +41,14 @@ m1 <- clustTMB(response = faithful, covariance.structure = "VVV")
 
 <img src="man/figures/README-run-example-1.png" width="100%" />
 
+## Vignettes
+
 For more detailed examples, see vignettes:
+
+- [Available Covariance
+  Structures](https://andrea-havron.github.io/clustTMB/articles/CovarianceStructure.html)
+- [Spatial
+  Example](https://andrea-havron.github.io/clustTMB/articles/SpatialExMeuseData.html)
 
 ``` r
 ## Not Run

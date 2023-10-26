@@ -117,15 +117,16 @@ finite mixture models (FMMs) using clustTMB.</p>
 <div class="section level3">
 <h3 id="data-overview">Data Overview<a class="anchor" aria-label="anchor" href="#data-overview"></a>
 </h3>
-<p>The meuse data set from the sp library (Pebesma and Bivand, 2005)
-consists of 155 observations, 4 response variables, location data, and 8
-covariates. The response involves four heavy metals measured to monitor
-pollution levels in the top soil of the Meuse river floodplain,
-Netherlands (Fig. @ref(fig:sample), Rikken and van Rijn, 1993). The
-heavy metal data exhibit lognormality (Fig. @ref(fig:pairs-expl)),
-allowing for a comparison between the Gaussian and lognormal
-distributions in addition to an FMM with and without spatial structure
-influencing the cluster probability.</p>
+<p>The meuse data set from the sp library <span class="citation">(<a href="#ref-Pebesma2005" role="doc-biblioref">Pebesma and Bivand
+2005</a>)</span> consists of 155 observations, 4 response variables,
+location data, and 8 covariates. The response involves four heavy metals
+measured to monitor pollution levels in the top soil of the Meuse river
+floodplain, Netherlands (Fig. @ref(fig:sample), <span class="citation">(<a href="#ref-Rikken1993" role="doc-biblioref">Rikken
+and Rijn 1993</a>)</span>). The heavy metal data exhibit normality on
+the logscale (Fig. @ref(fig:pairs-expl)), allowing for a comparison
+between the Gaussian and lognormal distributions in addition to an FMM
+with and without spatial structure influencing the cluster
+probability.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># load data</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span>
@@ -232,42 +233,42 @@ specified using the gmrf() command:</p>
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">sdr</span>, <span class="st">"fixed"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             Estimate Std. Error</span></span>
-<span><span class="co">## betag      0.1778728 0.51240663</span></span>
-<span><span class="co">## betag      0.5710553 0.50603724</span></span>
-<span><span class="co">## betag      0.1653820 0.50250880</span></span>
-<span><span class="co">## betad      2.0157767 0.09100852</span></span>
-<span><span class="co">## betad      4.3160899 0.03898684</span></span>
-<span><span class="co">## betad      5.4259832 0.08790514</span></span>
-<span><span class="co">## betad      6.7095845 0.08920038</span></span>
-<span><span class="co">## betad      1.0064950 0.03967200</span></span>
-<span><span class="co">## betad      3.6030496 0.03008717</span></span>
-<span><span class="co">## betad      5.2113135 0.04647324</span></span>
-<span><span class="co">## betad      6.2155348 0.04388000</span></span>
-<span><span class="co">## betad      0.1259797 0.06249987</span></span>
-<span><span class="co">## betad      3.1475079 0.02038059</span></span>
-<span><span class="co">## betad      4.2016924 0.04031264</span></span>
-<span><span class="co">## betad      5.2523428 0.03330890</span></span>
-<span><span class="co">## betad     -1.4361515 0.05510445</span></span>
-<span><span class="co">## betad      3.1132989 0.03560906</span></span>
-<span><span class="co">## betad      4.2118622 0.04706058</span></span>
-<span><span class="co">## betad      5.1996606 0.04976672</span></span>
-<span><span class="co">## theta     -1.2100854 0.16013149</span></span>
-<span><span class="co">## theta     -2.9055433 0.19071036</span></span>
-<span><span class="co">## theta     -1.2794750 0.15756899</span></span>
-<span><span class="co">## theta     -1.2502211 0.13950067</span></span>
-<span><span class="co">## theta     -2.5623991 0.17078652</span></span>
-<span><span class="co">## theta     -3.1154929 0.13779697</span></span>
-<span><span class="co">## theta     -2.2459371 0.13350904</span></span>
-<span><span class="co">## theta     -2.3607728 0.13177508</span></span>
-<span><span class="co">## theta     -1.8075121 0.17469360</span></span>
-<span><span class="co">## theta     -4.0486750 0.19343464</span></span>
-<span><span class="co">## theta     -2.6845108 0.14489507</span></span>
-<span><span class="co">## theta     -3.0661917 0.15618008</span></span>
-<span><span class="co">## theta     -2.4648450 0.25661345</span></span>
-<span><span class="co">## theta     -3.3381059 0.23942268</span></span>
-<span><span class="co">## theta     -2.7804344 0.20016997</span></span>
-<span><span class="co">## theta     -2.6686132 0.19753600</span></span>
-<span><span class="co">## ln_kappag -5.9132721 0.28191194</span></span></code></pre>
+<span><span class="co">## betag      0.1779633 0.51240693</span></span>
+<span><span class="co">## betag      0.5710262 0.50603382</span></span>
+<span><span class="co">## betag      0.1653805 0.50250754</span></span>
+<span><span class="co">## betad      2.0157754 0.09100866</span></span>
+<span><span class="co">## betad      4.3160879 0.03898689</span></span>
+<span><span class="co">## betad      5.4259854 0.08790546</span></span>
+<span><span class="co">## betad      6.7095846 0.08920058</span></span>
+<span><span class="co">## betad      1.0064930 0.03967251</span></span>
+<span><span class="co">## betad      3.6030490 0.03008720</span></span>
+<span><span class="co">## betad      5.2113133 0.04647324</span></span>
+<span><span class="co">## betad      6.2155349 0.04387996</span></span>
+<span><span class="co">## betad      0.1259768 0.06249992</span></span>
+<span><span class="co">## betad      3.1475084 0.02038053</span></span>
+<span><span class="co">## betad      4.2016906 0.04031252</span></span>
+<span><span class="co">## betad      5.2523426 0.03330884</span></span>
+<span><span class="co">## betad     -1.4361462 0.05510453</span></span>
+<span><span class="co">## betad      3.1132983 0.03560914</span></span>
+<span><span class="co">## betad      4.2118618 0.04706059</span></span>
+<span><span class="co">## betad      5.1996603 0.04976633</span></span>
+<span><span class="co">## theta     -1.2100823 0.16013168</span></span>
+<span><span class="co">## theta     -2.9055409 0.19071054</span></span>
+<span><span class="co">## theta     -1.2794678 0.15756966</span></span>
+<span><span class="co">## theta     -1.2502165 0.13950098</span></span>
+<span><span class="co">## theta     -2.5623734 0.17078908</span></span>
+<span><span class="co">## theta     -3.1154904 0.13779699</span></span>
+<span><span class="co">## theta     -2.2459369 0.13350909</span></span>
+<span><span class="co">## theta     -2.3607750 0.13177483</span></span>
+<span><span class="co">## theta     -1.8075105 0.17469387</span></span>
+<span><span class="co">## theta     -4.0486806 0.19343411</span></span>
+<span><span class="co">## theta     -2.6845167 0.14489455</span></span>
+<span><span class="co">## theta     -3.0661953 0.15617981</span></span>
+<span><span class="co">## theta     -2.4648421 0.25661389</span></span>
+<span><span class="co">## theta     -3.3381013 0.23942344</span></span>
+<span><span class="co">## theta     -2.7804343 0.20017039</span></span>
+<span><span class="co">## theta     -2.6686288 0.19753390</span></span>
+<span><span class="co">## ln_kappag -5.9132661 0.28190919</span></span></code></pre>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>
@@ -428,6 +429,24 @@ multinomial regression:</p>
 exp(\mathbb{\eta}_{,g})}{\sum^{G}_{g=1}exp(\mathbb{\eta}_{,g})}
 \end{align}
 \]</span></p>
+</div>
+</div>
+<div class="section level2">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Pebesma2005" class="csl-entry">
+Pebesma, Edzer J., and Roger Bivand. 2005. <span>“Classes and Methods
+for Spatial Data in <span>R</span>.”</span> <em>R News</em> 5 (2): 9–13.
+<a href="https://CRAN.R-project.org/doc/Rnews/" class="external-link">https://CRAN.R-project.org/doc/Rnews/</a>.
+</div>
+<div id="ref-Rikken1993" class="csl-entry">
+Rikken, M. G. J., and R. P. G. van Rijn. 1993. <em><span class="nocase">Soil pollution with heavy metals - an inquiry into
+spatial variation, cost of mapping and the risk evaluation of copper,
+cadmium, lead and zinc in the floodplains of the Meuse west of Stein,
+the Netherlands.</span></em> Doctoraalveldwerkverslag, Dept. of Physical
+Geography, Utrecht University.
+</div>
 </div>
 </div>
   </div>

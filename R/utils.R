@@ -1,8 +1,8 @@
 #' Helper function to run TMB code and return output
 #' @importFrom TMB openmp MakeADFun sdreport
 #'
-#' @param obj.args List of arguments for TMB MakeADFun() function
-#' @param opt.args List of arguments for nlminb() function
+#' @param obj.args List of arguments for TMB [MakeADFun()] function
+#' @param opt.args List of arguments for [nlminb()] function
 #' @param control List controlling model runs and standard error reporting
 #'
 #' @return Fitted objective function, nlminb output, reported values from model, sdreport if true
@@ -53,7 +53,7 @@ fit.tmb <- function(obj.args, opt.args = list(
   return(fit.results)
 }
 
-#' Returns factors defining how to optionally collect and fix parameters to be passed to map list in MakeADFun. See ?MakeADFun for more details.
+#' Returns factors defining how to optionally collect and fix parameters to be passed to map list in [MakeADFun()]. See ?MakeADFun for more details.
 #'
 #' @param d Dimension of factors for mapping
 #' @param f Vector of values to be converted to a factor
@@ -70,7 +70,7 @@ mkFac <- function(d, f = NA) {
 }
 
 
-#' Sets up map list for TMB model. The map list defines how to collect and fix parameters. See ?MakeADFun for more details.
+#' Sets up map list for TMB model. The map list defines how to collect and fix parameters. See [?MakeADFun()] for more details.
 #'
 #' @param Family Distribution family
 #' @param covstruct Covariance structure
@@ -252,7 +252,7 @@ lognormal <- function(link = "identity") {
 #' @param spatial.list List of spatial objects when fitting a spatial model
 #' @param projection.dat Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #'
-#' @return Data list for input into TMB::MakeADFun
+#' @return Data list for input into [TMB::MakeADFun()]
 #' @keywords internal
 #' @noRd
 

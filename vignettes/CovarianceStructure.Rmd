@@ -1,6 +1,9 @@
 ---
 title: "Covariance Structure"
-output: rmarkdown::html_vignette
+output: 
+  bookdown::html_document2:
+      base_format: rmarkdown::html_vignette
+link-citations: TRUE
 vignette: >
   %\VignetteIndexEntry{Covariance Structure}
   %\VignetteEngine{knitr::rmarkdown}
@@ -32,7 +35,7 @@ kbl(tbl, booktabs = TRUE)
 clustTMB fits spatial random effects using a Gaussian Markov Random Field (GMRF). The precision matrix, $Q$, of the GMRF is the inverse of a Matern covariance function and takes two parameters: 1) $\kappa$, which is the spatial decay parameter and a scaled function of the spatial range, $\phi = \sqrt{8}/\kappa$, the distance at which two locations are considered independent; and 2) $\tau$, which is a function of $\kappa$ and the marginal spatial variance $\sigma^{2}$:
 
 $$\tau = \frac{1}{2\sqrt{\pi}\kappa\sigma}.$$
-The precision matrix is approximated following the SPDE-FEM approach \citep{Lindgren2011}, where a constrained Delaunay triangulation network is used to discretize the spatial extent in order to determine a GMRF for a set of irregularly spaced locations, i$. 
+The precision matrix is approximated following the SPDE-FEM approach [@Lindgren2011], where a constrained Delaunay triangulation network is used to discretize the spatial extent in order to determine a GMRF for a set of irregularly spaced locations, i$. 
 
 $$\omega_{i} \sim GMRF(Q[\kappa, \tau])$$
 

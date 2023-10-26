@@ -9,16 +9,16 @@
 #' @param family Statistical distribution and link function of observations.
 #' @param Offset Constant in expertformula only used to offset density expectation.
 #' @param G Integer specifying the number of clusters.
-#' @param rr List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the reponse. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate response to a smaller dimension independent response. When used, the covariance structure of the response is switched to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.
+#' @param rr List specifying dimension of rank reduction in spatial, temporal, and/or random effects. Dimension must be smaller than the total dimension of the response. Rank reduction is applied only to the expertformula random effects. The rank reduction reduces the dimensionality of a correlated multivariate response to a smaller dimension independent response. When used, the covariance structure of the response is switched to 'Diagonal.' Defaults to NULL, no rank reduction. If rank reduction is used in conjunction with a random effect, that random effect must also be specified in the expert formula. Currently, rank reduction on temporal random effects is disabled.
 #' @param covariance.structure A character string specifying the covariance structure of the response using mclust naming scheme. See description of modelNames under ?Mclust for details.
 #' @param Start Set initial values for random effects parameters (fixed and random terms)
-#' @param Map Vector indicating parameter maps, see ?TMB::MakeADFun for details. Defaults in clustTMB control this map argument and user input is limited
+#' @param Map Vector indicating parameter maps, see ?[TMB::MakeADFun()] for details. Defaults in clustTMB control this map argument and user input is limited
 #' @param initialization.args A list consisting of initialization settings used to generate initial values.
-#' control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
+#' control Calls [init.options()] to generate settings for initial values. Arguments of [init.options()] can be specified by the user.
 #' 1. init.method - Single character string indicating initial clustering method. Methods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
 #' 2. hc.options - Named list of two character strings specifying hc modelName and hcUse when init.method = 'hc'. The default modelName is 'VVV' and the default use is 'SVD' unless gating/expert covariates specified, in which case default in VARS. See ?mclust::mclust.options for complete list of options.
 #' 3. mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
-#' 4. user - Numeric or character vector defining user specified intial classification. init.method must be set to 'user' when using this option.
+#' 4. user - Numeric or character vector defining user specified initial classification. init.method must be set to 'user' when using this option.
 #' @param spatial.list List of data objects needed when fitting a spatial GMRF model
 #' @param projection.dat Spatial Points class of projection coordinates or Spatial Points Dataframe containing projection coordinates and projection covariates
 #' @param control List controlling whether models are run and whether standard errors are calculated.

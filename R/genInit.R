@@ -3,7 +3,7 @@
 #' @param Data List containing TMB data objects
 #' @param family Distribution family
 #' @param dim.list List of model dimensions
-#' @param control Calls init.options() to generate settings for initial values. Arguments of init.options() can be specified by the user.
+#' @param control Calls [init.options()] to generate settings for initial values. Arguments of [init.options()] can be specified by the user.
 #' 1. init.method - Single character string indicating initial clustering method. Methods include: hc, quantile, random, mclust, kmeans, mixed, user. Defaults to 'hc'. In the case where data are univariate and there are no covariates in the gating/expert formula, this defaults to 'quantile'
 #' 2. hc.options - Named list of two character strings specifying hc modelName and hcUse when init.method = 'hc'. The default modelName is 'VVV' and the default use is 'SVD' unless gating/expert covariates specified, in which case default in VARS. See ?mclust::mclust.options for complete list of options.
 #' 3. mix.method - String stating initialization method for mixed-type data (init.method = 'mixed'). Current default when Tweedie family specified. Options include: Gower kmeans (default), Gower hclust, and kproto.
@@ -137,7 +137,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   }
   if (exp.mod & any(apply(Class, 2, sum) == 0)) {
     stop("initalization method results in an empty or unit cluster
-         which is not suitable when intializing the expert model")
+         which is not suitable when initializing the expert model")
   }
 
   # Set initial values in ParList
@@ -190,7 +190,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 #' @param n.g Number of clusters
 #' @param n.i Number of observations
 #' @param n.j Number of columns
-#' @param control Classification settings from init.options()
+#' @param control Classification settings from [init.options()]
 #' @param y Observations
 #'
 #' @return classification vector

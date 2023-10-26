@@ -1,6 +1,10 @@
 ---
 title: "Meuse Data Example"
-output: bookdown::html_document2
+output: 
+  bookdown::html_document2:
+      base_format: rmarkdown::html_vignette
+link-citations: TRUE
+bibliography: "REFERENCE.bib"
 vignette: >
   %\VignetteIndexEntry{Meuse Data Example}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,7 +22,7 @@ This vignette provides examples of setting up non-spatial and spatial finite mix
 
 ## Data Overview
 
-The meuse data set from the sp library (Pebesma and Bivand, 2005) consists of 155 observations, 4 response variables, location data, and 8 covariates. The response involves four heavy metals measured to monitor pollution levels in the top soil of the Meuse river floodplain, Netherlands (Fig. \@ref(fig:sample), Rikken and van Rijn, 1993). The heavy metal data exhibit lognormality (Fig. \@ref(fig:pairs-expl)), allowing for a comparison between the Gaussian and lognormal distributions in addition to an FMM with and without spatial structure influencing the cluster probability.
+The meuse data set from the sp library [@Pebesma2005] consists of 155 observations, 4 response variables, location data, and 8 covariates. The response involves four heavy metals measured to monitor pollution levels in the top soil of the Meuse river floodplain, Netherlands (Fig. \@ref(fig:sample), [@Rikken1993]). The heavy metal data exhibit normality on the logscale (Fig. \@ref(fig:pairs-expl)), allowing for a comparison between the Gaussian and lognormal distributions in addition to an FMM with and without spatial structure influencing the cluster probability.
 
 ```{r, echo = FALSE, results='hide', message=FALSE, warning=FALSE}
 library(GGally)
@@ -253,3 +257,6 @@ $$
  \mathbb{\pi}_{,g} &= \frac{ exp(\mathbb{\eta}_{,g})}{\sum^{G}_{g=1}exp(\mathbb{\eta}_{,g})} 
  \end{align}
 $$
+
+
+# References {-}

@@ -41,6 +41,8 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   X.g <- subset(Data$Xg, select = colnames(Data$Xg) != ("(Intercept)"))
   X.d <- subset(Data$Xd, select = colnames(Data$Xd) != ("(Intercept)"))
   gate.mod <- exp.mod <- FALSE
+  # when covariates are in expert or gating models, the covariate
+  # values are used to inform initial cluster
   if (ncol(X.g) > 0) {
     gate.mod <- TRUE
     y <- cbind(y, X.g)
@@ -49,17 +51,15 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
     exp.mod <- TRUE
     y <- cbind(y, X.d)
   }
-
-  ## reset defaults based on family, dimension, and expert/gating models
+  # reset defaults based on family, dimension, and expert/gating models
   control <- reset.defaults(Data$family, control, gate.mod, exp.mod, n.j)
-
+  # removed duplicated columns
   y <- y[, !duplicated(t(y))]
-
+  
   # Apply classification method
-  classify <- genInitMethods(n.g, n.i, n.j, control, y)
+  classify <- mkInitClass(n.g, n.i, n.j, control, y)
   Class <- unmap(classify)
   pi.init <- apply(Class, 2, sum) / n.i
-
   # setup ParList
   ParList <- list(
     betag = matrix(0, n.k.g, (n.g - 1)),
@@ -194,8 +194,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 #' @param y Observations
 #'
 #' @return classification vector
-#' @noRd
-genInitMethods <- function(n.g, n.i, n.j,
+#' @export
+#' @examples 
+#' data("faithful")
+#' mkInitClass(2, nrow(faithful), ncol(faithful), init.options(), faithful)
+mkInitClass <- function(n.g, n.i, n.j,
                            control, y) {
   # Apply classification method
   if (control$init.method == "random") {
@@ -207,6 +210,17 @@ genInitMethods <- function(n.g, n.i, n.j,
   }
 
   if (control$init.method == "hc") {
+    # when covariates are in expert or gating models, the
+    # covariate values are used to inform initial cluster
+    if( control$hc.options$modelName == "E" & ncol(y) > 1){ 
+      control$hc.options$modelName <- "EEE"
+      message("updating hc modelName from 'E' to 'EEE' to account for covariates in initial classification")
+      
+    }
+    if( control$hc.options$modelName == "V" & ncol(y) > 1){ 
+      control$hc.options$modelName <- "VVV"
+      message("updating hc modelName from 'V' to 'VVV' to account for covariates in initial classification")
+    }
     classify <- as.vector(hclass(
       hc(y,
         modelName = control$hc.options$modelName,
@@ -267,30 +281,27 @@ genInitMethods <- function(n.g, n.i, n.j,
 #' @return list of options for setting up initial classification values
 #' @noRd
 reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j) {
-  if (fam == 700) {
-    if (control$init.method != "mixed") {
-      if (is.element("init.method", control$defaults)) {
-        control$init.method <- "mixed"
-        control$mix.method <- "Gower kmeans"
-      } else {
-        warning("mixed init.method recommended when Tweedie family specified")
-      }
+  if (control$init.method != "mixed" & fam == 700) {
+    if (is.element("init.method", control$defaults)) {
+      control$init.method <- "mixed"
+      control$mix.method <- "Gower kmeans"
+    } else {
+      warning("mixed init.method recommended when Tweedie family specified")
     }
   }
-  if (fam != 700) {
-    if (n.j == 1 & is.element("init.method", control$defaults)) {
-      control$init.method <- "quantile"
-    }
-    # default when covariate in expert or gating model and not Tweedie
-    if (gate.mod | exp.mod) {
-      # TODO: check and fix comment/code default when data
-      # are univariate and not Tweedie and when no covariates in expert/gating
-      if (n.j == 1 & is.element("init.method", control$defaults)) {
+  
+  if(is.element("init.method", control$defaults) & fam != 700){
+    if((gate.mod | exp.mod)){
+      control$hc.options$use <- "VARS"
+      if (n.j == 1) {
         control$init.method <- "hc"
       }
-      control$hc.options$use <- "VARS"
+    }
+    if (!(gate.mod | exp.mod) & n.j == 1) {
+      control$init.method <- "quantile"
     }
   }
+ 
   return(control)
 }
 

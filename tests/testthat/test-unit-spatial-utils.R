@@ -89,7 +89,7 @@ test_that("mesh", {
   expect_equal(spDat$mesh, mesh)
   expect_equal(spDat$A, 
                fmesher::fm_basis(mesh, mesh$loc[mesh$idx$loc ,1:2]))
-  expect_warning(setup.spatialDat(10, spatial.list, NULL))
+  expect_message(setup.spatialDat(10, spatial.list, NULL))
   
   n <- 100
   set.seed(123)
@@ -108,7 +108,7 @@ test_that("mesh", {
   expect_equal(spDat$mesh, mesh)
   expect_equal(spDat$A, 
                fmesher::fm_basis(mesh, Loc))
-  expect_warning(setup.spatialDat(10, spatial.list, NULL))
+  expect_message(setup.spatialDat(10, spatial.list, NULL))
   
   
 })

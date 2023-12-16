@@ -31,7 +31,7 @@ test_that("loc and mesh - sp object", {
   sp::coordinates(loc) <- ~ x * y
   spatial.list$loc <- loc
 
-  expect_warning(setup.spatialDat(
+  expect_message(setup.spatialDat(
     n.i,
     spatial.list,
     NULL

@@ -61,11 +61,11 @@ meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(loc),
 
 ```{r fig1, fig.height = 3, fig.width = 5, echo = FALSE}
 library(ggplot2)
-library(inlabru)
-ggplot() +
-  gg(meuse.mesh) +
-  geom_point(mapping = aes(x = loc[, 1], y = loc[, 2], size = 0.5), size = 0.5) +
-  theme_classic()
+#library(inlabru)
+#ggplot() +
+#  gg(meuse.mesh) +
+#  geom_point(mapping = aes(x = loc[, 1], y = loc[, 2], size = 0.5), size = 0.5) +
+#  theme_classic()
 ```
 
 Coordinates are converted to a spatial point dataframe and read into the clustTMB model, along with the mesh, using the spatial.list argument. The gating formula is specified using the gmrf() command:

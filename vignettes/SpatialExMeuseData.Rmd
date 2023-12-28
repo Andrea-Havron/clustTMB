@@ -37,7 +37,7 @@ library(magrittr)
 library(kableExtra)
 library(knitr)
 library(ggplot2)
-library(inlabru)
+#library(inlabru)
 library(fmesher)
 ```
 
@@ -157,10 +157,10 @@ meuse.mesh <- fmesher::fm_mesh_2d(as.matrix(loc),
 The inlabru R package can be used to visualize the mesh:
 
 ```{r fig1, fig.height = 3, fig.width = 4, warning = FALSE}
-ggplot() +
-  inlabru::gg(meuse.mesh) +
-  geom_point(mapping = aes(x = loc[, 1], y = loc[, 2], size = 0.5), size = 0.5) +
-  theme_classic()
+#ggplot() +
+#  inlabru::gg(meuse.mesh) +
+#  geom_point(mapping = aes(x = loc[, 1], y = loc[, 2], size = 0.5), size = 0.5) +
+#  theme_classic()
 ```
 
 ### Fitting a spatial model with clustTMB

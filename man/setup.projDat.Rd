@@ -21,3 +21,4 @@ list of projection data
 \description{
 Setup projection data for mkDat
 }
+\keyword{internal}

@@ -11,3 +11,5 @@ on:
 jobs:
   call-workflow:
     uses: nmfs-fish-tools/ghactions4r/.github/workflows/r-cmd-check.yml@main
+    with:
+      depends_on_tmb: true

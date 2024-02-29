@@ -24,8 +24,6 @@
 \item{...}{Currently ignored}
 }
 \value{
-matrix
-
 numeric matrix of parameter estimate and standard errors
 }
 \description{

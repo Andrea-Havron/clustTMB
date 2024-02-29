@@ -82,10 +82,10 @@ clustTMB <- function(response = NULL,
   if (is.null(covariance.structure)) {
     if (dim.list$n.j == 1) {
       covariance.structure <- "E"
-      warning("Setting covariance structure to univariate E")
+      message("Setting covariance structure to univariate E")
     } else {
       covariance.structure <- "EII"
-      warning("Setting covariance structure to multivariate EII")
+      message("Setting covariance structure to multivariate EII")
     }
   }
 
@@ -140,7 +140,7 @@ clustTMB <- function(response = NULL,
   if (sum(reStruct[1, ] > 0) &
     attributes(terms(gatingformula))$intercept == 1) {
     gatingformula <- update(gatingformula, ~ . - 1)
-    warning("intercept removed from gatingformula
+    message("intercept removed from gatingformula
             when random effects specified")
   }
 
@@ -192,7 +192,6 @@ clustTMB <- function(response = NULL,
          expert model and therefore need to specify a
          spatial model in the expertformula")
   }
-
   ## ! fix time component of .cpp to distinguish between gating/expert. Implement something similar to glmmTMB?
   Dat <- mkDat(
     response,

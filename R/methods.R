@@ -3,9 +3,8 @@
 #' @param object The fitted clustTMB model
 #' @param ... Currently ignored
 #' @importFrom stats logLik
-#' @method logLik clustTMB
-#' @exportS3Method logLik clustTMB
 #' @return object of class \code{logLik} with attributes
+#' @exportS3Method logLik clustTMB
 logLik.clustTMB <- function(object, ...) {
   val <- -object$opt$objective
   df <- length(object$opt$par) # fixed effects only
@@ -22,10 +21,8 @@ logLik.clustTMB <- function(object, ...) {
 #' @param scale The scale, currently ignored
 #' @param k Penalization parameter, defaults to 2
 #' @param ... Currently ignored
-#'
-#' @method extractAIC clustTMB
-#' @exportS3Method extractAIC clustTMB
 #' @return numeric value
+#' @exportS3Method extractAIC clustTMB
 extractAIC.clustTMB <- function(fit, scale, k = 2, ...) {
   L <- logLik(fit)
   edf <- attr(L, "df")
@@ -38,10 +35,8 @@ extractAIC.clustTMB <- function(fit, scale, k = 2, ...) {
 #' @param complete Currently ignored
 #' @param ... Currently ignored
 #' @importFrom stats coef
-#'
-#' @method coef clustTMB
-#' @exportS3Method coef clustTMB
 #' @return names numeric vector
+#' @exportS3Method coef clustTMB
 coef.clustTMB <- function(object, complete = FALSE, ...) {
   out <- object$opt$par
   out
@@ -58,11 +53,8 @@ coef.clustTMB <- function(object, complete = FALSE, ...) {
 #' \code{\link{sdreport}}.
 #' @param p.value Add column with approximate p-values
 #' @param ... Currently ignored
-#' @return matrix
-#' @method summary clustTMB
-#' @exportS3Method summary clustTMB
-#'
 #' @return numeric matrix of parameter estimate and standard errors
+#' @exportS3Method summary clustTMB
 summary.clustTMB <- function(object, select = c("all", "fixed", "random", "report"),
                              p.value = FALSE, ...) {
   ans <- summary(object$sdr, select, p.value, ...)
@@ -75,11 +67,8 @@ summary.clustTMB <- function(object, select = c("all", "fixed", "random", "repor
 #' @title Print brief model summary
 #' @param x The fitted clustTMB model
 #' @param ... Not used
-#' @return NULL
-#' @method print clustTMB
-#' @exportS3Method print clustTMB
-#'
 #' @return numeric matrix of parameter estimate and standard errors
+#' @exportS3Method print clustTMB
 print.clustTMB <- function(x, ...) {
   print(x$sdr)
   invisible(x)

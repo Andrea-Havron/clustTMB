@@ -19,3 +19,4 @@ list of spatial mesh and sparse A matrix
 \description{
 Setup spatial data for mkDat
 }
+\keyword{internal}

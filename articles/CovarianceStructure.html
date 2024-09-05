@@ -75,9 +75,6 @@
     </li>
   </ul>
 </li>
-<li>
-  <a href="../news/index.html">Changelog</a>
-</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -246,9 +243,11 @@ argument. The gating formula is specified using the gmrf() command:</p>
 <span>  G <span class="op">=</span> <span class="fl">4</span>, covariance.structure <span class="op">=</span> <span class="st">"VVV"</span>,</span>
 <span>  spatial.list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>loc <span class="op">=</span> <span class="va">Loc</span>, mesh <span class="op">=</span> <span class="va">meuse.mesh</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## intercept removed from gatingformula</span></span>
+<pre><code><span><span class="co">## Warning in clustTMB(response = meuse[, 3:6], family = lognormal(link = "identity"), : intercept removed from gatingformula</span></span>
 <span><span class="co">##             when random effects specified</span></span></code></pre>
-<pre><code><span><span class="co">## spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions</span></span></code></pre>
+<pre><code><span><span class="co">## Warning in setup.spatialDat(n.i, spatial.list, projection.dat): spatial</span></span>
+<span><span class="co">## projection is turned off. Need to provide locations in projection.list$grid.df</span></span>
+<span><span class="co">## for spatial predictions</span></span></code></pre>
 <p>Models are optimized with nlminb(), model results can be viewed with
 nlminb commands:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">

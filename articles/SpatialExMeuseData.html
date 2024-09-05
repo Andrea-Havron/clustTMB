@@ -75,9 +75,6 @@
     </li>
   </ul>
 </li>
-<li>
-  <a href="../news/index.html">Changelog</a>
-</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -224,50 +221,48 @@ specified using the gmrf() command:</p>
 <span>  spatial.list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>loc <span class="op">=</span> <span class="va">Loc</span>, mesh <span class="op">=</span> <span class="va">meuse.mesh</span><span class="op">)</span>,</span>
 <span>  projection.dat <span class="op">=</span> <span class="va">Meuse.Grid</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## intercept removed from gatingformula</span></span>
-<span><span class="co">##             when random effects specified</span></span></code></pre>
 <p>Results can be viewed via model output:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">sdr</span>, <span class="st">"fixed"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             Estimate Std. Error</span></span>
-<span><span class="co">## betag      0.1779099 0.51240489</span></span>
-<span><span class="co">## betag      0.5710220 0.50603293</span></span>
-<span><span class="co">## betag      0.1653589 0.50250589</span></span>
-<span><span class="co">## betad      2.0157760 0.09100867</span></span>
-<span><span class="co">## betad      4.3160900 0.03898694</span></span>
-<span><span class="co">## betad      5.4259825 0.08790537</span></span>
-<span><span class="co">## betad      6.7095833 0.08920064</span></span>
-<span><span class="co">## betad      1.0064981 0.03967212</span></span>
-<span><span class="co">## betad      3.6030517 0.03008716</span></span>
-<span><span class="co">## betad      5.2113176 0.04647323</span></span>
-<span><span class="co">## betad      6.2155389 0.04388010</span></span>
-<span><span class="co">## betad      0.1259827 0.06249979</span></span>
-<span><span class="co">## betad      3.1475097 0.02038043</span></span>
-<span><span class="co">## betad      4.2016950 0.04031259</span></span>
-<span><span class="co">## betad      5.2523445 0.03330909</span></span>
-<span><span class="co">## betad     -1.4361533 0.05510450</span></span>
-<span><span class="co">## betad      3.1132970 0.03560886</span></span>
-<span><span class="co">## betad      4.2118606 0.04706028</span></span>
-<span><span class="co">## betad      5.1996592 0.04976665</span></span>
-<span><span class="co">## theta     -1.2100822 0.16013165</span></span>
-<span><span class="co">## theta     -2.9055380 0.19071088</span></span>
-<span><span class="co">## theta     -1.2794699 0.15756937</span></span>
-<span><span class="co">## theta     -1.2502152 0.13950114</span></span>
-<span><span class="co">## theta     -2.5623931 0.17078714</span></span>
-<span><span class="co">## theta     -3.1154933 0.13779683</span></span>
-<span><span class="co">## theta     -2.2459375 0.13350890</span></span>
-<span><span class="co">## theta     -2.3607682 0.13177554</span></span>
-<span><span class="co">## theta     -1.8075146 0.17469328</span></span>
-<span><span class="co">## theta     -4.0486908 0.19343297</span></span>
-<span><span class="co">## theta     -2.6845135 0.14489472</span></span>
-<span><span class="co">## theta     -3.0661804 0.15618138</span></span>
-<span><span class="co">## theta     -2.4648431 0.25661374</span></span>
-<span><span class="co">## theta     -3.3381173 0.23942124</span></span>
-<span><span class="co">## theta     -2.7804474 0.20016837</span></span>
-<span><span class="co">## theta     -2.6686159 0.19753604</span></span>
-<span><span class="co">## ln_kappag -5.9132617 0.28190986</span></span></code></pre>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<span><span class="co">## betag      0.1778404 0.51240551</span></span>
+<span><span class="co">## betag      0.5710804 0.50603833</span></span>
+<span><span class="co">## betag      0.1654149 0.50250878</span></span>
+<span><span class="co">## betad      2.0157747 0.09100892</span></span>
+<span><span class="co">## betad      4.3160917 0.03898705</span></span>
+<span><span class="co">## betad      5.4259825 0.08790561</span></span>
+<span><span class="co">## betad      6.7095844 0.08920056</span></span>
+<span><span class="co">## betad      1.0064982 0.03967206</span></span>
+<span><span class="co">## betad      3.6030513 0.03008708</span></span>
+<span><span class="co">## betad      5.2113156 0.04647330</span></span>
+<span><span class="co">## betad      6.2155376 0.04388001</span></span>
+<span><span class="co">## betad      0.1259777 0.06249983</span></span>
+<span><span class="co">## betad      3.1475085 0.02038058</span></span>
+<span><span class="co">## betad      4.2016902 0.04031304</span></span>
+<span><span class="co">## betad      5.2523424 0.03330905</span></span>
+<span><span class="co">## betad     -1.4361546 0.05510464</span></span>
+<span><span class="co">## betad      3.1132977 0.03560921</span></span>
+<span><span class="co">## betad      4.2118583 0.04706049</span></span>
+<span><span class="co">## betad      5.1996605 0.04976684</span></span>
+<span><span class="co">## theta     -1.2100765 0.16013233</span></span>
+<span><span class="co">## theta     -2.9055323 0.19071143</span></span>
+<span><span class="co">## theta     -1.2794644 0.15757001</span></span>
+<span><span class="co">## theta     -1.2502169 0.13950073</span></span>
+<span><span class="co">## theta     -2.5623959 0.17078693</span></span>
+<span><span class="co">## theta     -3.1154983 0.13779641</span></span>
+<span><span class="co">## theta     -2.2459345 0.13350934</span></span>
+<span><span class="co">## theta     -2.3607725 0.13177511</span></span>
+<span><span class="co">## theta     -1.8075132 0.17469317</span></span>
+<span><span class="co">## theta     -4.0486760 0.19343427</span></span>
+<span><span class="co">## theta     -2.6844911 0.14489696</span></span>
+<span><span class="co">## theta     -3.0661824 0.15618067</span></span>
+<span><span class="co">## theta     -2.4648384 0.25661434</span></span>
+<span><span class="co">## theta     -3.3380972 0.23942382</span></span>
+<span><span class="co">## theta     -2.7804386 0.20016924</span></span>
+<span><span class="co">## theta     -2.6686083 0.19753669</span></span>
+<span><span class="co">## ln_kappag -5.9132685 0.28191319</span></span></code></pre>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod.ln.sp</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 2318.892</span></span></code></pre>

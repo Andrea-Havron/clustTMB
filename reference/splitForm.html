@@ -58,9 +58,6 @@ treating 'special' terms appropriately"><!-- mathjax --><script src="https://cdn
       <a href="../articles/SpatialExMeuseData.html">Spatial Example - Meuse Dataset</a>
     </li>
   </ul></li>
-<li>
-  <a href="../news/index.html">Changelog</a>
-</li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/Andrea-Havron/clustTMB" class="external-link">
     <span class="fab fa-github fa-lg"></span>
@@ -143,7 +140,7 @@ ultimately from the flexLambda branch of lme4
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">)</span>                     <span class="co">## no specials or RE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -157,7 +154,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="va">f</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">)</span>               <span class="co">## no specials</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -171,7 +168,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">f</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">)</span>           <span class="co">## one special</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -185,7 +182,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">f</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>         <span class="co">## 'hidden' special</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -199,7 +196,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="va">f</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">+</span><span class="fu">cs</span><span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">)</span>       <span class="co">## combination</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -213,7 +210,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">f</span><span class="op">/</span><span class="va">g</span><span class="op">)</span><span class="op">)</span>             <span class="co">## 'slash'; term</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -227,7 +224,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">f</span><span class="op">/</span><span class="va">g</span><span class="op">/</span><span class="va">h</span><span class="op">)</span><span class="op">)</span>             <span class="co">## 'slash'; term</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -241,7 +238,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="op">(</span><span class="va">f</span><span class="op">/</span><span class="va">g</span><span class="op">)</span><span class="op">/</span><span class="va">h</span><span class="op">)</span><span class="op">)</span>             <span class="co">## 'slash'; term</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -255,7 +252,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">+</span><span class="op">(</span><span class="va">f</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">+</span><span class="fu">cs</span><span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">g</span><span class="op">)</span><span class="op">+</span><span class="fu">cs</span><span class="op">(</span><span class="va">a</span><span class="op">|</span><span class="va">b</span>,<span class="va">stuff</span><span class="op">)</span><span class="op">)</span>  <span class="co">## complex special</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -269,7 +266,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="op">(</span><span class="op">(</span><span class="op">(</span><span class="va">x</span><span class="op">+</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>               <span class="co">## lots of parentheses</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~(((x + y)))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
@@ -283,7 +280,7 @@ ultimately from the flexLambda branch of lme4
 <span class="r-in"><span><span class="fu">splitForm</span><span class="op">(</span><span class="op">~</span><span class="fl">1</span><span class="op">+</span><span class="fu">rr</span><span class="op">(</span><span class="va">f</span><span class="op">|</span><span class="va">g</span>,n<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fixedFormula</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5644046e8150&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561060157290&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $reTrmFormulas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>

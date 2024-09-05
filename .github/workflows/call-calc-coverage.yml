@@ -6,5 +6,3 @@ on: [push, pull_request]
 jobs:
   call-workflow:
     uses: nmfs-fish-tools/ghactions4r/.github/workflows/calc-coverage.yml@main
-    with:
-      use-public-rspm: false

@@ -17,7 +17,7 @@ test_that("test hc using default settings", {
     hclass(hc(faithful, use = "SVD"), ng)
   )
 
-  clss.clustTMB <- mkInitClass(
+  clss.clustTMB <- genInitMethods(
     n.g = ng, n.i = nrow(faithful),
     n.j = ncol(faithful),
     control = init.options(),
@@ -31,7 +31,7 @@ test_that("test hc using user defined settings", {
     hclass(hc(faithful, modelName = "EEE", use = "VARS"), ng)
   )
 
-  clss.clustTMB <- mkInitClass(
+  clss.clustTMB <- genInitMethods(
     n.g = ng, n.i = nrow(faithful),
     n.j = ncol(faithful),
     control = init.options(
@@ -49,7 +49,7 @@ test_that("test quantile", {
   # univariate method
   clss.true <- clustTMB:::mc.qclass(faithful[, 1], as.numeric(ng))
 
-  clss.clustTMB <- mkInitClass(
+  clss.clustTMB <- genInitMethods(
     n.g = ng, n.i = nrow(faithful),
     n.j = ncol(faithful),
     control = init.options(
@@ -66,7 +66,7 @@ test_that("test random", {
   clss.true <- sample(1:ng, nrow(faithful), replace = TRUE)
 
   set.seed(123)
-  clss.clustTMB <- mkInitClass(
+  clss.clustTMB <- genInitMethods(
     n.g = ng, n.i = nrow(faithful),
     n.j = ncol(faithful),
     control = init.options(
@@ -80,7 +80,7 @@ test_that("test random", {
 test_that("test kmeans", {
   clss.true <- cluster::pam(faithful, k = ng)$clustering
 
-  clss.clustTMB <- mkInitClass(
+  clss.clustTMB <- genInitMethods(
     n.g = ng, n.i = nrow(faithful),
     n.j = ncol(faithful),
     control = init.options(
@@ -94,7 +94,7 @@ test_that("test kmeans", {
 test_that("test kmeans", {
   clss.true <- cluster::pam(faithful, k = ng)$clustering
 
-  clss.clustTMB <- mkInitClass(
+  clss.clustTMB <- genInitMethods(
     n.g = ng, n.i = nrow(faithful),
     n.j = ncol(faithful),
     control = init.options(

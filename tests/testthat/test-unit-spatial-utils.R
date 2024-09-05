@@ -6,6 +6,7 @@ stopifnot(
 context("spatial-utils")
 
 test_that("no mesh", {
+  no.mesh.clustTMB <- spdeStruct(NULL)
   no.mesh.list <- list(
     "n_s"      = 1,
     "n_tri"    = 0,
@@ -17,26 +18,7 @@ test_that("no mesh", {
     "G0"       = fmesher::fm_as_dgTMatrix(matrix(0, 2, 2)),
     "G0_inv"   = fmesher::fm_as_dgTMatrix(matrix(0, 2, 2))
   )
-  expect_equal(spdeStruct(NULL), no.mesh.list)
-  
-  n <- 100
-  set.seed(123)
-  loc <- data.frame(x = runif(n,0,1), y = runif(n,0,1))
-  Loc <- sf::st_as_sf(loc, coords = c("x", "y"))
-  spatial.list <- list(
-    loc = Loc,
-    mesh = NULL,
-    init.range = list(
-      gating.range = NULL,
-      expert.range = NULL
-    )
-  )
-  spDat <- suppressWarnings(setup.spatialDat(n, spatial.list, NULL))
-  expect_equal(spDat$mesh, 
-               fmesher::fm_rcdt_2d(as.matrix(loc)))
-  expect_warning(setup.spatialDat(n, spatial.list, NULL))
-  expect_equal(spDat$A, fmesher::fm_basis(spDat$mesh, as.matrix(loc)))
-  
+  expect_equal(no.mesh.clustTMB, no.mesh.list)
 })
 
 test_that("mesh", {
@@ -76,42 +58,4 @@ test_that("mesh", {
   )
 
   expect_equal(mesh.clustTMB, spde.list)
-  
-  spatial.list <- list(
-    loc = NULL,
-    mesh = mesh,
-    init.range = list(
-      gating.range = NULL,
-      expert.range = NULL
-    )
-  )
-  spDat <- suppressWarnings(setup.spatialDat(10, spatial.list, NULL))
-  expect_equal(spDat$mesh, mesh)
-  expect_equal(spDat$A, 
-               fmesher::fm_basis(mesh, mesh$loc[mesh$idx$loc ,1:2]))
-  expect_message(setup.spatialDat(10, spatial.list, NULL))
-  
-  n <- 100
-  set.seed(123)
-  loc <- data.frame(x = runif(n,0,1), y = runif(n,0,1))
-  Loc <- sf::st_as_sf(loc, coords = c("x", "y"))
-  spatial.list <- list(
-    loc = Loc,
-    mesh = mesh,
-    init.range = list(
-      gating.range = NULL,
-      expert.range = NULL
-    )
-  )
-  
-  spDat <- suppressWarnings(setup.spatialDat(10, spatial.list, NULL))
-  expect_equal(spDat$mesh, mesh)
-  expect_equal(spDat$A, 
-               fmesher::fm_basis(mesh, Loc))
-  expect_message(setup.spatialDat(10, spatial.list, NULL))
-  
-  
 })
-
-
-

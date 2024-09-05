@@ -1,11 +1,11 @@
 Package: clustTMB
-Title: Spatio-Temporal Finite Mixture Model using 'TMB'
+Title: Spatio-Temporal Finite Mixture Model using TMB
 Version: 0.0.1.0
 Authors@R: 
     person("Andrea M.", "Havron", , "andrea.havron@noaa.gov", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4080-448X"))
-Description: Fits a spatio-temporal finite mixture model using 'TMB'.
-    Covariate, spatial and temporal random effects can be incorporated into the
+Description: Fits a spatio-temporal finite mixture model using TMB.
+    Spatial and temporal random effects can be incorporated into the
     gating formula using multinomial logistic regression, the expert
     formula using a generalized linear mixed model framework, or both.
 License: GPL-3

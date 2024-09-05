@@ -15,7 +15,7 @@ m2 <- MoE_clust(CO2, G = 2:3, gating = ~GNP, network.data = CO2data)
 m3 <- MoE_clust(CO2, G = 1:3, expert = ~GNP, network.data = CO2data)
 m4 <- MoE_clust(CO2, G = 2:3, gating = ~GNP, expert = ~GNP, network.data = CO2data)
 
-# match MoEclust values
+# match MoEclust alues
 cT.m1 <- clustTMB(
   response = CO2,
   G = m1$G, covariance.structure = m1$modelName

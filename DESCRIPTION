@@ -2,7 +2,7 @@ Package: clustTMB
 Title: Spatio-Temporal Finite Mixture Model using 'TMB'
 Version: 0.0.1.0
 Authors@R: 
-    person("Andrea M.", "Havron", , "andrea.havron@noaa.gov", role = c("aut", "cre"),
+    person("Andrea M.", "Havron", , "andrea.havron@noaa.gov", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-4080-448X"))
 Description: Fits a spatio-temporal finite mixture model using 'TMB'.
     Covariate, spatial and temporal random effects can be incorporated into the

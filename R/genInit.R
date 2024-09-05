@@ -178,11 +178,6 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
       ParList$ld_sp[, g] <- Loadings$ld_sp
     }
   } # end g loop
-  #throw error if any initial parameter values are not finite
-  if(sum(sapply(1:length(ParList), function(x) 
-    is.finite(sum(ParList[[x]]))) == FALSE) > 0){
-    stop("Initial cluster results in non-finite starting values. Refine clustTMB::init.options()")
-  }
 
   gen.init <- list(parms = ParList, class = classify)
   return(gen.init)

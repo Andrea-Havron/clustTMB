@@ -80,7 +80,7 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
     warning("loc and mesh are null. Need to provide locations or mesh in spatial.list to initiate spatial model for spatial predictions")
   }
   if ((!is.null(mesh) | !is.null(loc)) & is.null(projection.dat)) {
-    message("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
+    warning("spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions")
   }
   if (!is.null(loc) & is.null(mesh)) {
     # default mesh - in future add options to include arguments for fmesher::fm_mesh_2d

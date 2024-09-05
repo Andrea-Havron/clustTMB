@@ -64,7 +64,7 @@ spdeStruct <- function(mesh) {
 #' @importFrom methods is
 #'
 #' @return list of spatial mesh and sparse A matrix
-#' @keywords internal
+#'
 setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
   loc <- spatial.list$loc
   if (!is.null(loc)) {
@@ -118,7 +118,6 @@ setup.spatialDat <- function(n.i, spatial.list, projection.dat) {
 #' @param gating.formula Formula defining gating model. This formula corresponds to the covariates included in the mixing proportions (logistic regression). Defaults to intercept only (~1) when no covariates are used. When a random effects term is included in the gating network, this formula will be updated so that the intercept term is removed.
 #'
 #' @return list of projection data
-#' @keywords internal
 setup.projDat <- function(mesh, projection.dat,
                           expert.formula,
                           gating.formula) {

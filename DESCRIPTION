@@ -21,7 +21,6 @@ Imports:
     fmesher,
     glmmTMB,
     lme4,
-    Matrix,
     mclust,
     methods,
     MoEClust,

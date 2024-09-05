@@ -23,7 +23,7 @@ test_that("no mesh", {
   set.seed(123)
   loc <- data.frame(x = runif(n,0,1), y = runif(n,0,1))
   Loc <- sf::st_as_sf(loc, coords = c("x", "y"))
-  spatial.list <- list(
+  spatial.list = list(
     loc = Loc,
     mesh = NULL,
     init.range = list(
@@ -77,7 +77,7 @@ test_that("mesh", {
 
   expect_equal(mesh.clustTMB, spde.list)
   
-  spatial.list <- list(
+  spatial.list = list(
     loc = NULL,
     mesh = mesh,
     init.range = list(
@@ -95,7 +95,7 @@ test_that("mesh", {
   set.seed(123)
   loc <- data.frame(x = runif(n,0,1), y = runif(n,0,1))
   Loc <- sf::st_as_sf(loc, coords = c("x", "y"))
-  spatial.list <- list(
+  spatial.list = list(
     loc = Loc,
     mesh = mesh,
     init.range = list(

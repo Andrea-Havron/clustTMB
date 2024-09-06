@@ -11,7 +11,6 @@ Description: Fits a spatio-temporal finite mixture model using 'TMB'.
     both.
 License: GPL-3
 URL: https://github.com/Andrea-Havron/clustTMB,
-    https://andrea-havron.github.io/clustTMB,
     https://andrea-havron.github.io/clustTMB/
 BugReports: https://github.com/Andrea-Havron/clustTMB/issues
 Depends:

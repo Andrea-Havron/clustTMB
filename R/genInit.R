@@ -55,7 +55,7 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
   control <- reset.defaults(Data$family, control, gate.mod, exp.mod, n.j)
   # removed duplicated columns
   y <- y[, !duplicated(t(y))]
-  
+
   # Apply classification method
   classify <- mkInitClass(n.g, n.i, n.j, control, y)
   Class <- unmap(classify)
@@ -178,9 +178,10 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
       ParList$ld_sp[, g] <- Loadings$ld_sp
     }
   } # end g loop
-  #throw error if any initial parameter values are not finite
-  if(sum(sapply(1:length(ParList), function(x) 
-    is.finite(sum(ParList[[x]]))) == FALSE) > 0){
+  # throw error if any initial parameter values are not finite
+  if (sum(sapply(1:length(ParList), function(x) {
+    is.finite(sum(ParList[[x]]))
+  }) == FALSE) > 0) {
     stop("Initial cluster results in non-finite starting values. Refine clustTMB::init.options()")
   }
 
@@ -200,11 +201,11 @@ genInit <- function(Data, family = NULL, dim.list, control = init.options()) {
 #'
 #' @return classification vector
 #' @export
-#' @examples 
+#' @examples
 #' data("faithful")
 #' mkInitClass(2, nrow(faithful), ncol(faithful), init.options(), faithful)
 mkInitClass <- function(n.g, n.i, n.j,
-                           control, y) {
+                        control, y) {
   # Apply classification method
   if (control$init.method == "random") {
     classify <- sample(1:n.g, n.i, replace = TRUE)
@@ -217,12 +218,11 @@ mkInitClass <- function(n.g, n.i, n.j,
   if (control$init.method == "hc") {
     # when covariates are in expert or gating models, the
     # covariate values are used to inform initial cluster
-    if( control$hc.options$modelName == "E" & ncol(y) > 1){ 
+    if (control$hc.options$modelName == "E" & ncol(y) > 1) {
       control$hc.options$modelName <- "EEE"
       message("updating hc modelName from 'E' to 'EEE' to account for covariates in initial classification")
-      
     }
-    if( control$hc.options$modelName == "V" & ncol(y) > 1){ 
+    if (control$hc.options$modelName == "V" & ncol(y) > 1) {
       control$hc.options$modelName <- "VVV"
       message("updating hc modelName from 'V' to 'VVV' to account for covariates in initial classification")
     }
@@ -294,9 +294,9 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j) {
       warning("mixed init.method recommended when Tweedie family specified")
     }
   }
-  
-  if(is.element("init.method", control$defaults) & fam != 700){
-    if((gate.mod | exp.mod)){
+
+  if (is.element("init.method", control$defaults) & fam != 700) {
+    if ((gate.mod | exp.mod)) {
       control$hc.options$use <- "VARS"
       if (n.j == 1) {
         control$init.method <- "hc"
@@ -306,7 +306,7 @@ reset.defaults <- function(fam, control, gate.mod, exp.mod, n.j) {
       control$init.method <- "quantile"
     }
   }
- 
+
   return(control)
 }
 

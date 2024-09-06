@@ -3,9 +3,6 @@ title: "Meuse Data Example"
 output: 
   bookdown::html_document2:
       base_format: rmarkdown::html_vignette
-    md_extensions: [ 
-      "-autolink_bare_uris" 
-    ]
 link-citations: TRUE
 bibliography: "REFERENCE.bib"
 vignette: >

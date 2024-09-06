@@ -25,6 +25,7 @@ Imports:
     Matrix,
     mclust,
     methods,
+    reformulas,
     MoEClust,
     sf,
     stats,

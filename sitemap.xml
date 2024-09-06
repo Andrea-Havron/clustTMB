@@ -6,6 +6,7 @@
 <url><loc>/articles/index.html</loc></url>
 <url><loc>/authors.html</loc></url>
 <url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
 <url><loc>/reference/clustTMB.html</loc></url>
 <url><loc>/reference/coef.clustTMB.html</loc></url>
 <url><loc>/reference/extractAIC.clustTMB.html</loc></url>
@@ -15,6 +16,7 @@
 <url><loc>/reference/init.options.html</loc></url>
 <url><loc>/reference/logLik.clustTMB.html</loc></url>
 <url><loc>/reference/lognormal.html</loc></url>
+<url><loc>/reference/mkInitClass.html</loc></url>
 <url><loc>/reference/parm.lookup.html</loc></url>
 <url><loc>/reference/print.clustTMB.html</loc></url>
 <url><loc>/reference/run.options.html</loc></url>

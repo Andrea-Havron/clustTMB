@@ -75,6 +75,9 @@
     </li>
   </ul>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -243,32 +246,30 @@ argument. The gating formula is specified using the gmrf() command:</p>
 <span>  G <span class="op">=</span> <span class="fl">4</span>, covariance.structure <span class="op">=</span> <span class="st">"VVV"</span>,</span>
 <span>  spatial.list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>loc <span class="op">=</span> <span class="va">Loc</span>, mesh <span class="op">=</span> <span class="va">meuse.mesh</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in clustTMB(response = meuse[, 3:6], family = lognormal(link = "identity"), : intercept removed from gatingformula</span></span>
+<pre><code><span><span class="co">## intercept removed from gatingformula</span></span>
 <span><span class="co">##             when random effects specified</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in setup.spatialDat(n.i, spatial.list, projection.dat): spatial</span></span>
-<span><span class="co">## projection is turned off. Need to provide locations in projection.list$grid.df</span></span>
-<span><span class="co">## for spatial predictions</span></span></code></pre>
+<pre><code><span><span class="co">## spatial projection is turned off. Need to provide locations in projection.list$grid.df for spatial predictions</span></span></code></pre>
 <p>Models are optimized with nlminb(), model results can be viewed with
 nlminb commands:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimated fixed parameters</span></span>
 <span><span class="va">mod</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">par</span></span></code></pre></div>
 <pre><code><span><span class="co">##      betag      betag      betag      betad      betad      betad      betad </span></span>
-<span><span class="co">##  0.1778785  0.5710390  0.1653808  2.0157770  4.3160891  5.4259812  6.7095828 </span></span>
+<span><span class="co">##  0.1810384  0.5597662  0.1896805  2.0157761  4.3160883  5.4259817  6.7095823 </span></span>
 <span><span class="co">##      betad      betad      betad      betad      betad      betad      betad </span></span>
-<span><span class="co">##  1.0064910  3.6030481  5.2113125  6.2155339  0.1259838  3.1475098  4.2016963 </span></span>
+<span><span class="co">##  1.0164102  3.6119055  5.2215825  6.2274880  0.1353939  3.1482199  4.2137134 </span></span>
 <span><span class="co">##      betad      betad      betad      betad      betad      theta      theta </span></span>
-<span><span class="co">##  5.2523458 -1.4361518  3.1132965  4.2118628  5.1996580 -1.2100719 -2.9055373 </span></span>
+<span><span class="co">##  5.2614053 -1.4361506  3.1132983  4.2118630  5.1996616 -1.2100854 -2.9055298 </span></span>
 <span><span class="co">##      theta      theta      theta      theta      theta      theta      theta </span></span>
-<span><span class="co">## -1.2794893 -1.2502242 -2.5624052 -3.1154930 -2.2459437 -2.3607707 -1.8075154 </span></span>
+<span><span class="co">## -1.2794583 -1.2502103 -2.5718310 -3.1310802 -2.2406092 -2.3780318 -1.8212758 </span></span>
 <span><span class="co">##      theta      theta      theta      theta      theta      theta      theta </span></span>
-<span><span class="co">## -4.0486948 -2.6845241 -3.0661981 -2.4648459 -3.3381189 -2.7804368 -2.6686023 </span></span>
+<span><span class="co">## -4.0603282 -2.6424647 -3.0432258 -2.4648401 -3.3381046 -2.7804267 -2.6686145 </span></span>
 <span><span class="co">##  ln_kappag </span></span>
-<span><span class="co">## -5.9132622</span></span></code></pre>
+<span><span class="co">## -5.9346521</span></span></code></pre>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimum negative log likelihood</span></span>
 <span><span class="va">mod</span><span class="op">$</span><span class="va">opt</span><span class="op">$</span><span class="va">objective</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 2318.892</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 2318.925</span></span></code></pre>
 </div>
 </div>
 </div>

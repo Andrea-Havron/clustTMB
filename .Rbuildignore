@@ -11,3 +11,4 @@ src/*.so
 ^docs$
 ^pkgdown$
 ^cran-comments\.md$
+^CRAN-SUBMISSION$

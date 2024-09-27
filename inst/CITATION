@@ -1,7 +1,5 @@
-citHeader("To cite clustTMB in publications use:")
-
-citEntry(
-  entry    = "Manual",
+bibentry(
+  bibtype    = "Manual",
   title    = "clustTMB: spatial finite mixture model",
   author   = "Andrea Havron",
   year     = 2022,

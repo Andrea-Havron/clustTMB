@@ -8,6 +8,7 @@ context("unit test utils-fit.tmb")
 
 
 test_that("run.model = FALSE", {
+  skip_on_cran()
   clustTMB.mod <- fit.tmb(args,
     control = list(run.model = FALSE)
   )
@@ -26,6 +27,7 @@ test_that("run.model = FALSE", {
 })
 
 test_that("run.model = TRUE, sdr.report = FALSE", {
+  skip_on_cran()
   clustTMB.mod <- fit.tmb(args,
     control = list(
       run.model = TRUE,
@@ -56,6 +58,7 @@ test_that("run.model = TRUE, sdr.report = FALSE", {
 })
 
 test_that("run.model = TRUE, sdr.report = TRUE", {
+  skip_on_cran()
   clustTMB.mod <- fit.tmb(args,
     control = list(
       run.model = TRUE,

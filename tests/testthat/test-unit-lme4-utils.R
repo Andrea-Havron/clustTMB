@@ -18,7 +18,7 @@ specials <- clustTMB:::findReTrmClasses()
 
 
 test_that("test splitForm", {
-  split.glmm <- glmmTMB:::splitForm(formula)
+  split.reformulas <- reformulas:::splitForm(formula)
   split.clust <- clustTMB:::splitForm(formula)
-  expect_equal(split.glmm, split.clust)
+  expect_equal(split.reformulas, split.clust)
 })

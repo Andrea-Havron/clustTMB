@@ -15,9 +15,9 @@
 \item{object}{The fitted clustTMB model}
 
 \item{select}{Parameter classes to select. Can be any subset of
-\code{"fixed"} (\eqn{\hat\theta}), \code{"random"} (\eqn{\hat u}) or
-\code{"report"} (\eqn{\phi(\hat u,\hat\theta)}) using notation as
-\code{\link{sdreport}}.}
+\code{"fixed"} (\eqn{\hat{\theta}}), \code{"random"} (\eqn{\hat{u}}) or
+\code{"report"} (\eqn{\phi(\hat{u},\hat{\theta)}}) using notation as
+\code{\link[TMB:sdreport]{TMB::sdreport()}}.}
 
 \item{p.value}{Add column with approximate p-values}
 

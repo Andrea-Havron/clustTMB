@@ -34,7 +34,7 @@ findReTrmClasses <- function() {
 ##' splitForm(~(((x+y))))               ## lots of parentheses
 ##' splitForm(~1+rr(f|g,n=2))
 ##'
-##' @importFrom reformulas makeOp
+##' @importFrom reformulas makeOp expandAllGrpVar
 ##'
 ##' @author Steve Walker
 ##' @export
@@ -57,7 +57,7 @@ splitForm <- function(formula,
   ## (including special terms)
 
   fbxx <- reformulas::findbars_x(formula, debug, specials)
-  formSplits <- glmmTMB::expandAllGrpVar(fbxx)
+  formSplits <- expandAllGrpVar(fbxx)
 
   if (length(formSplits) > 0) {
     formSplitID <- vapply(

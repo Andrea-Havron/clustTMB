@@ -1,7 +1,10 @@
 require(TMB)
+run_model <- FALSE
 compile(testthat::test_path("ref", "simple.cpp"))
-dyn.load(dynlib(testthat::test_path("ref", "simple")))
-
+if(exists(dynlib(testthat::test_path("ref", "simple")))){
+  dyn.load(dynlib(testthat::test_path("ref", "simple")))
+  run_model <- TRUE
+}
 ## Test data
 set.seed(123)
 y <- rep(1900:2010, each = 2)
@@ -19,6 +22,7 @@ eps <- rnorm(nrow(B), sd = 1) ## logsd0=0
 x <- as.numeric(A %*% beta + B %*% u + eps)
 
 ## Fit model
+if(run_model){
 obj <- MakeADFun(
   data = list(x = x, B = B, A = A),
   parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
@@ -38,3 +42,4 @@ args <- list(
   DLL = "simple",
   silent = TRUE
 )
+}

@@ -19,7 +19,6 @@ Imports:
     cluster,
     clustMixType,
     fmesher,
-    glmmTMB,
     lme4,
     Matrix,
     mclust,

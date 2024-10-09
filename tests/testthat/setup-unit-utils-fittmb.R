@@ -1,7 +1,7 @@
 require(TMB)
 run_model <- FALSE
 compile(testthat::test_path("ref", "simple.cpp"))
-if(exists(dynlib(testthat::test_path("ref", "simple")))){
+if (exists(dynlib(testthat::test_path("ref", "simple")))) {
   dyn.load(dynlib(testthat::test_path("ref", "simple")))
   run_model <- TRUE
 }
@@ -22,24 +22,24 @@ eps <- rnorm(nrow(B), sd = 1) ## logsd0=0
 x <- as.numeric(A %*% beta + B %*% u + eps)
 
 ## Fit model
-if(run_model){
-obj <- MakeADFun(
-  data = list(x = x, B = B, A = A),
-  parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
-  random = "u",
-  DLL = "simple",
-  silent = TRUE
-)
-opt <- nlminb(obj$par, obj$fn, obj$gr)
-sdr <- sdreport(obj)
-report <- obj$report(obj$env$last.par.best)
+if (run_model) {
+  obj <- MakeADFun(
+    data = list(x = x, B = B, A = A),
+    parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
+    random = "u",
+    DLL = "simple",
+    silent = TRUE
+  )
+  opt <- nlminb(obj$par, obj$fn, obj$gr)
+  sdr <- sdreport(obj)
+  report <- obj$report(obj$env$last.par.best)
 
 
-args <- list(
-  data = list(x = x, B = B, A = A),
-  parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
-  random = "u",
-  DLL = "simple",
-  silent = TRUE
-)
+  args <- list(
+    data = list(x = x, B = B, A = A),
+    parameters = list(u = u * 0, beta = beta * 0, logsdu = 1, logsd0 = 1),
+    random = "u",
+    DLL = "simple",
+    silent = TRUE
+  )
 }

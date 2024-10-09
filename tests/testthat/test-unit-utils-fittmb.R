@@ -92,7 +92,7 @@ test_that("run.model = TRUE, sdr.report = TRUE", {
   expect_equal(sdr, clustTMB.mod$sdr)
 })
 
-if(run_model){
+if (run_model) {
   dyn.unload(dynlib(testthat::test_path("ref", "simple")))
   file.remove(dynlib(testthat::test_path("ref", "simple")))
   file.remove(testthat::test_path("ref", "simple.o"))

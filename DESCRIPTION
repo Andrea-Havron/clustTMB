@@ -23,8 +23,8 @@ Imports:
     Matrix,
     mclust,
     methods,
-    reformulas,
     MoEClust,
+    reformulas,
     sf,
     stats,
     TMB (>= 1.9.0)

@@ -125,7 +125,7 @@ enum valid_loglike{
 };
 
 template<class Type>
-Type reNll(array<Type> reVec, vector<Type> parmVec, int reStruct, bool do_simulate = false){
+Type reNll(tmbutils::array<Type> reVec, vector<Type> parmVec, int reStruct, bool do_simulate = false){
   Type ans = 0;
   Type ar1sd;
   switch(reStruct){
@@ -156,7 +156,7 @@ Type reNll(array<Type> reVec, vector<Type> parmVec, int reStruct, bool do_simula
 }
 
 template<class Type>
-Type spNll(array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int reStruct, bool do_simulate = false){
+Type spNll(tmbutils::array<Type> reVec, vector<Type> parmVec, spde_aniso_t<Type> Spde, int reStruct, bool do_simulate = false){
   Type ans = 0;
   matrix<Type> H(2,2);
   H(0,0) = exp(parmVec(2));
@@ -295,13 +295,13 @@ Type prec_fun(Type kappa, Type tau, int rrStruct){
 }
 
 template<class Type>
-array<Type> rr_fun(array<Type> x, matrix<Type>l, int nj, int rrStruct){
-  //factor analysis from adapted from Thorson, James T. VAST, https://github.com/James-Thorson-NOAA/VAST 
+tmbutils::array<Type> rr_fun(tmbutils::array<Type> x, matrix<Type>l, int nj, int rrStruct){
+  //factor analysis from adapted from Thorson, James T. VAST, https://github.com/James-Thorson-NOAA/VAST
   vector<int> d = x.dim;
   int ni = d(0);
   int nf = d(1);
   int ng = d(2);
-  array<Type> ans(ni,nj,ng);
+  tmbutils::array<Type> ans(ni,nj,ng);
   int cnt;
   switch(rrStruct){
     case reduce_rrStruct:
@@ -518,8 +518,8 @@ Type objective_function<Type>::operator() ()
   matrix<Type> Gamma_ig = A * gamma_vg;
 
   //Apply any rank reduction
-  array<Type> Omega_vjg(n_v, n_j, n_g);
-  array<Type> Omega_ijg (n_i, n_j, n_g);
+  tmbutils::array<Type> Omega_vjg(n_v, n_j, n_g);
+  tmbutils::array<Type> Omega_ijg (n_i, n_j, n_g);
   Omega_ijg.setZero();
   Omega_vjg = rr_fun(Omega_vfg, ld_sp, n_j, rrStruct(1));
 
@@ -533,7 +533,7 @@ Type objective_function<Type>::operator() ()
     }
   }
 
-  array<Type> v_ijg(n_i, n_j, n_g);
+  tmbutils::array<Type> v_ijg(n_i, n_j, n_g);
   v_ijg = rr_fun(v_ifg, ld_rand, n_j, rrStruct(0));
 
 
@@ -553,10 +553,10 @@ Type objective_function<Type>::operator() ()
   }
 
   //Observation linear predictor and link
-  array<Type> etad(n_i, n_j, n_g);
-  array<Type> etapz(n_i, n_j, n_g);
-  array<Type> mu(n_i, n_j, n_g);
-  array<Type> pz(n_i, n_j, n_g);
+  tmbutils::array<Type> etad(n_i, n_j, n_g);
+  tmbutils::array<Type> etapz(n_i, n_j, n_g);
+  tmbutils::array<Type> mu(n_i, n_j, n_g);
+  tmbutils::array<Type> pz(n_i, n_j, n_g);
   for(int g=0; g<n_g; g++){
     for(int i=0; i<n_i; i++){
       for(int j=0; j<n_j; j++){
@@ -590,7 +590,7 @@ Type objective_function<Type>::operator() ()
 
   matrix<Type> tmp_ll(n_i, n_g); //dim: i,g
   tmp_ll.setZero();
-  array<Type>Corr_mat_g(n_j,n_j,n_g);
+  tmbutils::array<Type>Corr_mat_g(n_j,n_j,n_g);
   Corr_mat_g.setZero();
   vector<Type> residual(n_j);
   residual.setZero();
@@ -938,7 +938,7 @@ Type objective_function<Type>::operator() ()
     }
 
     //density prediction only implemented for spatial
-    array<Type> Omega_xjg(n_x, n_j, n_g);
+    tmbutils::array<Type> Omega_xjg(n_x, n_j, n_g);
     matrix<Type> tmp_omega2(n_v, n_j);
     for(int g=0; g<n_g; g++){
       tmp_omega2.setZero();

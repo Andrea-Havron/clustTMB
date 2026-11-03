@@ -15,52 +15,66 @@ export(run.options)
 export(skewness)
 export(splitForm)
 export(tweedie)
-importFrom(Matrix,diag)
-importFrom(Matrix,t)
+importFrom(Matrix,
+  diag,
+  t
+)
 importFrom(MoEClust,MoE_mahala)
-importFrom(TMB,MakeADFun)
-importFrom(TMB,openmp)
-importFrom(TMB,sdreport)
+importFrom(TMB,
+  MakeADFun,
+  openmp,
+  sdreport
+)
 importFrom(clustMixType,kproto)
-importFrom(cluster,daisy)
-importFrom(cluster,pam)
-importFrom(lme4,nobars)
-importFrom(lme4,subbars)
-importFrom(mclust,hc)
-importFrom(mclust,hcE)
-importFrom(mclust,hcEEE)
-importFrom(mclust,hcEII)
-importFrom(mclust,hcV)
-importFrom(mclust,hcVII)
-importFrom(mclust,hcVVV)
-importFrom(mclust,hclass)
-importFrom(mclust,map)
-importFrom(mclust,unmap)
+importFrom(cluster,
+  daisy,
+  pam
+)
+importFrom(lme4,
+  nobars,
+  subbars
+)
+importFrom(mclust,
+  hc,
+  hcE,
+  hcEEE,
+  hcEII,
+  hcV,
+  hcVII,
+  hcVVV,
+  hclass,
+  map,
+  unmap
+)
 importFrom(methods,is)
-importFrom(reformulas,expandAllGrpVar)
-importFrom(reformulas,makeOp)
-importFrom(stats,as.formula)
-importFrom(stats,coef)
-importFrom(stats,cor)
-importFrom(stats,cutree)
-importFrom(stats,gaussian)
-importFrom(stats,glm)
-importFrom(stats,hclust)
-importFrom(stats,lm)
-importFrom(stats,logLik)
-importFrom(stats,make.link)
-importFrom(stats,model.frame)
-importFrom(stats,model.matrix)
-importFrom(stats,nlminb)
-importFrom(stats,predict)
-importFrom(stats,quantile)
-importFrom(stats,rmultinom)
-importFrom(stats,runif)
-importFrom(stats,sd)
-importFrom(stats,setNames)
-importFrom(stats,terms)
-importFrom(stats,update)
-importFrom(stats,var)
-importFrom(stats,vcov)
+importFrom(reformulas,
+  expandAllGrpVar,
+  makeOp
+)
+importFrom(stats,
+  as.formula,
+  coef,
+  cor,
+  cutree,
+  gaussian,
+  glm,
+  hclust,
+  lm,
+  logLik,
+  make.link,
+  model.frame,
+  model.matrix,
+  nlminb,
+  predict,
+  quantile,
+  rmultinom,
+  runif,
+  sd,
+  setNames,
+  terms,
+  update,
+  var,
+  vcov
+)
 importFrom(utils,data)
 useDynLib(clustTMB)

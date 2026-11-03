@@ -61,7 +61,6 @@ test_that("test expmod = FALSE", {
 })
 
 
-
 test_that("test set.MuVarPow, expmod = TRUE", {
   data(ais)
   y <- ais[, 3:7]

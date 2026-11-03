@@ -48,7 +48,6 @@ cT.m4 <- clustTMB(
 )
 
 
-
 test_that("covariate test, m1", {
   expect_equal(-summary(m1)$loglik,
     cT.m1$opt$objective,

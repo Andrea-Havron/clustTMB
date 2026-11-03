@@ -145,7 +145,6 @@ clustTMB <- function(response = NULL,
   }
 
 
-
   ## Rank reduction settings
   # clustTMB currently allows for spatial and random rank reduction
   rrStruct <- c(0, 0)

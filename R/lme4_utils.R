@@ -5,7 +5,6 @@ findReTrmClasses <- function() {
 }
 
 
-
 ##' Parse a formula into fixed formula and random effect terms,
 ##' treating 'special' terms appropriately
 ##'

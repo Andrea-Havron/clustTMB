@@ -1,7 +1,7 @@
-pandoc: 3.1.11
-pkgdown: 2.1.1
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   CovarianceStructure: CovarianceStructure.html
   SpatialExMeuseData: SpatialExMeuseData.html
-last_built: 2024-10-09T22:05Z
+last_built: 2026-11-03T19:33Z
